@@ -1,0 +1,641 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Stonehenge V3 — Pricing Tab</title>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --font-sans: 'IBM Plex Sans', -apple-system, sans-serif;
+    --font-mono: 'IBM Plex Mono', monospace;
+    --cinnabar: #D63F1A;
+    --cinnabar-light: #F5E6E2;
+    --bg: #FFFFFF;
+    --bg-app: #F7F6F3;
+    --bg-hover: #F0EFEC;
+    --bg-panel: #FAFAF8;
+    --text-1: #1A1A1E;
+    --text-2: #6B6A66;
+    --text-3: #9C9B97;
+    --border: #E8E7E3;
+    --border-med: #D4D3CF;
+    --fab: #534AB7;
+    --fab-bg: #EEEDFE;
+    --mat: #0F6E56;
+    --mat-bg: #E1F5EE;
+    --inst: #B8860B;
+    --inst-bg: #FAEEDA;
+    --success: #2D7A3A;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: var(--font-sans); background: var(--bg-app); color: var(--text-1); padding: 24px; }
+  .page { max-width: 960px; margin: 0 auto; }
+
+  /* Header strip */
+  .pricing-header {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    margin-bottom: 20px;
+  }
+  .pricing-header h1 { font-size: 16px; font-weight: 600; }
+  .recalc-status {
+    font-size: 11px;
+    color: var(--success);
+    font-weight: 500;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+  }
+  .recalc-dot { width: 6px; height: 6px; background: var(--success); border-radius: 50%; }
+  .header-spacer { flex: 1; }
+  .view-toggle {
+    display: flex;
+    border: 0.5px solid var(--border);
+    border-radius: 6px;
+    overflow: hidden;
+  }
+  .view-opt {
+    padding: 6px 12px;
+    font-size: 11px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.1s;
+    color: var(--text-2);
+    border-right: 0.5px solid var(--border);
+  }
+  .view-opt:last-child { border-right: none; }
+  .view-opt:hover { background: var(--bg-hover); }
+  .view-opt.active { background: var(--text-1); color: white; }
+
+  /* Three-bucket summary cards */
+  .bucket-cards {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 12px;
+    margin-bottom: 20px;
+  }
+  .bucket-card {
+    background: var(--bg);
+    border-radius: 10px;
+    border: 0.5px solid var(--border);
+    padding: 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+  .bucket-label {
+    font-size: 10px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+  }
+  .bucket-label.fab { color: var(--fab); }
+  .bucket-label.mat { color: var(--mat); }
+  .bucket-label.inst { color: var(--inst); }
+  .bucket-amount {
+    font-family: var(--font-mono);
+    font-size: 22px;
+    font-weight: 600;
+  }
+  .bucket-detail {
+    font-size: 11px;
+    color: var(--text-3);
+  }
+  .bucket-bar {
+    height: 4px;
+    border-radius: 2px;
+    margin-top: 4px;
+  }
+  .bucket-bar.fab { background: var(--fab); }
+  .bucket-bar.mat { background: var(--mat); }
+  .bucket-bar.inst { background: var(--inst); }
+
+  /* Material options strip (L13) */
+  .material-options {
+    display: flex;
+    gap: 4px;
+    margin-bottom: 16px;
+    padding: 4px;
+    background: var(--bg);
+    border-radius: 8px;
+    border: 0.5px solid var(--border);
+  }
+  .mat-opt {
+    flex: 1;
+    padding: 10px 14px;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.1s;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .mat-opt:hover { background: var(--bg-hover); }
+  .mat-opt.active { background: var(--cinnabar-light); }
+  .mat-swatch {
+    width: 32px; height: 32px;
+    border-radius: 6px;
+    flex-shrink: 0;
+    border: 0.5px solid var(--border);
+  }
+  .mat-opt-info { flex: 1; }
+  .mat-opt-name { font-size: 12px; font-weight: 500; }
+  .mat-opt-rate { font-size: 11px; color: var(--text-3); font-family: var(--font-mono); }
+  .mat-opt-total {
+    font-family: var(--font-mono);
+    font-size: 14px;
+    font-weight: 600;
+    text-align: right;
+  }
+  .mat-opt-diff {
+    font-size: 10px;
+    font-weight: 500;
+    margin-top: 2px;
+    text-align: right;
+  }
+  .diff-up { color: var(--cinnabar); }
+  .diff-base { color: var(--success); }
+
+  /* Breakdown tree */
+  .breakdown {
+    background: var(--bg);
+    border-radius: 10px;
+    border: 0.5px solid var(--border);
+    overflow: hidden;
+  }
+  .breakdown-header {
+    display: grid;
+    grid-template-columns: 1fr 100px 100px;
+    padding: 10px 20px;
+    background: var(--bg-app);
+    border-bottom: 0.5px solid var(--border);
+    font-size: 10px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--text-3);
+  }
+  .bk-row {
+    display: grid;
+    grid-template-columns: 1fr 100px 100px;
+    padding: 0 20px;
+    min-height: 40px;
+    align-items: center;
+    border-bottom: 0.5px solid var(--border);
+    transition: background 0.1s;
+  }
+  .bk-row:last-child { border-bottom: none; }
+  .bk-row:hover { background: var(--bg-hover); }
+  .bk-row.section {
+    background: var(--bg-panel);
+    font-weight: 600;
+    font-size: 13px;
+    min-height: 44px;
+  }
+  .bk-row.subsection {
+    font-weight: 500;
+    font-size: 13px;
+  }
+  .bk-row.detail {
+    font-size: 12px;
+    color: var(--text-2);
+  }
+  .bk-row.detail .bk-name { padding-left: 24px; }
+  .bk-row.sub-detail {
+    font-size: 11px;
+    color: var(--text-3);
+  }
+  .bk-row.sub-detail .bk-name { padding-left: 44px; }
+  .bk-row.total-row {
+    background: var(--bg-panel);
+    font-weight: 600;
+    font-size: 14px;
+    min-height: 48px;
+  }
+  .bk-row.grand-total {
+    background: var(--text-1);
+    color: white;
+    font-weight: 600;
+    font-size: 16px;
+    min-height: 52px;
+    border-bottom: none;
+  }
+  .bk-name {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .bk-chevron {
+    width: 16px;
+    font-size: 10px;
+    color: var(--text-3);
+    cursor: pointer;
+    flex-shrink: 0;
+    text-align: center;
+  }
+  .bk-calc {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    color: var(--text-3);
+    text-align: right;
+  }
+  .bk-amount {
+    font-family: var(--font-mono);
+    font-size: 13px;
+    text-align: right;
+    font-weight: 500;
+  }
+  .bk-row.section .bk-amount { font-size: 14px; }
+  .bk-row.total-row .bk-amount { font-size: 15px; }
+  .bk-row.grand-total .bk-amount {
+    font-size: 18px;
+    color: white;
+  }
+  .bk-badge {
+    font-size: 9px;
+    padding: 2px 6px;
+    border-radius: 3px;
+    font-weight: 500;
+    font-family: var(--font-mono);
+  }
+  .bk-badge.fab { background: var(--fab-bg); color: var(--fab); }
+  .bk-badge.mat { background: var(--mat-bg); color: var(--mat); }
+  .bk-badge.inst { background: var(--inst-bg); color: var(--inst); }
+
+  /* Per-piece expandable */
+  .piece-expand {
+    margin: 8px 20px;
+    background: var(--bg-panel);
+    border-radius: 8px;
+    border: 0.5px solid var(--border);
+    overflow: hidden;
+  }
+  .piece-expand-row {
+    display: grid;
+    grid-template-columns: 1fr 80px 80px 80px;
+    padding: 6px 12px;
+    font-size: 11px;
+    border-bottom: 0.5px solid var(--border);
+    align-items: center;
+  }
+  .piece-expand-row:last-child { border-bottom: none; }
+  .piece-expand-header {
+    font-weight: 600;
+    color: var(--text-3);
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+  }
+  .pe-name { color: var(--text-2); }
+  .pe-val { font-family: var(--font-mono); text-align: right; font-size: 11px; }
+  .pe-val.fab { color: var(--fab); }
+  .pe-val.mat { color: var(--mat); }
+  .pe-val.inst { color: var(--inst); }
+
+  /* Override indicator */
+  .override-badge {
+    font-size: 9px;
+    padding: 1px 5px;
+    border-radius: 3px;
+    background: #FAEEDA;
+    color: #854F0B;
+    font-weight: 500;
+    cursor: pointer;
+  }
+
+  /* Rule trace toggle */
+  .trace-toggle {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 11px;
+    color: var(--text-3);
+    cursor: pointer;
+    padding: 4px 0;
+  }
+  .trace-dot { width: 8px; height: 8px; border-radius: 2px; border: 1.5px solid var(--text-3); }
+</style>
+</head>
+<body>
+<div class="page">
+
+  <!-- Header -->
+  <div class="pricing-header">
+    <h1>Pricing</h1>
+    <div class="recalc-status"><div class="recalc-dot"></div> Up to date</div>
+    <div class="header-spacer"></div>
+    <div class="trace-toggle">
+      <div class="trace-dot"></div>
+      Show rule trace
+    </div>
+    <div class="view-toggle">
+      <div class="view-opt active">By category</div>
+      <div class="view-opt">By room</div>
+      <div class="view-opt">By piece</div>
+    </div>
+  </div>
+
+  <!-- Material options strip (L13 gap design) -->
+  <div class="material-options">
+    <div class="mat-opt active">
+      <div class="mat-swatch" style="background: linear-gradient(135deg, #E8E0D8 0%, #D4C8BB 100%);"></div>
+      <div class="mat-opt-info">
+        <div class="mat-opt-name">Caesarstone Attica 5143</div>
+        <div class="mat-opt-rate">$450/m² · Engineered</div>
+      </div>
+      <div>
+        <div class="mat-opt-total">$7,243</div>
+        <div class="mat-opt-diff diff-base">Base option</div>
+      </div>
+    </div>
+    <div class="mat-opt">
+      <div class="mat-swatch" style="background: linear-gradient(135deg, #F0EDE8 0%, #E0DAD0 100%);"></div>
+      <div class="mat-opt-info">
+        <div class="mat-opt-name">Smartstone Everest White</div>
+        <div class="mat-opt-rate">$420/m² · Engineered</div>
+      </div>
+      <div>
+        <div class="mat-opt-total">$6,987</div>
+        <div class="mat-opt-diff" style="color: var(--success);">−$256</div>
+      </div>
+    </div>
+    <div class="mat-opt">
+      <div class="mat-swatch" style="background: linear-gradient(135deg, #F5F3F0 0%, #E8E4DD 100%);"></div>
+      <div class="mat-opt-info">
+        <div class="mat-opt-name">Essa Imperial White</div>
+        <div class="mat-opt-rate">$550/m² · Natural</div>
+      </div>
+      <div>
+        <div class="mat-opt-total">$8,104</div>
+        <div class="mat-opt-diff diff-up">+$861</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Three-bucket summary -->
+  <div class="bucket-cards">
+    <div class="bucket-card">
+      <span class="bucket-label fab">Fabrication</span>
+      <span class="bucket-amount">$2,847.00</span>
+      <span class="bucket-detail">Cutting, profiles, joins, cutouts</span>
+      <div class="bucket-bar fab" style="width: 60%;"></div>
+    </div>
+    <div class="bucket-card">
+      <span class="bucket-label mat">Materials</span>
+      <span class="bucket-amount">$3,216.45</span>
+      <span class="bucket-detail">2 slabs × $450/m² + 15% margin</span>
+      <div class="bucket-bar mat" style="width: 70%;"></div>
+    </div>
+    <div class="bucket-card">
+      <span class="bucket-label inst">Installation</span>
+      <span class="bucket-amount">$1,179.55</span>
+      <span class="bucket-detail">6.26 m² × $140/m² + delivery</span>
+      <div class="bucket-bar inst" style="width: 35%;"></div>
+    </div>
+  </div>
+
+  <!-- Full breakdown tree -->
+  <div class="breakdown">
+    <div class="breakdown-header">
+      <span>Item</span>
+      <span style="text-align: right;">Calculation</span>
+      <span style="text-align: right;">Amount</span>
+    </div>
+
+    <!-- FABRICATION -->
+    <div class="bk-row section">
+      <div class="bk-name"><span class="bk-chevron">▼</span> Fabrication <span class="bk-badge fab">FAB</span></div>
+      <div></div>
+      <div class="bk-amount">$2,847.00</div>
+    </div>
+
+    <div class="bk-row subsection">
+      <div class="bk-name" style="padding-left: 24px;"><span class="bk-chevron">▼</span> Cutting</div>
+      <div></div>
+      <div class="bk-amount">$468.00</div>
+    </div>
+    <div class="bk-row detail">
+      <div class="bk-name">1.1 Benchtop — perimeter cut (20mm)</div>
+      <div class="bk-calc">6.0 lm × $42/lm</div>
+      <div class="bk-amount">$252.00</div>
+    </div>
+    <div class="bk-row detail">
+      <div class="bk-name">1.2 Return leg — perimeter cut (20mm)</div>
+      <div class="bk-calc">3.6 lm × $42/lm</div>
+      <div class="bk-amount">$151.20</div>
+    </div>
+    <div class="bk-row detail">
+      <div class="bk-name">2.1 Island — perimeter cut (20mm)</div>
+      <div class="bk-calc">5.8 lm × $42/lm</div>
+      <div class="bk-amount">$243.60</div>
+    </div>
+
+    <div class="bk-row subsection">
+      <div class="bk-name" style="padding-left: 24px;"><span class="bk-chevron">▼</span> Edge profiles</div>
+      <div></div>
+      <div class="bk-amount">$604.80</div>
+    </div>
+    <div class="bk-row detail">
+      <div class="bk-name">1.1 Benchtop — Pencil Round (exposed edges)</div>
+      <div class="bk-calc">5.4 lm × $35/lm</div>
+      <div class="bk-amount">$189.00</div>
+    </div>
+    <div class="bk-row detail">
+      <div class="bk-name">1.2 Return — Pencil Round</div>
+      <div class="bk-calc">2.7 lm × $35/lm</div>
+      <div class="bk-amount">$94.50</div>
+    </div>
+    <div class="bk-row detail">
+      <div class="bk-name">2.1 Island — Pencil Round</div>
+      <div class="bk-calc">5.8 lm × $35/lm</div>
+      <div class="bk-amount">$203.00</div>
+    </div>
+    <div class="bk-row detail">
+      <div class="bk-name">2.2 Waterfall — Mitred edge</div>
+      <div class="bk-calc">0.9 lm × $65/lm × 2 sides</div>
+      <div class="bk-amount">$117.00</div>
+    </div>
+
+    <div class="bk-row subsection">
+      <div class="bk-name" style="padding-left: 24px;">Joins</div>
+      <div></div>
+      <div class="bk-amount">$165.00</div>
+    </div>
+    <div class="bk-row detail">
+      <div class="bk-name">L-shape corner (MITRE × CORNER_DESIGN)</div>
+      <div class="bk-calc">0.6 lm × $80/lm</div>
+      <div class="bk-amount">$48.00</div>
+    </div>
+    <div class="bk-row detail">
+      <div class="bk-name">Waterfall attachment (MITRE × WATERFALL)</div>
+      <div class="bk-calc">0.9 lm × $65/lm × 2</div>
+      <div class="bk-amount">$117.00</div>
+    </div>
+
+    <div class="bk-row subsection">
+      <div class="bk-name" style="padding-left: 24px;">Cutouts</div>
+      <div></div>
+      <div class="bk-amount">$385.00</div>
+    </div>
+    <div class="bk-row detail">
+      <div class="bk-name">1.1 — Undermount sink (Clark Cellini 760)</div>
+      <div class="bk-calc">1 ea × $180</div>
+      <div class="bk-amount">$180.00</div>
+    </div>
+    <div class="bk-row detail">
+      <div class="bk-name">2.1 — Cooktop cutout (drop-in, 560×490)</div>
+      <div class="bk-calc">1 ea × $160</div>
+      <div class="bk-amount">$160.00</div>
+    </div>
+    <div class="bk-row detail">
+      <div class="bk-name">1.1 — Tap hole (35mm standard)</div>
+      <div class="bk-calc">1 ea × $45</div>
+      <div class="bk-amount">$45.00</div>
+    </div>
+
+    <div class="bk-row subsection">
+      <div class="bk-name" style="padding-left: 24px;">Build-up (40mm, 1.30× multiplier)</div>
+      <div></div>
+      <div class="bk-amount">$293.40</div>
+    </div>
+    <div class="bk-row detail">
+      <div class="bk-name">1.1 front edge — Fascia + Return strip cutting</div>
+      <div class="bk-calc">2.4 lm × $42 × 0.30</div>
+      <div class="bk-amount">$30.24</div>
+    </div>
+    <div class="bk-row detail">
+      <div class="bk-name">1.2 front edge — Fascia + Return strip cutting</div>
+      <div class="bk-calc">0.9 lm × $42 × 0.30</div>
+      <div class="bk-amount">$11.34</div>
+    </div>
+
+    <div class="bk-row subsection">
+      <div class="bk-name" style="padding-left: 24px;">Grain matching surcharge</div>
+      <div></div>
+      <div class="bk-amount">$0.00</div>
+    </div>
+
+    <!-- MATERIALS -->
+    <div class="bk-row section" style="margin-top: 4px;">
+      <div class="bk-name"><span class="bk-chevron">▼</span> Materials <span class="bk-badge mat">MAT</span></div>
+      <div></div>
+      <div class="bk-amount">$3,216.45</div>
+    </div>
+    <div class="bk-row detail">
+      <div class="bk-name">Caesarstone Attica 5143 (20mm)</div>
+      <div class="bk-calc">2 slabs × $617.55 + 15% ($161.10)</div>
+      <div class="bk-amount">$1,396.20</div>
+    </div>
+
+    <!-- Per-piece materials apportionment -->
+    <div class="piece-expand">
+      <div class="piece-expand-row piece-expand-header">
+        <span>Per-piece apportionment</span>
+        <span style="text-align:right">Fab</span>
+        <span style="text-align:right">Mat</span>
+        <span style="text-align:right">Inst</span>
+      </div>
+      <div class="piece-expand-row">
+        <span class="pe-name">1.1 Benchtop (2.86 m²)</span>
+        <span class="pe-val fab">$1,284</span>
+        <span class="pe-val mat">$1,458</span>
+        <span class="pe-val inst">$400</span>
+      </div>
+      <div class="piece-expand-row">
+        <span class="pe-name">1.2 Return leg (1.08 m²)</span>
+        <span class="pe-val fab">$487</span>
+        <span class="pe-val mat">$551</span>
+        <span class="pe-val inst">$151</span>
+      </div>
+      <div class="piece-expand-row">
+        <span class="pe-name" style="padding-left: 12px; font-size: 10px; color: var(--text-3);">1.3 Fascia strip</span>
+        <span class="pe-val" style="color: var(--text-3);">$31</span>
+        <span class="pe-val" style="color: var(--text-3);">—</span>
+        <span class="pe-val" style="color: var(--text-3);">—</span>
+      </div>
+      <div class="piece-expand-row">
+        <span class="pe-name">2.1 Island top (1.80 m²)</span>
+        <span class="pe-val fab">$606</span>
+        <span class="pe-val mat">$918</span>
+        <span class="pe-val inst">$252</span>
+      </div>
+      <div class="piece-expand-row">
+        <span class="pe-name">2.2 Waterfall end (0.52 m²)</span>
+        <span class="pe-val fab">$234</span>
+        <span class="pe-val mat">$265</span>
+        <span class="pe-val inst">$73</span>
+      </div>
+      <div class="piece-expand-row">
+        <span class="pe-name">3.1 Splashback (1.44 m²)</span>
+        <span class="pe-val fab">$204</span>
+        <span class="pe-val mat">$24</span>
+        <span class="pe-val inst">$302</span>
+      </div>
+    </div>
+
+    <!-- INSTALLATION -->
+    <div class="bk-row section" style="margin-top: 4px;">
+      <div class="bk-name"><span class="bk-chevron">▼</span> Installation <span class="bk-badge inst">INST</span></div>
+      <div></div>
+      <div class="bk-amount">$1,179.55</div>
+    </div>
+    <div class="bk-row detail">
+      <div class="bk-name">Benchtop installation</div>
+      <div class="bk-calc">4.94 m² × $140/m²</div>
+      <div class="bk-amount">$691.60</div>
+    </div>
+    <div class="bk-row detail">
+      <div class="bk-name">Splashback installation</div>
+      <div class="bk-calc">2.4 lm × $85/lm</div>
+      <div class="bk-amount">$204.00</div>
+    </div>
+    <div class="bk-row detail">
+      <div class="bk-name">Waterfall — per-end charge</div>
+      <div class="bk-calc">1 ea × $95</div>
+      <div class="bk-amount">$95.00</div>
+    </div>
+    <div class="bk-row detail">
+      <div class="bk-name">Delivery</div>
+      <div class="bk-calc">Regional · 42km × $3.00/km + $75 base</div>
+      <div class="bk-amount">$201.00</div>
+    </div>
+
+    <!-- TOTALS -->
+    <div class="bk-row total-row" style="margin-top: 4px;">
+      <div class="bk-name">Subtotal (ex GST)</div>
+      <div></div>
+      <div class="bk-amount">$6,584.55</div>
+    </div>
+    <div class="bk-row detail">
+      <div class="bk-name">Discount</div>
+      <div class="bk-calc"></div>
+      <div class="bk-amount" style="color: var(--text-3);">$0.00</div>
+    </div>
+    <div class="bk-row detail">
+      <div class="bk-name">GST (10%)</div>
+      <div class="bk-calc"></div>
+      <div class="bk-amount">$658.46</div>
+    </div>
+    <div class="bk-row grand-total">
+      <div class="bk-name">Total (inc. GST)</div>
+      <div></div>
+      <div class="bk-amount">$7,243.01</div>
+    </div>
+  </div>
+
+  <!-- Override section -->
+  <div style="margin-top: 16px; padding: 16px 20px; background: var(--bg); border-radius: 10px; border: 0.5px solid var(--border);">
+    <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px;">
+      <span style="font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.06em; color: var(--text-2);">Overrides & discounts</span>
+      <span style="font-size: 11px; color: var(--text-3); cursor: pointer;">+ Add override</span>
+    </div>
+    <div style="font-size: 12px; color: var(--text-3); padding: 12px; background: var(--bg-panel); border-radius: 6px; text-align: center;">
+      No overrides or discounts applied. Pricing uses standard rate card.
+    </div>
+  </div>
+
+</div>
+</body>
+</html>

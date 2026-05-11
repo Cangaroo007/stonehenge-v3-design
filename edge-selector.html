@@ -1,0 +1,854 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Stonehenge V3 — Edge Selector</title>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --font-sans: 'IBM Plex Sans', -apple-system, sans-serif;
+    --font-mono: 'IBM Plex Mono', monospace;
+    --cinnabar: #D63F1A;
+    --cinnabar-light: #F5E6E2;
+    --cinnabar-10: rgba(214,63,26,0.1);
+    --bg: #FFFFFF;
+    --bg-app: #F7F6F3;
+    --bg-hover: #F0EFEC;
+    --bg-selected: #FEF7F5;
+    --text-1: #1A1A1E;
+    --text-2: #6B6A66;
+    --text-3: #9C9B97;
+    --border: #E8E7E3;
+    --border-med: #D4D3CF;
+    
+    /* Edge state colors */
+    --exposed: #D63F1A;
+    --wall: #9C9B97;
+    --underside: #6B6A66;
+    --cabinet: #B4B2A9;
+    --curved: #2B6CB0;
+    
+    /* Profile colors */
+    --polished: #2D7A3A;
+    --honed: #2B6CB0;
+    --raw: #9C9B97;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { 
+    font-family: var(--font-sans); 
+    background: var(--bg-app); 
+    color: var(--text-1);
+    display: flex;
+    justify-content: center;
+    padding: 32px 16px;
+    min-height: 100vh;
+  }
+  .container {
+    width: 100%;
+    max-width: 800px;
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+  }
+
+  /* Header */
+  .header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  .header h1 {
+    font-size: 16px;
+    font-weight: 600;
+  }
+  .header .piece-info {
+    font-size: 12px;
+    color: var(--text-2);
+    font-family: var(--font-mono);
+  }
+  .header .badge {
+    font-size: 10px;
+    font-weight: 600;
+    padding: 3px 8px;
+    border-radius: 4px;
+    background: var(--cinnabar-light);
+    color: var(--cinnabar);
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+  }
+
+  /* ── The piece outline ── */
+  .piece-view {
+    background: var(--bg);
+    border-radius: 12px;
+    border: 0.5px solid var(--border);
+    padding: 24px;
+    position: relative;
+  }
+  .piece-svg-wrap {
+    display: flex;
+    justify-content: center;
+    padding: 16px 0;
+  }
+  .piece-svg-wrap svg {
+    width: 100%;
+    max-width: 560px;
+    height: auto;
+  }
+  /* Edge paths in SVG */
+  .edge-path {
+    cursor: pointer;
+    transition: all 0.15s;
+    stroke-linecap: round;
+  }
+  .edge-path:hover {
+    filter: brightness(1.2);
+  }
+  .edge-path.selected {
+    filter: drop-shadow(0 0 4px rgba(214,63,26,0.5));
+  }
+  .edge-hit {
+    stroke: transparent;
+    stroke-width: 20;
+    cursor: pointer;
+    fill: none;
+  }
+  .edge-label {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 10px;
+    fill: #6B6A66;
+    pointer-events: none;
+    user-select: none;
+  }
+  .edge-dim {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 11px;
+    fill: #1A1A1E;
+    pointer-events: none;
+    user-select: none;
+    font-weight: 500;
+  }
+  /* Profile indicator dots on edge */
+  .profile-dot {
+    pointer-events: none;
+  }
+
+  /* ── Quick actions bar ── */
+  .quick-bar {
+    background: var(--bg);
+    border-radius: 12px;
+    border: 0.5px solid var(--border);
+    padding: 16px 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+  .quick-bar-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .quick-title {
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--text-2);
+  }
+  .selection-count {
+    font-size: 11px;
+    color: var(--cinnabar);
+    font-weight: 500;
+  }
+  .quick-actions {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+  .quick-group {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+  .quick-group-label {
+    font-size: 10px;
+    color: var(--text-3);
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+  .quick-chips {
+    display: flex;
+    gap: 3px;
+  }
+  .chip {
+    height: 32px;
+    padding: 0 12px;
+    border-radius: 6px;
+    border: 0.5px solid var(--border);
+    background: var(--bg);
+    font-family: var(--font-sans);
+    font-size: 12px;
+    color: var(--text-1);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    transition: all 0.1s;
+    white-space: nowrap;
+    user-select: none;
+  }
+  .chip:hover { background: var(--bg-hover); border-color: var(--border-med); }
+  .chip.active { 
+    background: var(--cinnabar-light); 
+    border-color: var(--cinnabar); 
+    color: var(--cinnabar);
+    font-weight: 500;
+  }
+  .chip .dot {
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+  .chip .swatch {
+    width: 16px; height: 3px;
+    border-radius: 2px;
+    flex-shrink: 0;
+  }
+  .chip .curve-icon {
+    width: 14px; height: 10px;
+    flex-shrink: 0;
+  }
+
+  /* ── Edge table (compact, scannable) ── */
+  .edge-table {
+    background: var(--bg);
+    border-radius: 12px;
+    border: 0.5px solid var(--border);
+    overflow: hidden;
+  }
+  .edge-table-header {
+    display: grid;
+    grid-template-columns: 36px 1fr 80px 120px 100px 80px 80px;
+    padding: 8px 16px;
+    background: var(--bg-app);
+    border-bottom: 0.5px solid var(--border);
+    font-size: 10px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--text-3);
+    align-items: center;
+  }
+  .edge-row {
+    display: grid;
+    grid-template-columns: 36px 1fr 80px 120px 100px 80px 80px;
+    padding: 0 16px;
+    min-height: 44px;
+    align-items: center;
+    border-bottom: 0.5px solid var(--border);
+    transition: background 0.1s;
+    cursor: pointer;
+    user-select: none;
+  }
+  .edge-row:last-child { border-bottom: none; }
+  .edge-row:hover { background: var(--bg-hover); }
+  .edge-row.selected { background: var(--bg-selected); }
+  .edge-row.multi-selected { background: #FEF3EC; }
+
+  .edge-check {
+    width: 18px; height: 18px;
+    border: 1.5px solid var(--border-med);
+    border-radius: 4px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.1s;
+    flex-shrink: 0;
+  }
+  .edge-check.checked {
+    background: var(--cinnabar);
+    border-color: var(--cinnabar);
+  }
+  .edge-check.checked::after {
+    content: '✓';
+    color: white;
+    font-size: 11px;
+    font-weight: 600;
+  }
+
+  .edge-name-cell {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .edge-line-swatch {
+    width: 24px;
+    height: 4px;
+    border-radius: 2px;
+    flex-shrink: 0;
+  }
+  .edge-line-swatch.curved {
+    height: 4px;
+    width: 24px;
+    border-radius: 0;
+    background: none !important;
+    position: relative;
+  }
+  .edge-line-swatch.curved::before {
+    content: '';
+    position: absolute;
+    top: -4px; left: 0;
+    width: 24px; height: 12px;
+    border: 3px solid var(--curved);
+    border-bottom: none;
+    border-radius: 12px 12px 0 0;
+  }
+  .edge-name {
+    font-size: 13px;
+    font-weight: 500;
+  }
+  .edge-dim-cell {
+    font-family: var(--font-mono);
+    font-size: 12px;
+    color: var(--text-2);
+  }
+  
+  /* Inline selector (replaces dropdown) */
+  .inline-select {
+    display: flex;
+    gap: 2px;
+  }
+  .inline-opt {
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-size: 11px;
+    cursor: pointer;
+    transition: all 0.1s;
+    color: var(--text-2);
+    white-space: nowrap;
+  }
+  .inline-opt:hover { background: var(--bg-hover); color: var(--text-1); }
+  .inline-opt.active {
+    background: var(--text-1);
+    color: white;
+    font-weight: 500;
+  }
+  .inline-opt.active-exposed { background: var(--exposed); color: white; font-weight: 500; }
+  .inline-opt.active-wall { background: var(--wall); color: white; font-weight: 500; }
+  .inline-opt.active-polished { background: var(--polished); color: white; font-weight: 500; }
+  .inline-opt.active-raw { background: var(--raw); color: white; font-weight: 500; }
+
+  /* Profile pill */
+  .profile-pill {
+    font-size: 11px;
+    padding: 3px 8px;
+    border-radius: 4px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.1s;
+    position: relative;
+  }
+  .profile-pill:hover { filter: brightness(0.95); }
+  .profile-pill.pencil { background: #E6F1FB; color: #0C447C; }
+  .profile-pill.arris { background: #EAF3DE; color: #3B6D11; }
+  .profile-pill.bullnose { background: #FAEEDA; color: #854F0B; }
+  .profile-pill.raw { background: #F1EFE8; color: #888780; }
+  .profile-pill.mitred { background: #EEEDFE; color: #534AB7; }
+
+  /* Build-up indicator */
+  .buildup-cell {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+  }
+  .buildup-badge {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    padding: 2px 6px;
+    border-radius: 3px;
+    background: var(--cinnabar-light);
+    color: var(--cinnabar);
+    font-weight: 500;
+  }
+
+  /* ── Bulk action bar (appears when multi-selected) ── */
+  .bulk-bar {
+    background: var(--text-1);
+    color: white;
+    border-radius: 10px;
+    padding: 10px 16px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    font-size: 12px;
+    animation: slideUp 0.15s ease-out;
+  }
+  @keyframes slideUp {
+    from { opacity: 0; transform: translateY(8px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  .bulk-bar .count {
+    font-weight: 600;
+    font-family: var(--font-mono);
+    font-size: 11px;
+    background: rgba(255,255,255,0.15);
+    padding: 2px 8px;
+    border-radius: 4px;
+  }
+  .bulk-bar .bulk-label { color: rgba(255,255,255,0.6); font-size: 11px; }
+  .bulk-btn {
+    padding: 6px 12px;
+    border-radius: 6px;
+    border: 0.5px solid rgba(255,255,255,0.2);
+    background: rgba(255,255,255,0.08);
+    color: white;
+    font-family: var(--font-sans);
+    font-size: 11px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.1s;
+    white-space: nowrap;
+  }
+  .bulk-btn:hover { background: rgba(255,255,255,0.15); }
+  .bulk-spacer { flex: 1; }
+  .bulk-clear {
+    color: rgba(255,255,255,0.5);
+    font-size: 11px;
+    cursor: pointer;
+    padding: 4px 8px;
+  }
+  .bulk-clear:hover { color: white; }
+
+  /* ── Preset shortcuts ── */
+  .presets {
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+  }
+  .preset-btn {
+    padding: 8px 14px;
+    border-radius: 8px;
+    border: 0.5px solid var(--border);
+    background: var(--bg);
+    font-family: var(--font-sans);
+    font-size: 12px;
+    color: var(--text-2);
+    cursor: pointer;
+    transition: all 0.1s;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .preset-btn:hover { background: var(--bg-hover); color: var(--text-1); border-color: var(--border-med); }
+  .preset-icon { font-size: 14px; }
+
+  /* Section label */
+  .section-label {
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--text-3);
+    padding: 0 4px;
+  }
+
+  /* Profile picker dropdown */
+  .profile-picker {
+    position: absolute;
+    top: calc(100% + 4px);
+    left: 0;
+    background: var(--bg);
+    border-radius: 8px;
+    border: 0.5px solid var(--border);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+    padding: 4px;
+    z-index: 100;
+    min-width: 140px;
+    display: none;
+  }
+  .profile-picker.open { display: block; }
+  .profile-option {
+    padding: 8px 12px;
+    border-radius: 6px;
+    font-size: 12px;
+    cursor: pointer;
+    transition: background 0.1s;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .profile-option:hover { background: var(--bg-hover); }
+  .profile-option .po-dot {
+    width: 8px; height: 8px;
+    border-radius: 50%;
+  }
+</style>
+</head>
+<body>
+<div class="container">
+
+  <!-- Header -->
+  <div class="header">
+    <h1>1.1 Benchtop</h1>
+    <span class="piece-info">L-shape · 2,400×600 + 900×1,800</span>
+    <span class="badge">6 edges</span>
+  </div>
+
+  <!-- Piece outline with interactive edges -->
+  <div class="piece-view">
+    <div class="piece-svg-wrap">
+      <svg viewBox="-30 -30 520 310" xmlns="http://www.w3.org/2000/svg">
+        <!-- Edge lines (visual) -->
+        <!-- Front (exposed, pencil round) -->
+        <line x1="0" y1="0" x2="380" y2="0" class="edge-path" stroke="#D63F1A" stroke-width="4" data-edge="front"/>
+        <line x1="0" y1="0" x2="380" y2="0" class="edge-hit" data-edge="front"/>
+        
+        <!-- Right end (exposed, arris) -->
+        <line x1="380" y1="0" x2="380" y2="80" class="edge-path" stroke="#D63F1A" stroke-width="3" data-edge="right"/>
+        <line x1="380" y1="0" x2="380" y2="80" class="edge-hit" data-edge="right"/>
+        
+        <!-- Back (against wall, raw) -->
+        <line x1="380" y1="80" x2="140" y2="80" class="edge-path" stroke="#9C9B97" stroke-width="2" stroke-dasharray="6 3" data-edge="back-top"/>
+        <line x1="380" y1="80" x2="140" y2="80" class="edge-hit" data-edge="back-top"/>
+        
+        <!-- Inner corner -->
+        <line x1="140" y1="80" x2="140" y2="260" class="edge-path" stroke="#9C9B97" stroke-width="2" stroke-dasharray="6 3" data-edge="inner"/>
+        <line x1="140" y1="80" x2="140" y2="260" class="edge-hit" data-edge="inner"/>
+
+        <!-- Return front (exposed, pencil round) -->
+        <line x1="140" y1="260" x2="0" y2="260" class="edge-path" stroke="#D63F1A" stroke-width="4" data-edge="return-front"/>
+        <line x1="140" y1="260" x2="0" y2="260" class="edge-hit" data-edge="return-front"/>
+
+        <!-- Left wall (against wall, raw) -->
+        <line x1="0" y1="260" x2="0" y2="0" class="edge-path" stroke="#9C9B97" stroke-width="2" stroke-dasharray="6 3" data-edge="left"/>
+        <line x1="0" y1="260" x2="0" y2="0" class="edge-hit" data-edge="left"/>
+
+        <!-- Vertices -->
+        <circle cx="0" cy="0" r="5" fill="#D63F1A" stroke="white" stroke-width="2"/>
+        <circle cx="380" cy="0" r="5" fill="#D63F1A" stroke="white" stroke-width="2"/>
+        <circle cx="380" cy="80" r="5" fill="white" stroke="#D63F1A" stroke-width="2"/>
+        <circle cx="140" cy="80" r="5" fill="white" stroke="#D63F1A" stroke-width="2"/>
+        <circle cx="140" cy="260" r="5" fill="white" stroke="#D63F1A" stroke-width="2"/>
+        <circle cx="0" cy="260" r="5" fill="white" stroke="#D63F1A" stroke-width="2"/>
+
+        <!-- Dimension labels -->
+        <text x="190" y="-14" text-anchor="middle" class="edge-dim">2,400</text>
+        <text x="396" y="44" text-anchor="start" class="edge-dim">600</text>
+        <text x="260" y="72" text-anchor="middle" class="edge-label">against wall</text>
+        <text x="132" y="174" text-anchor="end" class="edge-label">against wall</text>
+        <text x="70" y="276" text-anchor="middle" class="edge-dim">900</text>
+        <text x="-14" y="134" text-anchor="end" class="edge-dim">1,800</text>
+
+        <!-- Profile indicators on exposed edges -->
+        <g transform="translate(190, 6)">
+          <text text-anchor="middle" font-family="'IBM Plex Sans', sans-serif" font-size="9" fill="#D63F1A" font-weight="500">PENCIL ROUND</text>
+        </g>
+        <g transform="translate(70, 253)">
+          <text text-anchor="middle" font-family="'IBM Plex Sans', sans-serif" font-size="9" fill="#D63F1A" font-weight="500">PENCIL ROUND</text>
+        </g>
+        <g transform="translate(390, 44)">
+          <text text-anchor="start" font-family="'IBM Plex Sans', sans-serif" font-size="9" fill="#D63F1A" font-weight="500" dx="4">ARRIS</text>
+        </g>
+
+        <!-- Legend -->
+        <g transform="translate(300, 220)">
+          <line x1="0" y1="0" x2="20" y2="0" stroke="#D63F1A" stroke-width="3"/>
+          <text x="26" y="4" font-family="'IBM Plex Sans', sans-serif" font-size="9" fill="#6B6A66">Exposed</text>
+          <line x1="0" y1="14" x2="20" y2="14" stroke="#9C9B97" stroke-width="2" stroke-dasharray="4 2"/>
+          <text x="26" y="18" font-family="'IBM Plex Sans', sans-serif" font-size="9" fill="#6B6A66">Against wall</text>
+        </g>
+
+        <!-- Sink cutout indicator -->
+        <rect x="180" y="15" width="110" height="50" rx="10" fill="none" stroke="#D4D3CF" stroke-width="1" stroke-dasharray="4 2"/>
+        <text x="235" y="44" text-anchor="middle" font-family="'IBM Plex Sans', sans-serif" font-size="8" fill="#9C9B97">UM SINK</text>
+      </svg>
+    </div>
+  </div>
+
+  <!-- One-click presets (the speed feature) -->
+  <div>
+    <div class="section-label" style="margin-bottom: 8px;">Quick presets</div>
+    <div class="presets">
+      <button class="preset-btn" onclick="applyPreset('kitchen-standard')">
+        <span class="preset-icon">🏠</span>
+        Kitchen standard — front exposed, back + sides against wall
+      </button>
+      <button class="preset-btn" onclick="applyPreset('island')">
+        <span class="preset-icon">🏝️</span>
+        Island — all edges exposed
+      </button>
+      <button class="preset-btn" onclick="applyPreset('all-pencil')">
+        <span class="preset-icon">✏️</span>
+        All exposed → Pencil Round
+      </button>
+      <button class="preset-btn" onclick="applyPreset('all-arris')">
+        All exposed → Arris
+      </button>
+    </div>
+  </div>
+
+  <!-- Bulk action bar (visible when edges multi-selected) -->
+  <div class="bulk-bar" id="bulkBar">
+    <span class="count">3</span>
+    <span class="bulk-label">edges selected</span>
+    <button class="bulk-btn" onclick="alert('Apply Pencil Round to 3 edges')">Pencil Round</button>
+    <button class="bulk-btn" onclick="alert('Apply Arris to 3 edges')">Arris</button>
+    <button class="bulk-btn" onclick="alert('Apply Bullnose to 3 edges')">Bullnose</button>
+    <span style="color: rgba(255,255,255,0.3);">│</span>
+    <button class="bulk-btn" onclick="alert('Set 3 edges to Exposed')">Exposed</button>
+    <button class="bulk-btn" onclick="alert('Set 3 edges to Wall')">Wall</button>
+    <span style="color: rgba(255,255,255,0.3);">│</span>
+    <button class="bulk-btn" onclick="alert('Add 40mm build-up to 3 edges')">+ Build-up</button>
+    <span class="bulk-spacer"></span>
+    <span class="bulk-clear">Clear ✕</span>
+  </div>
+
+  <!-- Edge table (the scannable at-a-glance view) -->
+  <div>
+    <div class="section-label" style="margin-bottom: 8px;">All edges</div>
+    <div class="edge-table">
+      <div class="edge-table-header">
+        <span></span>
+        <span>Edge</span>
+        <span>Length</span>
+        <span>Profile</span>
+        <span>Exposure</span>
+        <span>Finish</span>
+        <span>Build-up</span>
+      </div>
+
+      <!-- Front edge -->
+      <div class="edge-row selected" data-edge="front">
+        <div class="edge-check checked"></div>
+        <div class="edge-name-cell">
+          <div class="edge-line-swatch" style="background: var(--exposed);"></div>
+          <span class="edge-name">Front</span>
+        </div>
+        <span class="edge-dim-cell">2,400</span>
+        <div style="position: relative;">
+          <span class="profile-pill pencil">Pencil Round</span>
+        </div>
+        <div class="inline-select">
+          <span class="inline-opt active-exposed">Exposed</span>
+          <span class="inline-opt">Wall</span>
+        </div>
+        <div class="inline-select">
+          <span class="inline-opt active-polished">Pol</span>
+          <span class="inline-opt">Raw</span>
+        </div>
+        <div class="buildup-cell">
+          <span class="buildup-badge">40mm</span>
+        </div>
+      </div>
+
+      <!-- Right end -->
+      <div class="edge-row" data-edge="right">
+        <div class="edge-check"></div>
+        <div class="edge-name-cell">
+          <div class="edge-line-swatch" style="background: var(--exposed);"></div>
+          <span class="edge-name">Right end</span>
+        </div>
+        <span class="edge-dim-cell">600</span>
+        <div><span class="profile-pill arris">Arris</span></div>
+        <div class="inline-select">
+          <span class="inline-opt active-exposed">Exposed</span>
+          <span class="inline-opt">Wall</span>
+        </div>
+        <div class="inline-select">
+          <span class="inline-opt active-polished">Pol</span>
+          <span class="inline-opt">Raw</span>
+        </div>
+        <div class="buildup-cell">—</div>
+      </div>
+
+      <!-- Back (top section) -->
+      <div class="edge-row" data-edge="back-top">
+        <div class="edge-check"></div>
+        <div class="edge-name-cell">
+          <div class="edge-line-swatch" style="background: var(--wall);"></div>
+          <span class="edge-name" style="color: var(--text-2);">Back</span>
+        </div>
+        <span class="edge-dim-cell">2,400</span>
+        <div><span class="profile-pill raw">Raw</span></div>
+        <div class="inline-select">
+          <span class="inline-opt">Exposed</span>
+          <span class="inline-opt active-wall">Wall</span>
+        </div>
+        <div class="inline-select">
+          <span class="inline-opt">Pol</span>
+          <span class="inline-opt active-raw">Raw</span>
+        </div>
+        <div class="buildup-cell">—</div>
+      </div>
+
+      <!-- Inner (wall edge where L meets) -->
+      <div class="edge-row" data-edge="inner">
+        <div class="edge-check"></div>
+        <div class="edge-name-cell">
+          <div class="edge-line-swatch" style="background: var(--wall);"></div>
+          <span class="edge-name" style="color: var(--text-2);">Inner (to return)</span>
+        </div>
+        <span class="edge-dim-cell">1,200</span>
+        <div><span class="profile-pill raw">Raw</span></div>
+        <div class="inline-select">
+          <span class="inline-opt">Exposed</span>
+          <span class="inline-opt active-wall">Wall</span>
+        </div>
+        <div class="inline-select">
+          <span class="inline-opt">Pol</span>
+          <span class="inline-opt active-raw">Raw</span>
+        </div>
+        <div class="buildup-cell">—</div>
+      </div>
+
+      <!-- Return front -->
+      <div class="edge-row selected" data-edge="return-front">
+        <div class="edge-check checked"></div>
+        <div class="edge-name-cell">
+          <div class="edge-line-swatch" style="background: var(--exposed);"></div>
+          <span class="edge-name">Return front</span>
+        </div>
+        <span class="edge-dim-cell">900</span>
+        <div><span class="profile-pill pencil">Pencil Round</span></div>
+        <div class="inline-select">
+          <span class="inline-opt active-exposed">Exposed</span>
+          <span class="inline-opt">Wall</span>
+        </div>
+        <div class="inline-select">
+          <span class="inline-opt active-polished">Pol</span>
+          <span class="inline-opt">Raw</span>
+        </div>
+        <div class="buildup-cell">
+          <span class="buildup-badge">40mm</span>
+        </div>
+      </div>
+
+      <!-- Left wall -->
+      <div class="edge-row" data-edge="left">
+        <div class="edge-check"></div>
+        <div class="edge-name-cell">
+          <div class="edge-line-swatch" style="background: var(--wall);"></div>
+          <span class="edge-name" style="color: var(--text-2);">Left wall</span>
+        </div>
+        <span class="edge-dim-cell">1,800</span>
+        <div><span class="profile-pill raw">Raw</span></div>
+        <div class="inline-select">
+          <span class="inline-opt">Exposed</span>
+          <span class="inline-opt active-wall">Wall</span>
+        </div>
+        <div class="inline-select">
+          <span class="inline-opt">Pol</span>
+          <span class="inline-opt active-raw">Raw</span>
+        </div>
+        <div class="buildup-cell">—</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Example: curved edge piece (radius end) -->
+  <div style="margin-top: 16px;">
+    <div class="section-label" style="margin-bottom: 8px;">Curved edge example (radius end piece)</div>
+    <div class="edge-table">
+      <div class="edge-table-header">
+        <span></span>
+        <span>Edge</span>
+        <span>Length</span>
+        <span>Profile</span>
+        <span>Exposure</span>
+        <span>Finish</span>
+        <span>Build-up</span>
+      </div>
+      <div class="edge-row">
+        <div class="edge-check"></div>
+        <div class="edge-name-cell">
+          <div class="edge-line-swatch" style="background: var(--exposed);"></div>
+          <span class="edge-name">Front</span>
+        </div>
+        <span class="edge-dim-cell">1,800</span>
+        <div><span class="profile-pill pencil">Pencil Round</span></div>
+        <div class="inline-select">
+          <span class="inline-opt active-exposed">Exposed</span>
+          <span class="inline-opt">Wall</span>
+        </div>
+        <div class="inline-select">
+          <span class="inline-opt active-polished">Pol</span>
+          <span class="inline-opt">Raw</span>
+        </div>
+        <div class="buildup-cell">—</div>
+      </div>
+      <div class="edge-row" style="background: #F0F4FF;">
+        <div class="edge-check"></div>
+        <div class="edge-name-cell">
+          <div class="edge-line-swatch curved"></div>
+          <span class="edge-name">Radius end <span style="font-size: 10px; color: var(--curved); font-weight: 500; font-family: var(--font-mono);">↷ R450</span></span>
+        </div>
+        <span class="edge-dim-cell">1,414</span>
+        <div><span class="profile-pill bullnose">Bullnose</span></div>
+        <div class="inline-select">
+          <span class="inline-opt active-exposed">Exposed</span>
+          <span class="inline-opt">Wall</span>
+        </div>
+        <div class="inline-select">
+          <span class="inline-opt active-polished">Pol</span>
+          <span class="inline-opt">Raw</span>
+        </div>
+        <div class="buildup-cell">—</div>
+      </div>
+      <div class="edge-row">
+        <div class="edge-check"></div>
+        <div class="edge-name-cell">
+          <div class="edge-line-swatch" style="background: var(--wall);"></div>
+          <span class="edge-name" style="color: var(--text-2);">Back</span>
+        </div>
+        <span class="edge-dim-cell">1,800</span>
+        <div><span class="profile-pill raw">Raw</span></div>
+        <div class="inline-select">
+          <span class="inline-opt">Exposed</span>
+          <span class="inline-opt active-wall">Wall</span>
+        </div>
+        <div class="inline-select">
+          <span class="inline-opt">Pol</span>
+          <span class="inline-opt active-raw">Raw</span>
+        </div>
+        <div class="buildup-cell">—</div>
+      </div>
+      <div class="edge-row">
+        <div class="edge-check"></div>
+        <div class="edge-name-cell">
+          <div class="edge-line-swatch" style="background: var(--wall);"></div>
+          <span class="edge-name" style="color: var(--text-2);">Left wall</span>
+        </div>
+        <span class="edge-dim-cell">600</span>
+        <div><span class="profile-pill raw">Raw</span></div>
+        <div class="inline-select">
+          <span class="inline-opt">Exposed</span>
+          <span class="inline-opt active-wall">Wall</span>
+        </div>
+        <div class="inline-select">
+          <span class="inline-opt">Pol</span>
+          <span class="inline-opt active-raw">Raw</span>
+        </div>
+        <div class="buildup-cell">—</div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+// This is a static mockup — in production, these would be real interactions
+function applyPreset(name) {
+  const msg = {
+    'kitchen-standard': 'Applied: Front edges → Exposed/Pencil Round, Back + sides → Wall/Raw',
+    'island': 'Applied: All edges → Exposed/Pencil Round',
+    'all-pencil': 'Applied: All exposed edges → Pencil Round',
+    'all-arris': 'Applied: All exposed edges → Arris'
+  };
+  alert(msg[name]);
+}
+</script>
+</body>
+</html>

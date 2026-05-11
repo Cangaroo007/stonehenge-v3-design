@@ -1,0 +1,981 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Stonehenge V3 — Quote Workspace</title>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --font-sans: 'IBM Plex Sans', -apple-system, sans-serif;
+    --font-mono: 'IBM Plex Mono', 'SF Mono', monospace;
+    --cinnabar: #D63F1A;
+    --cinnabar-light: #F5E6E2;
+    --cinnabar-dark: #A83015;
+    --grid: 4px;
+    --tap-min: 44px;
+    
+    /* Surfaces */
+    --bg-app: #F7F6F3;
+    --bg-surface: #FFFFFF;
+    --bg-panel: #FAFAF8;
+    --bg-hover: #F0EFEC;
+    --bg-active: #E8E7E3;
+    --bg-canvas: #1A1A1E;
+    
+    /* Text */
+    --text-primary: #1A1A1E;
+    --text-secondary: #6B6A66;
+    --text-tertiary: #9C9B97;
+    --text-inverse: #F7F6F3;
+    
+    /* Borders */
+    --border-light: #E8E7E3;
+    --border-medium: #D4D3CF;
+    --border-focus: #1A1A1E;
+    
+    /* Semantic */
+    --success: #2D7A3A;
+    --warning: #B8860B;
+    --danger: #C53030;
+    --info: #2B6CB0;
+    
+    /* Pricing buckets */
+    --fab-color: #534AB7;
+    --mat-color: #0F6E56;
+    --inst-color: #B8860B;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: var(--font-sans); font-size: 13px; color: var(--text-primary); background: var(--bg-app); overflow: hidden; height: 100vh; }
+
+  /* ── Top bar ── */
+  .topbar {
+    height: 48px;
+    background: var(--bg-surface);
+    border-bottom: 0.5px solid var(--border-light);
+    display: flex;
+    align-items: center;
+    padding: 0 16px;
+    gap: 12px;
+    z-index: 10;
+  }
+  .logo {
+    width: 8px; height: 8px;
+    background: var(--cinnabar);
+    border-radius: 2px;
+    flex-shrink: 0;
+  }
+  .brand {
+    font-weight: 600;
+    font-size: 13px;
+    letter-spacing: 0.02em;
+  }
+  .breadcrumb {
+    font-size: 12px;
+    color: var(--text-secondary);
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .breadcrumb .sep { color: var(--text-tertiary); }
+  .quote-id {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    color: var(--text-secondary);
+    background: var(--bg-panel);
+    padding: 2px 8px;
+    border-radius: 4px;
+  }
+  .topbar-spacer { flex: 1; }
+  .topbar-actions {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+  }
+  .topbar-btn {
+    height: 32px;
+    padding: 0 12px;
+    border: 0.5px solid var(--border-light);
+    border-radius: 6px;
+    background: var(--bg-surface);
+    font-family: var(--font-sans);
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--text-primary);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    transition: all 0.1s;
+  }
+  .topbar-btn:hover { background: var(--bg-hover); }
+  .topbar-btn.primary {
+    background: var(--cinnabar);
+    color: white;
+    border-color: var(--cinnabar);
+  }
+  .topbar-btn.primary:hover { background: var(--cinnabar-dark); }
+  .save-indicator {
+    font-size: 11px;
+    color: var(--success);
+    font-weight: 500;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+  }
+  .save-dot {
+    width: 6px; height: 6px;
+    background: var(--success);
+    border-radius: 50%;
+  }
+
+  /* ── Layout ── */
+  .workspace {
+    display: flex;
+    height: calc(100vh - 48px);
+  }
+
+  /* ── Left rail: Config tree ── */
+  .left-rail {
+    width: 260px;
+    background: var(--bg-surface);
+    border-right: 0.5px solid var(--border-light);
+    display: flex;
+    flex-direction: column;
+    flex-shrink: 0;
+  }
+  .tree-header {
+    padding: 12px 16px 8px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .tree-title {
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--text-secondary);
+  }
+  .tree-toggle {
+    font-size: 10px;
+    color: var(--text-tertiary);
+    cursor: pointer;
+    padding: 4px 8px;
+    border-radius: 4px;
+  }
+  .tree-toggle:hover { background: var(--bg-hover); color: var(--text-secondary); }
+  .tree-content {
+    flex: 1;
+    overflow-y: auto;
+    padding: 0 8px 12px;
+  }
+  .tree-node {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 8px;
+    border-radius: 6px;
+    cursor: pointer;
+    min-height: 32px;
+    transition: all 0.1s;
+    font-size: 13px;
+  }
+  .tree-node:hover { background: var(--bg-hover); }
+  .tree-node.selected { background: var(--cinnabar-light); }
+  .tree-node.selected .tree-label { font-weight: 500; }
+  .tree-indent { width: 12px; flex-shrink: 0; }
+  .tree-icon {
+    width: 16px; height: 16px;
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+    font-size: 10px;
+  }
+  .tree-icon.filled { color: var(--cinnabar); }
+  .tree-icon.open { color: var(--text-secondary); }
+  .tree-icon.strip { color: var(--text-tertiary); }
+  .tree-icon.attachment { color: var(--info); }
+  .tree-label { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .tree-meta {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    color: var(--text-tertiary);
+  }
+  .tree-section {
+    padding: 8px 8px 4px;
+    font-size: 10px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--text-tertiary);
+  }
+  .tree-add {
+    font-size: 11px;
+    color: var(--text-tertiary);
+    padding: 4px 8px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+  }
+  .tree-add:hover { color: var(--cinnabar); }
+
+  /* ── Tab bar ── */
+  .tab-bar {
+    height: 40px;
+    background: var(--bg-surface);
+    border-bottom: 0.5px solid var(--border-light);
+    display: flex;
+    align-items: stretch;
+    padding: 0 16px;
+    gap: 0;
+  }
+  .tab {
+    padding: 0 16px;
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--text-secondary);
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    cursor: pointer;
+    border-bottom: 2px solid transparent;
+    transition: all 0.1s;
+    position: relative;
+  }
+  .tab:hover { color: var(--text-primary); }
+  .tab.active {
+    color: var(--text-primary);
+    border-bottom-color: var(--cinnabar);
+  }
+  .tab-num {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    color: var(--text-tertiary);
+    width: 16px;
+    text-align: center;
+  }
+  .tab-recalc {
+    width: 6px; height: 6px;
+    background: var(--warning);
+    border-radius: 50%;
+    position: absolute;
+    top: 8px;
+    right: 4px;
+  }
+
+  /* ── Center: Canvas ── */
+  .center-area {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+  }
+  .canvas-area {
+    flex: 1;
+    background: var(--bg-canvas);
+    position: relative;
+    overflow: hidden;
+  }
+  .canvas-grid {
+    position: absolute;
+    inset: 0;
+    background-image:
+      linear-gradient(rgba(255,255,255,0.03) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(255,255,255,0.03) 1px, transparent 1px);
+    background-size: 40px 40px;
+  }
+  .canvas-rulers-x {
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 20px;
+    background: rgba(0,0,0,0.4);
+    font-family: var(--font-mono);
+    font-size: 9px;
+    color: rgba(255,255,255,0.35);
+    display: flex;
+    align-items: center;
+    padding: 0 8px;
+    gap: 78px;
+  }
+  .canvas-rulers-y {
+    position: absolute;
+    top: 20px; left: 0;
+    width: 20px; bottom: 0;
+    background: rgba(0,0,0,0.4);
+    font-family: var(--font-mono);
+    font-size: 9px;
+    color: rgba(255,255,255,0.35);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 12px 0;
+    gap: 58px;
+  }
+  
+  /* Mock piece on canvas */
+  .piece-mock {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+  }
+  .piece-mock svg { filter: drop-shadow(0 0 20px rgba(214, 63, 26, 0.15)); }
+
+  /* Canvas toolbar */
+  .canvas-toolbar {
+    position: absolute;
+    bottom: 16px;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    align-items: center;
+    gap: 2px;
+    background: rgba(26,26,30,0.85);
+    backdrop-filter: blur(8px);
+    border-radius: 8px;
+    padding: 4px;
+    border: 0.5px solid rgba(255,255,255,0.1);
+  }
+  .canvas-tool {
+    width: 36px; height: 32px;
+    border-radius: 6px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: rgba(255,255,255,0.6);
+    font-size: 11px;
+    font-family: var(--font-mono);
+    cursor: pointer;
+    transition: all 0.1s;
+  }
+  .canvas-tool:hover { background: rgba(255,255,255,0.08); color: rgba(255,255,255,0.9); }
+  .canvas-tool.active { background: rgba(255,255,255,0.12); color: white; }
+  .canvas-divider { width: 0.5px; height: 20px; background: rgba(255,255,255,0.1); margin: 0 4px; }
+  .zoom-label {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    color: rgba(255,255,255,0.5);
+    padding: 0 8px;
+    min-width: 48px;
+    text-align: center;
+  }
+
+  /* ── Right rail: Edge/Feature panel ── */
+  .right-rail {
+    width: 300px;
+    background: var(--bg-surface);
+    border-left: 0.5px solid var(--border-light);
+    display: flex;
+    flex-direction: column;
+    flex-shrink: 0;
+    overflow-y: auto;
+  }
+  .panel-header {
+    padding: 12px 16px;
+    border-bottom: 0.5px solid var(--border-light);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .panel-title {
+    font-size: 12px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: var(--text-secondary);
+  }
+  .panel-badge {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    color: var(--cinnabar);
+    background: var(--cinnabar-light);
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-weight: 500;
+  }
+  .panel-section {
+    padding: 12px 16px;
+    border-bottom: 0.5px solid var(--border-light);
+  }
+  .panel-section-title {
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--text-secondary);
+    margin-bottom: 8px;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+  }
+  .field-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    min-height: 32px;
+    gap: 8px;
+  }
+  .field-row + .field-row { margin-top: 4px; }
+  .field-label {
+    font-size: 12px;
+    color: var(--text-secondary);
+    flex-shrink: 0;
+  }
+  .field-value {
+    font-size: 12px;
+    font-weight: 500;
+    text-align: right;
+  }
+  .field-input {
+    height: 28px;
+    border: 0.5px solid var(--border-light);
+    border-radius: 4px;
+    padding: 0 8px;
+    font-family: var(--font-mono);
+    font-size: 12px;
+    background: var(--bg-panel);
+    color: var(--text-primary);
+    width: 80px;
+    text-align: right;
+    outline: none;
+  }
+  .field-input:focus { border-color: var(--border-focus); }
+  .field-select {
+    height: 28px;
+    border: 0.5px solid var(--border-light);
+    border-radius: 4px;
+    padding: 0 8px;
+    font-family: var(--font-sans);
+    font-size: 12px;
+    background: var(--bg-panel);
+    color: var(--text-primary);
+    outline: none;
+    cursor: pointer;
+    appearance: none;
+    -webkit-appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg width='10' height='6' viewBox='0 0 10 6' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M1 1L5 5L9 1' stroke='%236B6A66' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 8px center;
+    padding-right: 24px;
+  }
+  .field-select:focus { border-color: var(--border-focus); }
+  .field-tag {
+    font-size: 11px;
+    padding: 2px 8px;
+    border-radius: 4px;
+    font-weight: 500;
+  }
+  .tag-exposed { background: #E6F1FB; color: #0C447C; }
+  .tag-wall { background: #F1EFE8; color: #5F5E5A; }
+  .tag-polished { background: #EAF3DE; color: #3B6D11; }
+  .tag-raw { background: #F1EFE8; color: #888780; }
+
+  /* Build-up toggle */
+  .buildup-toggle {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 0;
+  }
+  .toggle-track {
+    width: 36px;
+    height: 20px;
+    background: var(--border-light);
+    border-radius: 10px;
+    position: relative;
+    cursor: pointer;
+    transition: background 0.15s;
+    flex-shrink: 0;
+  }
+  .toggle-track.on { background: var(--cinnabar); }
+  .toggle-thumb {
+    width: 16px;
+    height: 16px;
+    background: white;
+    border-radius: 50%;
+    position: absolute;
+    top: 2px;
+    left: 2px;
+    transition: transform 0.15s;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.15);
+  }
+  .toggle-track.on .toggle-thumb { transform: translateX(16px); }
+  .toggle-label { font-size: 12px; color: var(--text-primary); font-weight: 500; }
+
+  /* Edge list in panel */
+  .edge-list { display: flex; flex-direction: column; gap: 2px; }
+  .edge-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 6px 8px;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.1s;
+  }
+  .edge-item:hover { background: var(--bg-hover); }
+  .edge-item.selected { background: var(--cinnabar-light); }
+  .edge-swatch {
+    width: 24px; height: 3px;
+    border-radius: 2px;
+    flex-shrink: 0;
+  }
+  .edge-swatch.exposed { background: var(--cinnabar); }
+  .edge-swatch.wall { background: var(--text-tertiary); }
+  .edge-name { font-size: 12px; flex: 1; }
+  .edge-length {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    color: var(--text-secondary);
+  }
+
+  /* ── Bottom bar: NL + pricing summary ── */
+  .bottom-bar {
+    height: 56px;
+    background: var(--bg-surface);
+    border-top: 0.5px solid var(--border-light);
+    display: flex;
+    align-items: center;
+    padding: 0 16px;
+    gap: 16px;
+  }
+  .nl-bar {
+    flex: 1;
+    height: 36px;
+    display: flex;
+    align-items: center;
+    border: 0.5px solid var(--border-light);
+    border-radius: 8px;
+    padding: 0 4px 0 12px;
+    background: var(--bg-panel);
+    gap: 8px;
+    transition: border-color 0.1s;
+  }
+  .nl-bar:focus-within { border-color: var(--border-focus); }
+  .nl-icon { color: var(--text-tertiary); font-size: 14px; }
+  .nl-input {
+    flex: 1;
+    border: none;
+    background: transparent;
+    font-family: var(--font-sans);
+    font-size: 12px;
+    color: var(--text-primary);
+    outline: none;
+  }
+  .nl-input::placeholder { color: var(--text-tertiary); }
+  .nl-submit {
+    height: 28px;
+    padding: 0 12px;
+    border: none;
+    border-radius: 6px;
+    background: var(--cinnabar);
+    color: white;
+    font-family: var(--font-sans);
+    font-size: 11px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background 0.1s;
+  }
+  .nl-submit:hover { background: var(--cinnabar-dark); }
+
+  .pricing-summary {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    flex-shrink: 0;
+  }
+  .pricing-bucket {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 1px;
+  }
+  .bucket-label {
+    font-size: 9px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+  }
+  .bucket-label.fab { color: var(--fab-color); }
+  .bucket-label.mat { color: var(--mat-color); }
+  .bucket-label.inst { color: var(--inst-color); }
+  .bucket-value {
+    font-family: var(--font-mono);
+    font-size: 12px;
+    font-weight: 500;
+  }
+  .pricing-divider {
+    width: 0.5px;
+    height: 28px;
+    background: var(--border-light);
+  }
+  .pricing-total {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 1px;
+  }
+  .total-label {
+    font-size: 9px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--text-secondary);
+  }
+  .total-value {
+    font-family: var(--font-mono);
+    font-size: 16px;
+    font-weight: 600;
+    color: var(--text-primary);
+  }
+  .total-gst {
+    font-size: 10px;
+    color: var(--text-tertiary);
+    font-family: var(--font-mono);
+  }
+</style>
+</head>
+<body>
+
+<!-- Top bar -->
+<div class="topbar">
+  <div class="logo"></div>
+  <span class="brand">Stonehenge</span>
+  <div class="breadcrumb">
+    <span class="sep">›</span>
+    <span>Henderson Kitchen Reno</span>
+    <span class="sep">›</span>
+    <span class="quote-id">Q-2026-0847 v1</span>
+  </div>
+  <div class="topbar-spacer"></div>
+  <div class="save-indicator"><div class="save-dot"></div> Saved</div>
+  <div class="topbar-actions">
+    <button class="topbar-btn">⌘Z Undo</button>
+    <button class="topbar-btn">Share</button>
+    <button class="topbar-btn primary">Send quote →</button>
+  </div>
+</div>
+
+<div class="workspace">
+
+  <!-- Left rail: Config tree -->
+  <div class="left-rail">
+    <div class="tree-header">
+      <span class="tree-title">Pieces</span>
+      <span class="tree-toggle">Mason ▾</span>
+    </div>
+    <div class="tree-content">
+      <div class="tree-section">Kitchen</div>
+      
+      <!-- L-shape bench -->
+      <div class="tree-node" style="padding-left: 12px;">
+        <span class="tree-icon" style="font-size:8px; color: var(--text-tertiary);">▼</span>
+        <span class="tree-label" style="font-weight: 500;">L-shape bench</span>
+      </div>
+      <div class="tree-node selected" style="padding-left: 28px;">
+        <span class="tree-icon filled">●</span>
+        <span class="tree-label">1.1 Benchtop</span>
+        <span class="tree-meta">2.86 m²</span>
+      </div>
+      <div class="tree-node" style="padding-left: 28px;">
+        <span class="tree-icon filled">●</span>
+        <span class="tree-label">1.2 Return leg</span>
+        <span class="tree-meta">1.08 m²</span>
+      </div>
+      <div class="tree-node" style="padding-left: 40px;">
+        <span class="tree-icon strip">○</span>
+        <span class="tree-label" style="color: var(--text-secondary);">1.3 Fascia</span>
+      </div>
+      <div class="tree-node" style="padding-left: 40px;">
+        <span class="tree-icon strip">○</span>
+        <span class="tree-label" style="color: var(--text-secondary);">1.4 Return strip</span>
+      </div>
+
+      <!-- Island -->
+      <div class="tree-node" style="padding-left: 12px; margin-top: 4px;">
+        <span class="tree-icon" style="font-size:8px; color: var(--text-tertiary);">▼</span>
+        <span class="tree-label" style="font-weight: 500;">Island</span>
+      </div>
+      <div class="tree-node" style="padding-left: 28px;">
+        <span class="tree-icon filled">●</span>
+        <span class="tree-label">2.1 Island top</span>
+        <span class="tree-meta">1.80 m²</span>
+      </div>
+      <div class="tree-node" style="padding-left: 28px;">
+        <span class="tree-icon attachment">▭</span>
+        <span class="tree-label">2.2 Waterfall</span>
+        <span class="tree-meta">0.52 m²</span>
+      </div>
+      <div class="tree-node" style="padding-left: 40px;">
+        <span class="tree-icon strip">○</span>
+        <span class="tree-label" style="color: var(--text-secondary);">2.3 Fascia</span>
+      </div>
+      <div class="tree-node" style="padding-left: 40px;">
+        <span class="tree-icon strip">○</span>
+        <span class="tree-label" style="color: var(--text-secondary);">2.4 Return strip</span>
+      </div>
+
+      <!-- Splashback -->
+      <div class="tree-node" style="padding-left: 12px; margin-top: 4px;">
+        <span class="tree-icon" style="font-size:8px; color: var(--text-tertiary);">▶</span>
+        <span class="tree-label" style="font-weight: 500;">Splashback</span>
+      </div>
+      
+      <div class="tree-add" style="padding-left: 12px; margin-top: 8px;">
+        <span>+</span> Add logical unit
+      </div>
+
+      <div class="tree-section" style="margin-top: 12px;">Bathroom</div>
+      <div class="tree-node" style="padding-left: 12px;">
+        <span class="tree-icon" style="font-size:8px; color: var(--text-tertiary);">▶</span>
+        <span class="tree-label" style="font-weight: 500;">Vanity</span>
+      </div>
+      <div class="tree-add" style="padding-left: 12px; margin-top: 4px;">
+        <span>+</span> Add logical unit
+      </div>
+      
+      <div class="tree-add" style="margin-top: 16px; padding: 8px; border: 0.5px dashed var(--border-light); border-radius: 6px; justify-content: center;">
+        <span>+</span> Add room
+      </div>
+    </div>
+  </div>
+
+  <!-- Center area -->
+  <div class="center-area">
+    <!-- Tab bar -->
+    <div class="tab-bar">
+      <div class="tab"><span class="tab-num">1</span> Configuration</div>
+      <div class="tab active"><span class="tab-num">2</span> Spatial</div>
+      <div class="tab"><span class="tab-num">3</span> Parts</div>
+      <div class="tab"><span class="tab-num">4</span> Pricing <div class="tab-recalc" title="Recalculating..."></div></div>
+      <div class="tab"><span class="tab-num">5</span> PDF</div>
+      <div class="tab"><span class="tab-num">6</span> Activity</div>
+    </div>
+
+    <!-- Canvas -->
+    <div class="canvas-area">
+      <div class="canvas-grid"></div>
+      <div class="canvas-rulers-x">
+        <span>0</span><span>250</span><span>500</span><span>750</span><span>1000</span><span>1250</span><span>1500</span><span>1750</span><span>2000</span><span>2250</span>
+      </div>
+      <div class="canvas-rulers-y">
+        <span>0</span><span>200</span><span>400</span><span>600</span>
+      </div>
+
+      <!-- Simplified piece representation -->
+      <div class="piece-mock">
+        <svg width="480" height="240" viewBox="0 0 480 240">
+          <!-- Main benchtop -->
+          <rect x="0" y="0" width="420" height="100" rx="2" fill="rgba(214,63,26,0.08)" stroke="#D63F1A" stroke-width="1.5"/>
+          <!-- Return leg -->
+          <rect x="0" y="100" width="160" height="140" rx="2" fill="rgba(214,63,26,0.05)" stroke="#D63F1A" stroke-width="1" stroke-dasharray="4 2"/>
+          
+          <!-- Selected edge highlight (front edge) -->
+          <line x1="0" y1="0" x2="420" y2="0" stroke="#D63F1A" stroke-width="3"/>
+          
+          <!-- Dimension labels -->
+          <text x="210" y="-10" text-anchor="middle" fill="rgba(255,255,255,0.7)" font-family="'IBM Plex Mono', monospace" font-size="11">2400</text>
+          <text x="440" y="50" text-anchor="start" fill="rgba(255,255,255,0.5)" font-family="'IBM Plex Mono', monospace" font-size="11">600</text>
+          <text x="80" y="180" text-anchor="middle" fill="rgba(255,255,255,0.5)" font-family="'IBM Plex Mono', monospace" font-size="11">900</text>
+          <text x="-16" y="170" text-anchor="end" fill="rgba(255,255,255,0.5)" font-family="'IBM Plex Mono', monospace" font-size="11">1800</text>
+          
+          <!-- Vertices -->
+          <circle cx="0" cy="0" r="4" fill="#D63F1A" stroke="white" stroke-width="1.5"/>
+          <circle cx="420" cy="0" r="4" fill="#D63F1A" stroke="white" stroke-width="1.5"/>
+          <circle cx="420" cy="100" r="4" fill="white" stroke="#D63F1A" stroke-width="1.5"/>
+          <circle cx="160" cy="100" r="4" fill="white" stroke="#D63F1A" stroke-width="1.5"/>
+          <circle cx="160" cy="240" r="4" fill="white" stroke="#D63F1A" stroke-width="1.5"/>
+          <circle cx="0" cy="240" r="4" fill="white" stroke="#D63F1A" stroke-width="1.5"/>
+          
+          <!-- Sink cutout -->
+          <rect x="220" y="20" width="130" height="65" rx="12" fill="none" stroke="rgba(255,255,255,0.3)" stroke-width="1" stroke-dasharray="3 2"/>
+          <text x="285" y="56" text-anchor="middle" fill="rgba(255,255,255,0.3)" font-family="'IBM Plex Sans', sans-serif" font-size="9">UM SINK</text>
+          
+          <!-- Tap hole -->
+          <circle cx="285" cy="14" r="5" fill="none" stroke="rgba(255,255,255,0.25)" stroke-width="1"/>
+        </svg>
+      </div>
+
+      <!-- Canvas toolbar -->
+      <div class="canvas-toolbar">
+        <div class="canvas-tool">−</div>
+        <div class="zoom-label">8.35</div>
+        <div class="canvas-tool">+</div>
+        <div class="canvas-divider"></div>
+        <div class="canvas-tool active" title="Fit view">FIT</div>
+        <div class="canvas-tool" title="Toggle grid">GRID</div>
+        <div class="canvas-tool" title="Fullscreen">⛶</div>
+      </div>
+    </div>
+
+    <!-- Bottom bar -->
+    <div class="bottom-bar">
+      <div class="nl-bar">
+        <span class="nl-icon">🎤</span>
+        <input class="nl-input" type="text" placeholder='e.g. "make the back edge 200mm longer"'>
+        <button class="nl-submit">Submit</button>
+      </div>
+      <div class="pricing-summary">
+        <div class="pricing-bucket">
+          <span class="bucket-label fab">Fabrication</span>
+          <span class="bucket-value">$2,847</span>
+        </div>
+        <div class="pricing-bucket">
+          <span class="bucket-label mat">Materials</span>
+          <span class="bucket-value">$3,216</span>
+        </div>
+        <div class="pricing-bucket">
+          <span class="bucket-label inst">Installation</span>
+          <span class="bucket-value">$1,180</span>
+        </div>
+        <div class="pricing-divider"></div>
+        <div class="pricing-total">
+          <span class="total-label">Total ex GST</span>
+          <span class="total-value">$7,243</span>
+          <span class="total-gst">+$724 GST = $7,967</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Right rail: Edge configuration -->
+  <div class="right-rail">
+    <div class="panel-header">
+      <span class="panel-title">Edge — Front</span>
+      <span class="panel-badge">2,400 mm</span>
+    </div>
+    
+    <div class="panel-section">
+      <div class="panel-section-title">Profile</div>
+      <div class="field-row">
+        <span class="field-label">Type</span>
+        <select class="field-select" style="width: 140px;">
+          <option selected>Pencil round</option>
+          <option>Arris</option>
+          <option>Bullnose</option>
+          <option>Ogee</option>
+          <option>Mitred</option>
+          <option>Raw</option>
+        </select>
+      </div>
+      <div class="field-row">
+        <span class="field-label">Finish</span>
+        <span class="field-tag tag-polished">Polished</span>
+      </div>
+      <div class="field-row">
+        <span class="field-label">Exposure</span>
+        <span class="field-tag tag-exposed">Exposed</span>
+      </div>
+    </div>
+
+    <div class="panel-section">
+      <div class="panel-section-title">Build-up</div>
+      <div class="buildup-toggle">
+        <div class="toggle-track on">
+          <div class="toggle-thumb"></div>
+        </div>
+        <span class="toggle-label">40mm build-up</span>
+      </div>
+      <div class="field-row">
+        <span class="field-label">Depth</span>
+        <select class="field-select" style="width: 80px;">
+          <option>20mm</option>
+          <option selected>40mm</option>
+          <option>60mm</option>
+          <option>80mm</option>
+        </select>
+      </div>
+      <div class="field-row">
+        <span class="field-label">Multiplier</span>
+        <span class="field-value" style="font-family: var(--font-mono);">1.30×</span>
+      </div>
+      <div style="margin-top: 8px; font-size: 11px; color: var(--text-tertiary);">
+        Generates: Fascia (Part B) + Return strip (Part C)
+      </div>
+    </div>
+
+    <div class="panel-section">
+      <div class="panel-section-title">All edges</div>
+      <div class="edge-list">
+        <div class="edge-item selected">
+          <div class="edge-swatch exposed"></div>
+          <span class="edge-name">Front</span>
+          <span class="edge-length">2,400</span>
+        </div>
+        <div class="edge-item">
+          <div class="edge-swatch exposed"></div>
+          <span class="edge-name">Right end</span>
+          <span class="edge-length">600</span>
+        </div>
+        <div class="edge-item">
+          <div class="edge-swatch wall"></div>
+          <span class="edge-name">Back</span>
+          <span class="edge-length">2,400</span>
+        </div>
+        <div class="edge-item">
+          <div class="edge-swatch wall"></div>
+          <span class="edge-name">Left (to return)</span>
+          <span class="edge-length">600</span>
+        </div>
+        <div class="edge-item">
+          <div class="edge-swatch exposed"></div>
+          <span class="edge-name">Return front</span>
+          <span class="edge-length">900</span>
+        </div>
+        <div class="edge-item">
+          <div class="edge-swatch exposed"></div>
+          <span class="edge-name">Return end</span>
+          <span class="edge-length">1,800</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="panel-section">
+      <div class="panel-section-title">Features</div>
+      <div class="field-row">
+        <span class="field-label" style="display: flex; align-items: center; gap: 6px;">
+          <span style="width: 8px; height: 8px; border: 1px solid var(--text-tertiary); border-radius: 2px;"></span>
+          Undermount sink
+        </span>
+        <span class="field-value" style="font-family: var(--font-mono); color: var(--text-secondary);">760×450</span>
+      </div>
+      <div class="field-row">
+        <span class="field-label" style="display: flex; align-items: center; gap: 6px;">
+          <span style="width: 8px; height: 8px; border-radius: 50%; border: 1px solid var(--text-tertiary);"></span>
+          Tap hole
+        </span>
+        <span class="field-value" style="font-family: var(--font-mono); color: var(--text-secondary);">35mm</span>
+      </div>
+      <div style="margin-top: 8px;">
+        <span class="tree-add" style="padding: 0; font-size: 12px;">+ Add feature</span>
+      </div>
+    </div>
+
+    <div class="panel-section">
+      <div class="panel-section-title">Piece pricing</div>
+      <div class="field-row">
+        <span class="field-label">Cutting</span>
+        <span class="field-value" style="font-family: var(--font-mono);">$168.00</span>
+      </div>
+      <div class="field-row">
+        <span class="field-label">Polishing</span>
+        <span class="field-value" style="font-family: var(--font-mono);">$196.00</span>
+      </div>
+      <div class="field-row">
+        <span class="field-label">Sink cutout</span>
+        <span class="field-value" style="font-family: var(--font-mono);">$180.00</span>
+      </div>
+      <div class="field-row">
+        <span class="field-label">Tap hole</span>
+        <span class="field-value" style="font-family: var(--font-mono);">$45.00</span>
+      </div>
+      <div class="field-row" style="margin-top: 8px; padding-top: 8px; border-top: 0.5px solid var(--border-light);">
+        <span class="field-label" style="font-weight: 500;">Piece total</span>
+        <span class="field-value" style="font-family: var(--font-mono); font-weight: 600;">$1,875.40</span>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+</body>
+</html>
