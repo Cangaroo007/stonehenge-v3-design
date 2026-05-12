@@ -1,0 +1,718 @@
+<!DOCTYPE html>
+<html lang="en-AU">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Stonehenge V3 — Job Board</title>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+:root {
+  --cinnabar: #D63F1A;
+  --cinnabar-light: #D63F1A12;
+  --cinnabar-mid: #D63F1A33;
+  --ink: #1A1A1A;
+  --ink-secondary: #5C5C5C;
+  --ink-tertiary: #8A8A8A;
+  --surface: #F5F5F4;
+  --surface-raised: #FFFFFF;
+  --border: #E2E2E2;
+  --border-active: #CCCCCC;
+  --font-sans: 'IBM Plex Sans', sans-serif;
+  --font-mono: 'IBM Plex Mono', monospace;
+
+  /* Stage colours — derived from quote dashboard status palette, extended for manufacturing */
+  --stage-pending: #8A8A8A;        /* grey, waiting */
+  --stage-measure: #2E7D9B;        /* blue, sent-equivalent */
+  --stage-office-review: #5C7B9D;  /* slate blue */
+  --stage-cad: #8B5CF6;            /* purple */
+  --stage-production: #D63F1A;     /* cinnabar — on the floor */
+  --stage-quality: #E8A317;        /* amber — needs checking */
+  --stage-pickup: #3D8B37;         /* green */
+  --stage-installation: #2D6B27;   /* darker green */
+  --stage-maintenance: #B83D3D;    /* red — service ticket */
+  --stage-completion: #6B6B6B;     /* mid-grey, done */
+}
+
+body {
+  font-family: var(--font-sans);
+  background: var(--surface);
+  color: var(--ink);
+  -webkit-font-smoothing: antialiased;
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
+/* ── Top nav (matches quote-dashboard) ────────────────────────── */
+.topnav {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 56px;
+  padding: 0 24px;
+  background: var(--surface-raised);
+  border-bottom: 1px solid var(--border);
+}
+
+.topnav-left { display: flex; align-items: center; gap: 16px; }
+.topnav-logo {
+  display: flex; align-items: center; gap: 8px;
+  font-size: 14px; font-weight: 600; letter-spacing: -0.02em;
+  color: var(--ink); text-decoration: none;
+}
+.topnav-sep { width: 1px; height: 20px; background: var(--border); }
+.topnav-page { font-size: 14px; font-weight: 500; color: var(--ink-secondary); }
+.topnav-tabs { display: flex; gap: 2px; margin-left: 16px; }
+.topnav-tab {
+  font-size: 13px; font-weight: 500; color: var(--ink-tertiary);
+  padding: 4px 10px; cursor: pointer; text-decoration: none;
+  border-bottom: 2px solid transparent;
+}
+.topnav-tab.active { color: var(--cinnabar); border-bottom-color: var(--cinnabar); }
+.topnav-tab:hover { color: var(--ink-secondary); }
+.topnav-tab.active:hover { color: var(--cinnabar); }
+.topnav-right { display: flex; align-items: center; gap: 12px; }
+.topnav-tenant { font-size: 12px; color: var(--ink-tertiary); font-family: var(--font-mono); }
+.avatar {
+  width: 32px; height: 32px; border-radius: 50%;
+  background: var(--cinnabar-light); border: 1px solid var(--cinnabar-mid);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 12px; font-weight: 600; color: var(--cinnabar);
+}
+
+/* ── Page container — wider for kanban ─────────────────── */
+.page {
+  padding: 24px 24px 100px 24px;
+}
+
+/* ── Stats strip ────────────────────── */
+.stats-strip { display: flex; gap: 12px; margin-bottom: 20px; }
+.stat-card { flex: 1; padding: 14px 18px; background: var(--surface-raised); border: 1px solid var(--border); }
+.stat-label {
+  font-size: 10px; font-weight: 500; color: var(--ink-tertiary);
+  text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 4px;
+}
+.stat-value {
+  font-family: var(--font-mono); font-size: 22px; font-weight: 600; letter-spacing: -0.02em;
+}
+.stat-sub { font-size: 11px; color: var(--ink-tertiary); margin-top: 3px; }
+.stat-value.cinnabar { color: var(--cinnabar); }
+.stat-value.amber { color: #E8A317; }
+.stat-value.red { color: #B83D3D; }
+
+/* ── Toolbar ────────────────────────── */
+.toolbar {
+  display: flex; align-items: center; justify-content: space-between;
+  margin-bottom: 18px; gap: 12px;
+}
+.toolbar-left { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.toolbar-right { display: flex; align-items: center; gap: 8px; }
+
+.search-wrap { position: relative; }
+.search-input {
+  width: 240px; height: 36px; padding: 0 12px 0 34px;
+  font-family: var(--font-sans); font-size: 13px; color: var(--ink);
+  background: var(--surface-raised); border: 1px solid var(--border);
+}
+.search-input:focus { outline: none; border-color: var(--cinnabar); }
+.search-input::placeholder { color: var(--ink-tertiary); }
+.search-icon { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: var(--ink-tertiary); pointer-events: none; }
+
+.filter-btn {
+  height: 36px; padding: 0 12px;
+  font-family: var(--font-sans); font-size: 12px; font-weight: 500;
+  color: var(--ink-secondary); background: var(--surface-raised);
+  border: 1px solid var(--border); cursor: pointer;
+  display: flex; align-items: center; gap: 6px; transition: border-color 0.12s;
+}
+.filter-btn:hover { border-color: var(--border-active); }
+.filter-btn.active {
+  border-color: var(--cinnabar); color: var(--cinnabar); background: var(--cinnabar-light);
+}
+
+.view-toggle {
+  display: flex; height: 36px; border: 1px solid var(--border); background: var(--surface-raised);
+}
+.view-toggle-btn {
+  padding: 0 12px; font-family: var(--font-sans); font-size: 12px; font-weight: 500;
+  color: var(--ink-tertiary); background: transparent; border: none; cursor: pointer;
+  display: flex; align-items: center; gap: 6px;
+}
+.view-toggle-btn.active { background: var(--ink); color: var(--surface-raised); }
+
+.customize-btn {
+  height: 36px; padding: 0 12px;
+  font-family: var(--font-sans); font-size: 12px; font-weight: 500;
+  color: var(--ink-tertiary); background: transparent;
+  border: 1px dashed var(--border); cursor: pointer;
+  display: flex; align-items: center; gap: 6px;
+}
+.customize-btn:hover { border-color: var(--cinnabar); color: var(--cinnabar); }
+
+.new-job-btn {
+  height: 36px; padding: 0 16px;
+  font-family: var(--font-sans); font-size: 13px; font-weight: 600;
+  color: var(--surface-raised); background: var(--cinnabar); border: none; cursor: pointer;
+  display: flex; align-items: center; gap: 6px; letter-spacing: -0.01em;
+}
+.new-job-btn:hover { opacity: 0.88; }
+
+/* ── Workflow template indicator ───────────────── */
+.workflow-indicator {
+  display: flex; align-items: center; gap: 8px;
+  padding: 8px 12px; margin-bottom: 12px;
+  background: var(--surface-raised); border: 1px solid var(--border);
+  font-size: 12px; color: var(--ink-secondary);
+}
+.workflow-indicator strong { color: var(--ink); font-weight: 600; }
+.workflow-indicator .pill {
+  font-family: var(--font-mono); font-size: 10px; font-weight: 500;
+  color: var(--cinnabar); background: var(--cinnabar-light);
+  border: 1px solid var(--cinnabar-mid); padding: 2px 6px; letter-spacing: 0.04em;
+}
+.workflow-link { color: var(--cinnabar); text-decoration: none; font-weight: 500; }
+.workflow-link:hover { text-decoration: underline; }
+
+/* ── Kanban board ─────────────────────── */
+.board {
+  display: flex; gap: 12px; overflow-x: auto; overflow-y: visible;
+  padding-bottom: 12px;
+  scrollbar-width: thin;
+}
+.board::-webkit-scrollbar { height: 8px; }
+.board::-webkit-scrollbar-track { background: var(--surface); }
+.board::-webkit-scrollbar-thumb { background: var(--border-active); }
+
+.column {
+  flex: 0 0 280px;
+  background: var(--surface-raised);
+  border: 1px solid var(--border);
+  display: flex; flex-direction: column;
+  max-height: calc(100vh - 320px);
+}
+
+.column-header {
+  padding: 12px 14px;
+  border-bottom: 1px solid var(--border);
+  display: flex; align-items: center; justify-content: space-between;
+  background: var(--surface-raised);
+  position: sticky; top: 0; z-index: 1;
+}
+
+.column-title {
+  display: flex; align-items: center; gap: 8px;
+  font-size: 11px; font-weight: 600; letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+.column-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+.column-count {
+  font-family: var(--font-mono); font-size: 11px; font-weight: 500;
+  color: var(--ink-tertiary); padding: 2px 6px; background: var(--surface); border: 1px solid var(--border);
+}
+
+.column-body {
+  padding: 8px;
+  overflow-y: auto;
+  flex: 1;
+  display: flex; flex-direction: column; gap: 8px;
+  scrollbar-width: thin;
+}
+
+/* ── Job card ─────────────────────── */
+.job-card {
+  background: var(--surface-raised);
+  border: 1px solid var(--border);
+  padding: 12px;
+  cursor: pointer;
+  transition: border-color 0.12s, transform 0.12s;
+  position: relative;
+}
+.job-card:hover { border-color: var(--border-active); }
+.job-card.dragging { opacity: 0.5; transform: scale(0.98); }
+.job-card.priority::before {
+  content: '';
+  position: absolute; top: 0; left: 0; width: 3px; height: 100%;
+  background: var(--cinnabar);
+}
+
+.job-card-head {
+  display: flex; align-items: center; justify-content: space-between;
+  margin-bottom: 8px;
+}
+.job-id {
+  font-family: var(--font-mono); font-size: 11px; font-weight: 500;
+  color: var(--ink-tertiary); letter-spacing: 0.02em;
+}
+.job-actions-btn {
+  width: 20px; height: 20px;
+  display: flex; align-items: center; justify-content: center;
+  background: none; border: none; cursor: pointer; color: var(--ink-tertiary);
+}
+.job-actions-btn:hover { color: var(--ink-secondary); }
+
+.job-customer { font-size: 13px; font-weight: 600; color: var(--ink); margin-bottom: 2px; line-height: 1.3; }
+.job-project { font-size: 11px; color: var(--ink-secondary); margin-bottom: 10px; line-height: 1.3; }
+
+.job-meta {
+  display: flex; align-items: center; gap: 10px;
+  font-size: 11px; color: var(--ink-tertiary);
+  margin-bottom: 10px; flex-wrap: wrap;
+}
+.job-meta-item { display: flex; align-items: center; gap: 4px; }
+.job-meta-item.material { display: flex; align-items: center; gap: 6px; }
+.material-swatch {
+  width: 14px; height: 14px;
+  border: 1px solid var(--border-active); flex-shrink: 0;
+}
+.job-meta-item.pieces .num {
+  font-family: var(--font-mono); font-weight: 500; color: var(--ink-secondary);
+}
+
+.job-footer {
+  display: flex; align-items: center; justify-content: space-between;
+  padding-top: 8px;
+  border-top: 1px solid var(--border);
+}
+.job-due {
+  display: flex; align-items: center; gap: 4px;
+  font-family: var(--font-mono); font-size: 10px;
+  color: var(--ink-tertiary); letter-spacing: 0.02em;
+}
+.job-due.urgent { color: #B83D3D; font-weight: 500; }
+.job-due.overdue { color: #B83D3D; font-weight: 600; }
+.job-footer-right { display: flex; align-items: center; gap: 8px; }
+.job-photos {
+  display: flex; align-items: center; gap: 3px;
+  font-family: var(--font-mono); font-size: 10px; color: var(--ink-tertiary);
+}
+.job-assignee {
+  width: 20px; height: 20px; border-radius: 50%;
+  background: var(--cinnabar-light); border: 1px solid var(--cinnabar-mid);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 9px; font-weight: 600; color: var(--cinnabar);
+}
+
+.job-flag {
+  display: inline-flex; align-items: center; gap: 4px;
+  font-family: var(--font-mono); font-size: 9px; font-weight: 500;
+  letter-spacing: 0.04em; padding: 2px 6px; margin-top: 8px;
+}
+.job-flag.remake { color: #B83D3D; background: #B83D3D14; border: 1px solid #B83D3D33; }
+.job-flag.grain { color: #8B5CF6; background: #8B5CF614; border: 1px solid #8B5CF633; }
+.job-flag.hold { color: #E8A317; background: #E8A31714; border: 1px solid #E8A31733; }
+
+.column-empty {
+  padding: 16px 8px;
+  text-align: center; font-size: 11px; color: var(--ink-tertiary);
+  font-style: italic;
+}
+
+.column-add {
+  flex: 0 0 60px;
+  background: transparent;
+  border: 1px dashed var(--border);
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer; color: var(--ink-tertiary);
+  transition: border-color 0.12s, color 0.12s;
+}
+.column-add:hover { border-color: var(--cinnabar); color: var(--cinnabar); }
+.column-add-content {
+  display: flex; flex-direction: column; align-items: center; gap: 6px;
+  writing-mode: vertical-rl; transform: rotate(180deg);
+  font-size: 11px; letter-spacing: 0.04em;
+}
+
+/* ── NL bar (the M16 surface) ────── */
+.nl-bar {
+  position: fixed;
+  bottom: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 640px;
+  max-width: calc(100vw - 48px);
+  background: var(--surface-raised);
+  border: 1px solid var(--ink);
+  display: flex; align-items: center;
+  padding: 0;
+  box-shadow: 0 4px 0 -2px var(--cinnabar);
+}
+.nl-bar-inner {
+  display: flex; align-items: center; padding: 0 16px;
+  height: 48px; flex: 1; gap: 10px;
+}
+.nl-bar-icon { color: var(--cinnabar); flex-shrink: 0; }
+.nl-bar input {
+  flex: 1; border: none; outline: none;
+  font-family: var(--font-sans); font-size: 14px; color: var(--ink); background: transparent;
+}
+.nl-bar input::placeholder { color: var(--ink-tertiary); }
+.nl-bar-send {
+  height: 36px; padding: 0 14px; margin-right: 6px;
+  font-family: var(--font-sans); font-size: 12px; font-weight: 600;
+  color: var(--ink-tertiary); background: transparent; border: 1px solid var(--border);
+  cursor: pointer; letter-spacing: 0.02em;
+}
+.nl-bar-send:hover { color: var(--ink); border-color: var(--ink); }
+.nl-bar-hint {
+  position: absolute; bottom: -22px; left: 0;
+  font-size: 10px; color: var(--ink-tertiary);
+  width: 100%; text-align: center;
+  font-family: var(--font-mono); letter-spacing: 0.04em;
+}
+
+/* ── Screen label ───────────────────── */
+.screen-label {
+  position: fixed; bottom: 88px; right: 24px;
+  font-family: var(--font-mono); font-size: 10px; color: var(--cinnabar);
+  background: var(--cinnabar-light); border: 1px solid var(--cinnabar-mid);
+  padding: 4px 10px; letter-spacing: 0.04em;
+}
+</style>
+</head>
+<body>
+
+<!-- TOP NAV -->
+<nav class="topnav">
+  <div class="topnav-left">
+    <a class="topnav-logo" href="index.html">
+      <svg width="22" height="22" viewBox="0 0 22 22" fill="none">
+        <rect x="1" y="1" width="20" height="20" stroke="#1A1A1A" stroke-width="1.5" fill="none"/>
+        <path d="M5 17 L5 5 L17 5 L17 11 L11 11 L11 17 Z" stroke="#D63F1A" stroke-width="1.5" fill="none"/>
+      </svg>
+      Stonehenge
+    </a>
+    <div class="topnav-sep"></div>
+    <div class="topnav-tabs">
+      <a class="topnav-tab" href="quote-dashboard.html">Quotes</a>
+      <a class="topnav-tab active" href="#">Jobs</a>
+      <a class="topnav-tab" href="#">Materials</a>
+      <a class="topnav-tab" href="#">Schedule</a>
+    </div>
+  </div>
+  <div class="topnav-right">
+    <span class="topnav-tenant">Northcoast Stone</span>
+    <div class="avatar">JH</div>
+  </div>
+</nav>
+
+<!-- PAGE -->
+<div class="page">
+
+  <!-- STATS -->
+  <div class="stats-strip">
+    <div class="stat-card">
+      <div class="stat-label">Open jobs</div>
+      <div class="stat-value">38</div>
+      <div class="stat-sub">12 on the floor today</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">Pieces in fab</div>
+      <div class="stat-value cinnabar">147</div>
+      <div class="stat-sub">23 awaiting QC</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">Installs this week</div>
+      <div class="stat-value">9</div>
+      <div class="stat-sub">3 tomorrow, 2 Thursday</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">Overdue</div>
+      <div class="stat-value red">4</div>
+      <div class="stat-sub">Earliest 6 days behind</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">Avg days to complete</div>
+      <div class="stat-value">14.2</div>
+      <div class="stat-sub">Last 30 days</div>
+    </div>
+  </div>
+
+  <!-- WORKFLOW INDICATOR -->
+  <div class="workflow-indicator">
+    <span class="pill">NORTHCOAST V1</span>
+    <span>Workflow template: <strong>Northcoast standard</strong> · 10 stages · Last edited 28/04/2026.</span>
+    <span style="flex:1"></span>
+    <a class="workflow-link" href="#">Customise workflow →</a>
+  </div>
+
+  <!-- TOOLBAR -->
+  <div class="toolbar">
+    <div class="toolbar-left">
+      <div class="search-wrap">
+        <svg class="search-icon" width="16" height="16" viewBox="0 0 16 16" fill="none">
+          <circle cx="7" cy="7" r="5" stroke="currentColor" stroke-width="1.5"/>
+          <line x1="11" y1="11" x2="14" y2="14" stroke="currentColor" stroke-width="1.5"/>
+        </svg>
+        <input class="search-input" type="text" placeholder="Search jobs, customers..." id="search-input">
+      </div>
+      <button class="filter-btn active">All <span style="font-family:var(--font-mono);font-size:10px;color:var(--ink-tertiary)">38</span></button>
+      <button class="filter-btn">20mm</button>
+      <button class="filter-btn">40mm</button>
+      <button class="filter-btn">Mine</button>
+      <button class="filter-btn">⚠ Flagged</button>
+    </div>
+    <div class="toolbar-right">
+      <button class="customize-btn" title="Northcoast workflow can be customised per your shop's process">
+        <svg width="13" height="13" viewBox="0 0 13 13" fill="none">
+          <circle cx="6.5" cy="6.5" r="2" stroke="currentColor" stroke-width="1.2"/>
+          <path d="M6.5 1 L6.5 3 M6.5 10 L6.5 12 M1 6.5 L3 6.5 M10 6.5 L12 6.5 M2.5 2.5 L4 4 M9 9 L10.5 10.5 M2.5 10.5 L4 9 M9 4 L10.5 2.5" stroke="currentColor" stroke-width="1.2"/>
+        </svg>
+        Workflow
+      </button>
+      <div class="view-toggle">
+        <button class="view-toggle-btn active">
+          <svg width="13" height="13" viewBox="0 0 13 13" fill="none">
+            <rect x="1" y="1" width="3" height="11" stroke="currentColor" stroke-width="1.2" fill="none"/>
+            <rect x="5" y="1" width="3" height="7" stroke="currentColor" stroke-width="1.2" fill="none"/>
+            <rect x="9" y="1" width="3" height="9" stroke="currentColor" stroke-width="1.2" fill="none"/>
+          </svg>
+          Board
+        </button>
+        <button class="view-toggle-btn">
+          <svg width="13" height="13" viewBox="0 0 13 13" fill="none">
+            <line x1="1" y1="3" x2="12" y2="3" stroke="currentColor" stroke-width="1.2"/>
+            <line x1="1" y1="6.5" x2="12" y2="6.5" stroke="currentColor" stroke-width="1.2"/>
+            <line x1="1" y1="10" x2="12" y2="10" stroke="currentColor" stroke-width="1.2"/>
+          </svg>
+          List
+        </button>
+      </div>
+      <button class="new-job-btn">
+        <svg width="13" height="13" viewBox="0 0 13 13" fill="none">
+          <line x1="6.5" y1="2" x2="6.5" y2="11" stroke="white" stroke-width="1.5"/>
+          <line x1="2" y1="6.5" x2="11" y2="6.5" stroke="white" stroke-width="1.5"/>
+        </svg>
+        New job
+      </button>
+    </div>
+  </div>
+
+  <!-- KANBAN BOARD -->
+  <div class="board" id="board">
+    <!-- columns render via JS -->
+  </div>
+</div>
+
+<!-- NL BAR -->
+<div class="nl-bar">
+  <div class="nl-bar-inner">
+    <svg class="nl-bar-icon" width="18" height="18" viewBox="0 0 18 18" fill="none">
+      <path d="M2 13L2 4C2 3.4 2.4 3 3 3L15 3C15.6 3 16 3.4 16 4L16 11C16 11.6 15.6 12 15 12L6 12L2 15L2 13Z" stroke="currentColor" stroke-width="1.3" fill="none"/>
+      <circle cx="6" cy="7.5" r="0.8" fill="currentColor"/>
+      <circle cx="9" cy="7.5" r="0.8" fill="currentColor"/>
+      <circle cx="12" cy="7.5" r="0.8" fill="currentColor"/>
+    </svg>
+    <input type="text" placeholder="Tell Stonehenge what happened — 'piece 3 of J-2026-014 chipped during polish, schedule remake' or 'push J-2026-017 to Thursday'" id="nl-input">
+  </div>
+  <button class="nl-bar-send">SEND</button>
+  <div class="nl-bar-hint">PRESS ⌘+K FROM ANY SCREEN — OR DESCRIBE WHAT HAPPENED IN PLAIN ENGLISH</div>
+</div>
+
+<div class="screen-label">SCREEN M01 — JOB BOARD (KANBAN)</div>
+
+<script>
+// ── NCS workflow template: 10 stages, matches FMS-21 Production Menu ──
+const stages = [
+  { id: 'PENDING',         label: 'Pending',           short: 'PENDING',     colour: 'var(--stage-pending)' },
+  { id: 'MEASURE',         label: 'Measure',           short: 'MEASURE',     colour: 'var(--stage-measure)' },
+  { id: 'OFFICE_REVIEW',   label: 'Office Review',     short: 'OFFICE',      colour: 'var(--stage-office-review)' },
+  { id: 'CAD',             label: 'CAD',               short: 'CAD',         colour: 'var(--stage-cad)' },
+  { id: 'PRODUCTION',      label: 'Production',        short: 'PRODUCTION',  colour: 'var(--stage-production)' },
+  { id: 'QUALITY',         label: 'Quality',           short: 'QUALITY',     colour: 'var(--stage-quality)' },
+  { id: 'PICKUP',          label: 'Pickup',            short: 'PICKUP',      colour: 'var(--stage-pickup)' },
+  { id: 'INSTALLATION',    label: 'Installation',      short: 'INSTALL',     colour: 'var(--stage-installation)' },
+  { id: 'MAINTENANCE',     label: 'Maintenance',       short: 'MAINT',       colour: 'var(--stage-maintenance)' },
+  { id: 'COMPLETION',      label: 'Office Completion', short: 'DONE',        colour: 'var(--stage-completion)' },
+];
+
+// Material swatches — colour approximations of stone product
+const materials = {
+  'Caesarstone Concrete':    '#9A9A95',
+  'Smartstone Borghini':     '#E8E4D9',
+  'Essastone Bone White':    '#F2EDE0',
+  'Piatra Grey':             '#6E6E6E',
+  'Calacatta Nuvo':          '#F0EDE8',
+  'Alpha Zero Classic':      '#D4CFC4',
+  'Quantum Zero Luna White': '#EEEAE0',
+  'Carrara Mist':            '#DCDAD3',
+};
+
+// Demo jobs — derived from quote-dashboard quotes + a few extras for column population
+const jobs = [
+  // PENDING — new acceptances, awaiting measure scheduling
+  { id: 'J-2026-021', source: 'Q-2026-0042', customer: 'Hashtag Hub Pty Ltd', project: 'Sandgate Renovation', material: 'Caesarstone Concrete', pieces: 14, dueDays: 22, assignee: 'BK', stage: 'PENDING' },
+  { id: 'J-2026-020', source: 'Q-2026-0041', customer: 'Meridian Homes', project: 'Wavell Heights New Build', material: 'Smartstone Borghini', pieces: 22, dueDays: 18, assignee: 'TB', stage: 'PENDING' },
+
+  // MEASURE — site visit booked / in progress
+  { id: 'J-2026-019', source: 'Q-2026-0040', customer: 'Urban Edge Developments', project: 'Clayfield Apartments U3-U6', material: 'Piatra Grey', pieces: 48, dueDays: 14, assignee: 'TB', stage: 'MEASURE', priority: true },
+  { id: 'J-2026-018', source: 'Q-2026-0037', customer: 'Bayside Constructions', project: 'Wellington Point Reno', material: 'Caesarstone Concrete', pieces: 18, dueDays: 12, assignee: 'MO', stage: 'MEASURE' },
+
+  // OFFICE_REVIEW — measure complete, office sanity check
+  { id: 'J-2026-017', source: 'Q-2026-0036', customer: 'K. Nakamura', project: 'Paddington Terrace', material: 'Smartstone Borghini', pieces: 11, dueDays: 10, assignee: 'MG', stage: 'OFFICE_REVIEW' },
+
+  // CAD — drawing cut-up in progress
+  { id: 'J-2026-016', source: 'Q-2026-0035', customer: 'LJ Hooker Commercial', project: 'Spring Hill Office Fitout', material: 'Essastone Bone White', pieces: 32, dueDays: 9, assignee: 'TL', stage: 'CAD', flags: ['grain'] },
+  { id: 'J-2026-015', source: 'Q-2026-0034', customer: 'Meridian Homes', project: 'Hendra Display Home', material: 'Caesarstone Concrete', pieces: 26, dueDays: 7, assignee: 'TL', stage: 'CAD' },
+
+  // PRODUCTION — on the floor
+  { id: 'J-2026-014', source: 'Q-2026-0033', customer: 'S. & T. Williams', project: 'Bulimba Kitchen', material: 'Calacatta Nuvo', pieces: 9, dueDays: 5, assignee: 'GT', stage: 'PRODUCTION', priority: true },
+  { id: 'J-2026-013', source: 'Q-2026-0031', customer: 'R. Patterson', project: 'Ascot Laundry', material: 'Alpha Zero Classic', pieces: 3, dueDays: 6, assignee: 'GT', stage: 'PRODUCTION' },
+  { id: 'J-2026-012', source: '(older)', customer: 'Format Kitchens', project: 'Bask Bokarina L4-5', material: 'Quantum Zero Luna White', pieces: 14, dueDays: 4, assignee: 'DL', stage: 'PRODUCTION', flags: ['remake'] },
+  { id: 'J-2026-011', source: '(older)', customer: 'Halcyon Constructions', project: 'Site 091 Banya', material: 'Quantum Zero Luna White', pieces: 11, dueDays: 5, assignee: 'GT', stage: 'PRODUCTION' },
+
+  // QUALITY — inspection
+  { id: 'J-2026-010', source: '(older)', customer: 'Devcon Building Co', project: 'Lot 1121 Prospect Cct', material: 'Caesarstone Concrete', pieces: 5, dueDays: 3, assignee: 'BK', stage: 'QUALITY' },
+  { id: 'J-2026-009', source: '(older)', customer: 'Ausmar Homes', project: 'Lot 174 Forest Glen', material: 'Carrara Mist', pieces: 10, dueDays: 3, assignee: 'BK', stage: 'QUALITY' },
+
+  // PICKUP — customer collecting
+  { id: 'J-2026-008', source: '(older)', customer: 'Format Kitchens', project: '12 Kumbada Stage 2', material: 'Essastone Bone White', pieces: 5, dueDays: 2, assignee: 'MO', stage: 'PICKUP' },
+
+  // INSTALLATION — install crew on site
+  { id: 'J-2026-007', source: '(older)', customer: 'Hashtag Hub Pty Ltd', project: 'Kedron Kitchen', material: 'Calacatta Nuvo', pieces: 12, dueDays: 1, assignee: 'MO', stage: 'INSTALLATION' },
+  { id: 'J-2026-006', source: '(older)', customer: 'R. Patterson', project: 'Hamilton Ensuite', material: 'Smartstone Borghini', pieces: 6, dueDays: 1, assignee: 'TB', stage: 'INSTALLATION' },
+
+  // MAINTENANCE — post-install service / warranty
+  { id: 'J-2025-887', source: '(2025)', customer: 'GVG Construction', project: 'Mydas Bask L5-1507 Service', material: 'Carrara Mist', pieces: 1, dueDays: -2, assignee: 'BK', stage: 'MAINTENANCE', flags: ['hold'] },
+
+  // COMPLETION — paperwork closure
+  { id: 'J-2026-005', source: 'Q-2026-0032', customer: 'Urban Edge Developments', project: 'Clayfield Apartments U1-U2', material: 'Piatra Grey', pieces: 24, dueDays: -1, assignee: 'MG', stage: 'COMPLETION' },
+  { id: 'J-2026-004', source: '(older)', customer: 'Coastal Kitchens', project: '193 Ocean Vista Dr', material: 'Caesarstone Concrete', pieces: 8, dueDays: -3, assignee: 'MG', stage: 'COMPLETION' },
+];
+
+// ── Render ──
+function render() {
+  const board = document.getElementById('board');
+  board.innerHTML = '';
+
+  stages.forEach(stage => {
+    const stageJobs = jobs.filter(j => j.stage === stage.id);
+
+    const col = document.createElement('div');
+    col.className = 'column';
+    col.dataset.stage = stage.id;
+
+    col.innerHTML = `
+      <div class="column-header">
+        <div class="column-title">
+          <span class="column-dot" style="background:${stage.colour}"></span>
+          ${stage.label}
+        </div>
+        <span class="column-count">${stageJobs.length}</span>
+      </div>
+      <div class="column-body" data-stage="${stage.id}">
+        ${stageJobs.length === 0
+          ? `<div class="column-empty">No jobs in this stage</div>`
+          : stageJobs.map(job => renderCard(job)).join('')
+        }
+      </div>
+    `;
+    board.appendChild(col);
+  });
+
+  // "Add column" affordance at end
+  const addCol = document.createElement('div');
+  addCol.className = 'column-add';
+  addCol.innerHTML = `
+    <div class="column-add-content">
+      <svg width="14" height="14" viewBox="0 0 14 14" fill="none" style="transform: rotate(0deg)">
+        <line x1="7" y1="2" x2="7" y2="12" stroke="currentColor" stroke-width="1.5"/>
+        <line x1="2" y1="7" x2="12" y2="7" stroke="currentColor" stroke-width="1.5"/>
+      </svg>
+      ADD STAGE
+    </div>
+  `;
+  addCol.title = 'Customise workflow — add a stage specific to your shop';
+  board.appendChild(addCol);
+
+  attachDragHandlers();
+}
+
+function renderCard(job) {
+  const matColour = materials[job.material] || '#CCCCCC';
+  const dueLabel = job.dueDays > 0
+    ? `${job.dueDays} day${job.dueDays === 1 ? '' : 's'}`
+    : job.dueDays === 0
+      ? 'Today'
+      : `${Math.abs(job.dueDays)} day${Math.abs(job.dueDays) === 1 ? '' : 's'} over`;
+  const dueClass = job.dueDays < 0 ? 'overdue' : job.dueDays <= 2 ? 'urgent' : '';
+  const flags = (job.flags || []).map(f => {
+    const labels = { remake: 'REMAKE', grain: 'GRAIN MATCH', hold: 'ON HOLD' };
+    return `<span class="job-flag ${f}">● ${labels[f]}</span>`;
+  }).join('');
+
+  return `
+    <div class="job-card ${job.priority ? 'priority' : ''}" draggable="true" data-job-id="${job.id}">
+      <div class="job-card-head">
+        <span class="job-id">${job.id}</span>
+        <button class="job-actions-btn" onclick="event.stopPropagation()">
+          <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
+            <circle cx="6" cy="2.5" r="1" fill="currentColor"/>
+            <circle cx="6" cy="6" r="1" fill="currentColor"/>
+            <circle cx="6" cy="9.5" r="1" fill="currentColor"/>
+          </svg>
+        </button>
+      </div>
+      <div class="job-customer">${job.customer}</div>
+      <div class="job-project">${job.project}</div>
+      <div class="job-meta">
+        <div class="job-meta-item material">
+          <span class="material-swatch" style="background:${matColour}"></span>
+          <span>${job.material.split(' ')[0]}</span>
+        </div>
+        <div class="job-meta-item pieces">
+          <span class="num">${job.pieces}</span> pcs
+        </div>
+      </div>
+      ${flags}
+      <div class="job-footer">
+        <div class="job-due ${dueClass}">
+          <svg width="10" height="10" viewBox="0 0 10 10" fill="none">
+            <circle cx="5" cy="5" r="4" stroke="currentColor" stroke-width="1.2"/>
+            <line x1="5" y1="5" x2="5" y2="3" stroke="currentColor" stroke-width="1.2"/>
+            <line x1="5" y1="5" x2="7" y2="5" stroke="currentColor" stroke-width="1.2"/>
+          </svg>
+          ${dueLabel}
+        </div>
+        <div class="job-footer-right">
+          <div class="job-assignee" title="Assignee">${job.assignee}</div>
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+// ── Drag and drop ──
+let draggedJob = null;
+function attachDragHandlers() {
+  document.querySelectorAll('.job-card').forEach(card => {
+    card.addEventListener('dragstart', e => {
+      draggedJob = card.dataset.jobId;
+      card.classList.add('dragging');
+    });
+    card.addEventListener('dragend', e => card.classList.remove('dragging'));
+  });
+
+  document.querySelectorAll('.column-body').forEach(body => {
+    body.addEventListener('dragover', e => {
+      e.preventDefault();
+      body.style.background = 'var(--cinnabar-light)';
+    });
+    body.addEventListener('dragleave', e => body.style.background = '');
+    body.addEventListener('drop', e => {
+      e.preventDefault();
+      body.style.background = '';
+      const newStage = body.dataset.stage;
+      const job = jobs.find(j => j.id === draggedJob);
+      if (job && job.stage !== newStage) {
+        job.stage = newStage;
+        render();
+      }
+    });
+  });
+}
+
+render();
+</script>
+</body>
+</html>
