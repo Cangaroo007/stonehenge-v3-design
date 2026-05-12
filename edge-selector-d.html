@@ -1,0 +1,1041 @@
+<!DOCTYPE html>
+<html lang="en-AU">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Edge Selector — Variant D: Smart Defaults + Exceptions</title>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+:root {
+  --cinnabar: #D63F1A;
+  --cinnabar-light: #D63F1A1A;
+  --cinnabar-mid: #D63F1A33;
+  --ink: #1A1A1A;
+  --ink-secondary: #5C5C5C;
+  --ink-tertiary: #8A8A8A;
+  --surface: #FAFAFA;
+  --surface-raised: #FFFFFF;
+  --border: #E2E2E2;
+  --border-active: #CCCCCC;
+  --exposed: #D63F1A;
+  --wall: #8A8A8A;
+  --cabinet: #5C8A5C;
+  --underside: #5C5C8A;
+  --curved-edge: #2E7D9B;
+  --attention: #E8A317;
+  --attention-light: #E8A31720;
+  --resolved: #3D8B37;
+  --resolved-light: #3D8B3715;
+  --font-sans: 'IBM Plex Sans', sans-serif;
+  --font-mono: 'IBM Plex Mono', monospace;
+}
+
+body {
+  font-family: var(--font-sans);
+  background: var(--surface);
+  color: var(--ink);
+  -webkit-font-smoothing: antialiased;
+  overflow: hidden;
+  height: 100vh;
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 24px;
+  border-bottom: 1px solid var(--border);
+  background: var(--surface-raised);
+}
+
+.header-left { display: flex; align-items: center; gap: 12px; }
+.header-title { font-size: 14px; font-weight: 600; letter-spacing: -0.01em; }
+.header-subtitle { font-size: 12px; color: var(--ink-secondary); }
+
+.variant-badge {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--cinnabar);
+  background: var(--cinnabar-light);
+  padding: 4px 10px;
+  border: 1px solid var(--cinnabar-mid);
+  letter-spacing: 0.04em;
+}
+
+/* ── Layout ─────────────────────────── */
+.layout {
+  display: flex;
+  height: calc(100vh - 57px);
+}
+
+/* ── Left: piece + attention banner ─── */
+.piece-pane {
+  flex: 0 0 480px;
+  display: flex;
+  flex-direction: column;
+  border-right: 1px solid var(--border);
+  background: var(--surface-raised);
+}
+
+/* ── Attention banner ───────────────── */
+.attention-banner {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 20px;
+  border-bottom: 1px solid var(--border);
+  transition: background 0.3s;
+}
+
+.attention-banner.needs-attention {
+  background: var(--attention-light);
+  border-bottom-color: #E8A31740;
+}
+
+.attention-banner.all-resolved {
+  background: var(--resolved-light);
+  border-bottom-color: #3D8B3730;
+}
+
+.attention-icon {
+  flex-shrink: 0;
+  width: 20px;
+  height: 20px;
+}
+
+.attention-text {
+  font-size: 13px;
+  font-weight: 500;
+}
+
+.attention-sub {
+  font-size: 12px;
+  color: var(--ink-secondary);
+  margin-left: auto;
+}
+
+/* ── Pattern display ────────────────── */
+.pattern-bar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 20px;
+  border-bottom: 1px solid var(--border);
+  background: var(--surface);
+}
+
+.pattern-label {
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--ink-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.pattern-value {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--ink);
+}
+
+.pattern-change {
+  font-size: 11px;
+  color: var(--cinnabar);
+  cursor: pointer;
+  margin-left: auto;
+  border: none;
+  background: none;
+  font-family: var(--font-sans);
+}
+
+.pattern-change:hover { text-decoration: underline; }
+
+/* ── Piece canvas ───────────────────── */
+.piece-canvas {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  position: relative;
+}
+
+.piece-canvas svg { width: 100%; max-height: 100%; }
+
+.edge-line {
+  stroke-width: 3;
+  fill: none;
+  cursor: pointer;
+  transition: stroke-width 0.15s;
+}
+
+.edge-line:hover { stroke-width: 5; }
+.edge-line.selected { stroke-width: 5; }
+
+.edge-line.exposure-exposed { stroke: var(--exposed); }
+.edge-line.exposure-wall { stroke: var(--wall); }
+.edge-line.exposure-cabinet { stroke: var(--cabinet); }
+.edge-line.exposure-underside { stroke: var(--underside); }
+
+.edge-hitarea {
+  stroke-width: 22;
+  stroke: transparent;
+  fill: none;
+  cursor: pointer;
+}
+
+.vertex-dot {
+  fill: var(--surface-raised);
+  stroke: var(--border-active);
+  stroke-width: 1.5;
+}
+
+.dim-label {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  fill: var(--ink-tertiary);
+  pointer-events: none;
+}
+
+.edge-label-svg {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  fill: var(--ink-secondary);
+  pointer-events: none;
+}
+
+.edge-label-svg.selected { fill: var(--ink); font-weight: 600; }
+
+/* Attention pulse on edges needing input */
+.edge-attention-ring {
+  fill: none;
+  stroke: var(--attention);
+  stroke-width: 8;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.edge-attention-ring.pulse {
+  animation: pulse-ring 2s ease-in-out infinite;
+}
+
+@keyframes pulse-ring {
+  0%, 100% { opacity: 0; }
+  50% { opacity: 0.35; }
+}
+
+/* Resolved check marks */
+.edge-check {
+  font-family: var(--font-sans);
+  font-size: 14px;
+  fill: var(--resolved);
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.3s;
+}
+
+.edge-check.visible { opacity: 1; }
+
+/* ── Legend ──────────────────────────── */
+.piece-legend {
+  display: flex;
+  gap: 14px;
+  padding: 10px 20px;
+  border-top: 1px solid var(--border);
+  font-size: 11px;
+  color: var(--ink-secondary);
+}
+
+.legend-item { display: flex; align-items: center; gap: 5px; }
+
+.legend-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+}
+
+.legend-dot.exposed { background: var(--exposed); }
+.legend-dot.wall { background: var(--wall); }
+.legend-dot.cabinet { background: var(--cabinet); }
+.legend-dot.attention { background: var(--attention); }
+
+/* ── Right panel ────────────────────── */
+.right-pane {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.right-header {
+  padding: 12px 20px;
+  border-bottom: 1px solid var(--border);
+  background: var(--surface-raised);
+  flex-shrink: 0;
+}
+
+.right-tabs {
+  display: flex;
+  gap: 0;
+}
+
+.tab-btn {
+  padding: 8px 16px;
+  font-family: var(--font-sans);
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--ink-secondary);
+  background: none;
+  border: 1px solid var(--border);
+  cursor: pointer;
+  transition: all 0.12s;
+  min-height: 36px;
+}
+
+.tab-btn:first-child { border-right: none; }
+
+.tab-btn.active {
+  color: var(--cinnabar);
+  background: var(--cinnabar-light);
+  border-color: var(--cinnabar);
+}
+
+.tab-btn .tab-count {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  margin-left: 4px;
+  color: var(--attention);
+}
+
+.tab-btn.active .tab-count { color: var(--cinnabar); }
+
+/* ── Edge list ──────────────────────── */
+.edge-list {
+  flex: 1;
+  overflow-y: auto;
+  padding: 12px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+/* ── Edge row ───────────────────────── */
+.edge-row {
+  background: var(--surface-raised);
+  border: 1px solid var(--border);
+  transition: border-color 0.15s;
+}
+
+.edge-row.attention-needed { border-left: 3px solid var(--attention); }
+.edge-row.resolved { border-left: 3px solid var(--resolved); }
+.edge-row.auto-applied { border-left: 3px solid var(--border); opacity: 0.7; }
+.edge-row.auto-applied:hover { opacity: 1; }
+
+.edge-row.selected { border-color: var(--cinnabar); }
+
+.row-header {
+  display: flex;
+  align-items: center;
+  padding: 10px 14px;
+  gap: 10px;
+  cursor: pointer;
+}
+
+.row-status-icon {
+  width: 18px;
+  height: 18px;
+  flex-shrink: 0;
+}
+
+.row-id {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  font-weight: 600;
+  min-width: 28px;
+}
+
+.row-dim {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--ink-tertiary);
+}
+
+.row-auto-tag {
+  font-family: var(--font-mono);
+  font-size: 9px;
+  color: var(--ink-tertiary);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  padding: 2px 6px;
+  letter-spacing: 0.04em;
+}
+
+.row-summary {
+  font-size: 11px;
+  color: var(--ink-secondary);
+  margin-left: auto;
+}
+
+.row-expand {
+  color: var(--ink-tertiary);
+  flex-shrink: 0;
+  transition: transform 0.2s;
+}
+
+.edge-row.open .row-expand { transform: rotate(180deg); }
+
+.row-body {
+  display: none;
+  padding: 0 14px 14px;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.edge-row.open .row-body { display: flex; }
+
+/* ── Controls ───────────────────────── */
+.ctrl-group { display: flex; flex-direction: column; gap: 6px; }
+
+.ctrl-label {
+  font-size: 10px;
+  font-weight: 500;
+  color: var(--ink-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.ctrl-row { display: flex; flex-wrap: wrap; gap: 4px; }
+
+.chip {
+  height: 32px;
+  padding: 0 10px;
+  font-family: var(--font-sans);
+  font-size: 11px;
+  color: var(--ink-secondary);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 44px;
+  transition: all 0.12s;
+  user-select: none;
+}
+
+.chip:hover { border-color: var(--border-active); color: var(--ink); }
+
+.chip.active {
+  border-color: var(--cinnabar);
+  color: var(--cinnabar);
+  background: var(--cinnabar-light);
+  font-weight: 500;
+}
+
+.toggle-row { display: flex; align-items: center; justify-content: space-between; }
+
+.toggle-switch {
+  position: relative;
+  width: 32px;
+  height: 18px;
+  background: var(--border);
+  border-radius: 9px;
+  cursor: pointer;
+  transition: background 0.2s;
+  flex-shrink: 0;
+}
+
+.toggle-switch.on { background: var(--cinnabar); }
+
+.toggle-switch::after {
+  content: '';
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: var(--surface-raised);
+  transition: transform 0.2s;
+}
+
+.toggle-switch.on::after { transform: translateX(14px); }
+
+.buildup-sub {
+  display: none;
+  flex-direction: column;
+  gap: 6px;
+  padding-left: 10px;
+  border-left: 2px solid var(--cinnabar-mid);
+  margin-top: 4px;
+}
+
+.buildup-sub.visible { display: flex; }
+
+.select-ctrl {
+  height: 32px;
+  padding: 0 24px 0 10px;
+  font-family: var(--font-sans);
+  font-size: 11px;
+  color: var(--ink);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  appearance: none;
+  cursor: pointer;
+  width: 100%;
+}
+
+.select-ctrl:focus { outline: none; border-color: var(--cinnabar); }
+
+.row-price {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-top: 8px;
+  border-top: 1px solid var(--border);
+}
+
+.row-price-label { font-size: 10px; color: var(--ink-tertiary); text-transform: uppercase; letter-spacing: 0.04em; }
+.row-price-value { font-family: var(--font-mono); font-size: 12px; font-weight: 600; }
+
+/* ── Total bar ──────────────────────── */
+.total-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 20px;
+  border-top: 1px solid var(--border);
+  background: var(--surface-raised);
+  flex-shrink: 0;
+}
+
+.total-label { font-size: 12px; font-weight: 500; color: var(--ink-secondary); text-transform: uppercase; letter-spacing: 0.04em; }
+.total-value { font-family: var(--font-mono); font-size: 16px; font-weight: 600; }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="header-left">
+    <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+      <rect x="1" y="1" width="18" height="18" stroke="#1A1A1A" stroke-width="1.5" fill="none"/>
+      <path d="M5 15 L5 5 L15 5 L15 10 L10 10 L10 15 Z" stroke="#D63F1A" stroke-width="1.5" fill="none"/>
+    </svg>
+    <div>
+      <div class="header-title">Edge Configuration</div>
+      <div class="header-subtitle">Kitchen Island — L-Shape &middot; 8 edges</div>
+    </div>
+  </div>
+  <div class="variant-badge">VARIANT D &mdash; SMART DEFAULTS</div>
+</div>
+
+<div class="layout">
+  <!-- LEFT: PIECE + ATTENTION -->
+  <div class="piece-pane">
+    <!-- Attention banner -->
+    <div class="attention-banner needs-attention" id="attention-banner">
+      <svg class="attention-icon" viewBox="0 0 20 20" fill="none">
+        <circle cx="10" cy="10" r="8" stroke="#E8A317" stroke-width="1.5" fill="none"/>
+        <line x1="10" y1="6" x2="10" y2="11" stroke="#E8A317" stroke-width="1.5"/>
+        <circle cx="10" cy="14" r="1" fill="#E8A317"/>
+      </svg>
+      <div>
+        <div class="attention-text" id="attention-text">3 of 8 edges need your input</div>
+      </div>
+      <span class="attention-sub" id="attention-sub">5 auto-configured</span>
+    </div>
+
+    <!-- Pattern bar -->
+    <div class="pattern-bar">
+      <span class="pattern-label">Applied pattern</span>
+      <span class="pattern-value" id="pattern-value">Front = Exposed, Back = Wall, Inner = Cabinet</span>
+      <button class="pattern-change" id="pattern-change">Change</button>
+    </div>
+
+    <!-- Piece -->
+    <div class="piece-canvas">
+      <svg viewBox="0 0 520 380" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+          <pattern id="grid" width="20" height="20" patternUnits="userSpaceOnUse">
+            <circle cx="10" cy="10" r="0.4" fill="#D4D4D4"/>
+          </pattern>
+        </defs>
+        <rect width="520" height="380" fill="url(#grid)"/>
+        <polygon points="60,40 380,40 380,140 260,140 260,330 60,330" fill="#F8F8F8" stroke="none"/>
+
+        <!-- Attention pulse rings (behind edges) -->
+        <line class="edge-attention-ring" id="attn-0" x1="60" y1="40" x2="380" y2="40"/>
+        <line class="edge-attention-ring" id="attn-1" x1="380" y1="40" x2="380" y2="140"/>
+        <line class="edge-attention-ring" id="attn-2" x1="380" y1="140" x2="260" y2="140"/>
+        <line class="edge-attention-ring" id="attn-3" x1="260" y1="140" x2="260" y2="330"/>
+        <line class="edge-attention-ring" id="attn-4" x1="260" y1="330" x2="60" y2="330"/>
+        <path class="edge-attention-ring" id="attn-5" d="M60,330 Q40,330 40,310" style="stroke-width:8;fill:none;"/>
+        <line class="edge-attention-ring" id="attn-6" x1="40" y1="310" x2="40" y2="60"/>
+        <path class="edge-attention-ring" id="attn-7" d="M40,60 Q40,40 60,40" style="stroke-width:8;fill:none;"/>
+
+        <!-- Edges -->
+        <line class="edge-hitarea" data-edge="0" x1="60" y1="40" x2="380" y2="40"/>
+        <line class="edge-line exposure-wall" id="el-0" data-edge="0" x1="60" y1="40" x2="380" y2="40"/>
+
+        <line class="edge-hitarea" data-edge="1" x1="380" y1="40" x2="380" y2="140"/>
+        <line class="edge-line exposure-exposed" id="el-1" data-edge="1" x1="380" y1="40" x2="380" y2="140"/>
+
+        <line class="edge-hitarea" data-edge="2" x1="380" y1="140" x2="260" y2="140"/>
+        <line class="edge-line exposure-cabinet" id="el-2" data-edge="2" x1="380" y1="140" x2="260" y2="140"/>
+
+        <line class="edge-hitarea" data-edge="3" x1="260" y1="140" x2="260" y2="330"/>
+        <line class="edge-line exposure-cabinet" id="el-3" data-edge="3" x1="260" y1="140" x2="260" y2="330"/>
+
+        <line class="edge-hitarea" data-edge="4" x1="260" y1="330" x2="60" y2="330"/>
+        <line class="edge-line exposure-exposed" id="el-4" data-edge="4" x1="260" y1="330" x2="60" y2="330"/>
+
+        <path class="edge-hitarea" data-edge="5" d="M60,330 Q40,330 40,310" style="stroke-width:22;stroke:transparent;fill:none;"/>
+        <path class="edge-line exposure-exposed" id="el-5" data-edge="5" d="M60,330 Q40,330 40,310"/>
+
+        <line class="edge-hitarea" data-edge="6" x1="40" y1="310" x2="40" y2="60"/>
+        <line class="edge-line exposure-exposed" id="el-6" data-edge="6" x1="40" y1="310" x2="40" y2="60"/>
+
+        <path class="edge-hitarea" data-edge="7" d="M40,60 Q40,40 60,40" style="stroke-width:22;stroke:transparent;fill:none;"/>
+        <path class="edge-line exposure-wall" id="el-7" data-edge="7" d="M40,60 Q40,40 60,40"/>
+
+        <!-- Vertices -->
+        <circle class="vertex-dot" cx="60" cy="40" r="3.5"/>
+        <circle class="vertex-dot" cx="380" cy="40" r="3.5"/>
+        <circle class="vertex-dot" cx="380" cy="140" r="3.5"/>
+        <circle class="vertex-dot" cx="260" cy="140" r="3.5"/>
+        <circle class="vertex-dot" cx="260" cy="330" r="3.5"/>
+        <circle class="vertex-dot" cx="60" cy="330" r="3.5"/>
+        <circle class="vertex-dot" cx="40" cy="310" r="3.5"/>
+        <circle class="vertex-dot" cx="40" cy="60" r="3.5"/>
+
+        <!-- Edge IDs -->
+        <text class="edge-label-svg" data-elbl="0" x="220" y="54" text-anchor="middle">E1</text>
+        <text class="edge-label-svg" data-elbl="1" x="392" y="95" text-anchor="start">E2</text>
+        <text class="edge-label-svg" data-elbl="2" x="320" y="134" text-anchor="middle">E3</text>
+        <text class="edge-label-svg" data-elbl="3" x="248" y="240" text-anchor="end">E4</text>
+        <text class="edge-label-svg" data-elbl="4" x="160" y="324" text-anchor="middle">E5</text>
+        <text class="edge-label-svg" data-elbl="5" x="56" y="324" text-anchor="start" style="font-size:9px">E6</text>
+        <text class="edge-label-svg" data-elbl="6" x="30" y="185" text-anchor="end">E7</text>
+        <text class="edge-label-svg" data-elbl="7" x="56" y="54" text-anchor="start" style="font-size:9px">E8</text>
+
+        <!-- Dims -->
+        <text class="dim-label" x="220" y="32" text-anchor="middle">2 400</text>
+        <text class="dim-label" x="400" y="95" text-anchor="start">720</text>
+        <text class="dim-label" x="320" y="158" text-anchor="middle">900</text>
+        <text class="dim-label" x="278" y="240" text-anchor="start">1 080</text>
+        <text class="dim-label" x="160" y="348" text-anchor="middle">1 500</text>
+        <text class="dim-label" x="24" y="185" text-anchor="end">1 440</text>
+      </svg>
+    </div>
+
+    <div class="piece-legend">
+      <div class="legend-item"><div class="legend-dot exposed"></div> Exposed</div>
+      <div class="legend-item"><div class="legend-dot wall"></div> Wall</div>
+      <div class="legend-item"><div class="legend-dot cabinet"></div> Cabinet</div>
+      <div class="legend-item"><div class="legend-dot attention"></div> Needs input</div>
+    </div>
+  </div>
+
+  <!-- RIGHT: EDGE LIST -->
+  <div class="right-pane">
+    <div class="right-header">
+      <div class="right-tabs">
+        <button class="tab-btn active" id="tab-attention" data-tab="attention">
+          Needs input<span class="tab-count" id="tab-attention-count">3</span>
+        </button>
+        <button class="tab-btn" id="tab-all" data-tab="all">
+          All edges
+        </button>
+      </div>
+    </div>
+    <div class="edge-list" id="edge-list">
+      <!-- Generated by JS -->
+    </div>
+    <div class="total-bar">
+      <span class="total-label">Total edge work</span>
+      <span class="total-value" id="total-value">$0.00</span>
+    </div>
+  </div>
+</div>
+
+<script>
+// Smart defaults: auto-apply pattern based on Jay Henderson's mental model
+// Front edges (exposed to customer) = EXPOSED + default profile
+// Back edges (against wall) = WALL + raw
+// Inner edges (against cabinet) = CABINET + raw
+// Curved edges + build-up decisions = NEEDS ATTENTION
+
+const edges = [
+  { id: 'E1', dim: '2 400 mm', dimNum: 2400, curved: false, exposure: 'wall',    profile: 'raw',  finish: 'raw', buildup: false, buildupDepth: null, buildupMethod: null, attachment: 'none', auto: true, needsAttention: false, reason: null },
+  { id: 'E2', dim: '720 mm',   dimNum: 720,  curved: false, exposure: 'exposed', profile: 'arris', finish: 'polished', buildup: false, buildupDepth: null, buildupMethod: null, attachment: 'none', auto: true, needsAttention: true, reason: 'Exposed end — confirm profile' },
+  { id: 'E3', dim: '900 mm',   dimNum: 900,  curved: false, exposure: 'cabinet', profile: 'raw',  finish: 'raw', buildup: false, buildupDepth: null, buildupMethod: null, attachment: 'none', auto: true, needsAttention: false, reason: null },
+  { id: 'E4', dim: '1 080 mm', dimNum: 1080, curved: false, exposure: 'cabinet', profile: 'raw',  finish: 'raw', buildup: false, buildupDepth: null, buildupMethod: null, attachment: 'none', auto: true, needsAttention: false, reason: null },
+  { id: 'E5', dim: '1 500 mm', dimNum: 1500, curved: false, exposure: 'exposed', profile: 'arris', finish: 'polished', buildup: false, buildupDepth: null, buildupMethod: null, attachment: 'none', auto: true, needsAttention: true, reason: 'Front edge — add build-up?' },
+  { id: 'E6', dim: 'R30',      dimNum: 47,   curved: true,  exposure: 'exposed', profile: null,   finish: null, buildup: false, buildupDepth: null, buildupMethod: null, attachment: 'none', auto: false, needsAttention: true, reason: 'Curved — select profile' },
+  { id: 'E7', dim: '1 440 mm', dimNum: 1440, curved: false, exposure: 'exposed', profile: 'arris', finish: 'polished', buildup: false, buildupDepth: null, buildupMethod: null, attachment: 'none', auto: true, needsAttention: false, reason: null },
+  { id: 'E8', dim: 'R30',      dimNum: 47,   curved: true,  exposure: 'wall',    profile: 'raw',  finish: 'raw', buildup: false, buildupDepth: null, buildupMethod: null, attachment: 'none', auto: true, needsAttention: false, reason: null },
+];
+
+const profiles = ['raw', 'arris', 'pencil-round', 'bullnose', 'ogee', 'mitred'];
+const profileLabels = { raw: 'Raw', arris: 'Arris', 'pencil-round': 'Pencil Rnd', bullnose: 'Bullnose', ogee: 'Ogee', mitred: 'Mitred' };
+const finishes = ['polished', 'honed', 'raw', 'leathered'];
+const finishLabels = { polished: 'Polished', honed: 'Honed', raw: 'Raw', leathered: 'Leathered' };
+const exposures = ['exposed', 'wall', 'cabinet', 'underside'];
+const exposureLabels = { exposed: 'Exposed', wall: 'Wall', cabinet: 'Cabinet', underside: 'Underside' };
+
+function edgeCost(e) {
+  if (!e.profile || e.profile === 'raw') return 0;
+  let base = (e.dimNum / 1000) * 28;
+  if (e.profile === 'bullnose') base *= 1.4;
+  else if (e.profile === 'ogee') base *= 1.8;
+  else if (e.profile === 'mitred') base *= 1.5;
+  else if (e.profile === 'pencil-round') base *= 1.15;
+  if (e.finish === 'polished') base *= 1.2;
+  else if (e.finish === 'honed') base *= 1.1;
+  if (e.buildup) base *= 1.3;
+  if (e.curved) base *= 1.5;
+  return base;
+}
+
+let currentTab = 'attention';
+const edgeList = document.getElementById('edge-list');
+
+function buildEdgeRows() {
+  edgeList.innerHTML = '';
+  const filtered = currentTab === 'attention'
+    ? edges.map((e, i) => ({ ...e, idx: i })).filter(e => e.needsAttention)
+    : edges.map((e, i) => ({ ...e, idx: i }));
+
+  filtered.forEach(e => {
+    const row = document.createElement('div');
+    row.className = 'edge-row';
+    row.id = 'row-' + e.idx;
+
+    if (e.needsAttention) row.classList.add('attention-needed');
+    else if (e.auto) row.classList.add('auto-applied');
+    else row.classList.add('resolved');
+
+    // Header
+    const hdr = document.createElement('div');
+    hdr.className = 'row-header';
+
+    // Status icon
+    const icon = document.createElement('div');
+    icon.className = 'row-status-icon';
+    icon.id = 'row-icon-' + e.idx;
+    if (e.needsAttention) {
+      icon.innerHTML = '<svg viewBox="0 0 18 18" fill="none"><circle cx="9" cy="9" r="7" stroke="#E8A317" stroke-width="1.5"/><line x1="9" y1="5" x2="9" y2="10" stroke="#E8A317" stroke-width="1.5"/><circle cx="9" cy="12.5" r="0.8" fill="#E8A317"/></svg>';
+    } else {
+      icon.innerHTML = '<svg viewBox="0 0 18 18" fill="none"><circle cx="9" cy="9" r="7" stroke="#3D8B37" stroke-width="1.5"/><path d="M6 9L8 11L12 7" stroke="#3D8B37" stroke-width="1.5"/></svg>';
+    }
+
+    const idEl = document.createElement('span');
+    idEl.className = 'row-id';
+    idEl.textContent = e.id;
+
+    const dimEl = document.createElement('span');
+    dimEl.className = 'row-dim';
+    dimEl.textContent = e.dim;
+
+    hdr.appendChild(icon);
+    hdr.appendChild(idEl);
+    hdr.appendChild(dimEl);
+
+    if (e.auto && !e.needsAttention) {
+      const tag = document.createElement('span');
+      tag.className = 'row-auto-tag';
+      tag.textContent = 'AUTO';
+      hdr.appendChild(tag);
+    }
+
+    if (e.curved) {
+      const cb = document.createElement('span');
+      cb.style.cssText = 'font-family:var(--font-mono);font-size:9px;color:var(--curved-edge);border:1px solid var(--curved-edge);padding:2px 5px;letter-spacing:0.04em;';
+      cb.textContent = 'CURVED';
+      hdr.appendChild(cb);
+    }
+
+    const summary = document.createElement('span');
+    summary.className = 'row-summary';
+    summary.id = 'row-summary-' + e.idx;
+    if (e.reason && e.needsAttention) summary.textContent = e.reason;
+    else {
+      const parts = [];
+      if (e.profile && e.profile !== 'raw') parts.push(profileLabels[e.profile]);
+      if (e.finish && e.finish !== 'raw') parts.push(finishLabels[e.finish]);
+      summary.textContent = parts.join(' / ');
+    }
+    hdr.appendChild(summary);
+
+    const arrow = document.createElement('span');
+    arrow.className = 'row-expand';
+    arrow.innerHTML = '<svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M3 5L7 9L11 5" stroke="currentColor" stroke-width="1.5"/></svg>';
+    hdr.appendChild(arrow);
+
+    // Body
+    const body = document.createElement('div');
+    body.className = 'row-body';
+
+    body.appendChild(makeCtrl('Exposure', 'exp-' + e.idx, exposures, exposureLabels, e.exposure, val => {
+      edges[e.idx].exposure = val;
+      edges[e.idx].auto = false;
+      updateEdgeVisual(e.idx);
+      markResolved(e.idx);
+    }));
+
+    body.appendChild(makeCtrl('Profile', 'pro-' + e.idx, profiles, profileLabels, e.profile, val => {
+      edges[e.idx].profile = val;
+      edges[e.idx].auto = false;
+      markResolved(e.idx);
+      updateTotals();
+    }));
+
+    body.appendChild(makeCtrl('Finish', 'fin-' + e.idx, finishes, finishLabels, e.finish, val => {
+      edges[e.idx].finish = val;
+      edges[e.idx].auto = false;
+      markResolved(e.idx);
+      updateTotals();
+    }));
+
+    // Build-up
+    const buGroup = document.createElement('div');
+    buGroup.className = 'ctrl-group';
+    const buRow = document.createElement('div');
+    buRow.className = 'toggle-row';
+    const buLbl = document.createElement('span');
+    buLbl.className = 'ctrl-label';
+    buLbl.style.margin = '0';
+    buLbl.textContent = 'Build-up';
+    const buTog = document.createElement('div');
+    buTog.className = 'toggle-switch' + (e.buildup ? ' on' : '');
+    buTog.id = 'bu-tog-' + e.idx;
+    buRow.appendChild(buLbl);
+    buRow.appendChild(buTog);
+    buGroup.appendChild(buRow);
+
+    const buSub = document.createElement('div');
+    buSub.className = 'buildup-sub' + (e.buildup ? ' visible' : '');
+    buSub.id = 'bu-sub-' + e.idx;
+    buSub.appendChild(makeChipRow('bud-' + e.idx, ['40', '60'], { '40': '40 mm', '60': '60 mm' }, e.buildupDepth, val => {
+      edges[e.idx].buildupDepth = val;
+      updateTotals();
+    }));
+    buSub.appendChild(makeChipRow('bum-' + e.idx, ['mitre', 'square'], { mitre: 'Mitre', square: 'Square' }, e.buildupMethod, val => {
+      edges[e.idx].buildupMethod = val;
+    }));
+    buGroup.appendChild(buSub);
+    body.appendChild(buGroup);
+
+    buTog.addEventListener('click', () => {
+      const on = !buTog.classList.contains('on');
+      buTog.classList.toggle('on', on);
+      edges[e.idx].buildup = on;
+      buSub.classList.toggle('visible', on);
+      if (on && !edges[e.idx].buildupDepth) {
+        edges[e.idx].buildupDepth = '40';
+        edges[e.idx].buildupMethod = 'mitre';
+        setChips('bud-' + e.idx, '40');
+        setChips('bum-' + e.idx, 'mitre');
+      }
+      markResolved(e.idx);
+      updateTotals();
+    });
+
+    // Attachment
+    const attG = document.createElement('div');
+    attG.className = 'ctrl-group';
+    const attL = document.createElement('div');
+    attL.className = 'ctrl-label';
+    attL.textContent = 'Attachment';
+    attG.appendChild(attL);
+    const sel = document.createElement('select');
+    sel.className = 'select-ctrl';
+    ['none:None', 'waterfall:Waterfall return', 'splashback:Splashback', 'upstand:Upstand'].forEach(o => {
+      const [v, l] = o.split(':');
+      const opt = document.createElement('option');
+      opt.value = v; opt.textContent = l;
+      sel.appendChild(opt);
+    });
+    sel.value = e.attachment;
+    sel.addEventListener('change', () => { edges[e.idx].attachment = sel.value; });
+    attG.appendChild(sel);
+    body.appendChild(attG);
+
+    // Price
+    const pr = document.createElement('div');
+    pr.className = 'row-price';
+    pr.innerHTML = `<span class="row-price-label">Edge cost</span><span class="row-price-value" id="rpv-${e.idx}">$${edgeCost(e).toFixed(2)}</span>`;
+    body.appendChild(pr);
+
+    row.appendChild(hdr);
+    row.appendChild(body);
+
+    hdr.addEventListener('click', () => {
+      const wasOpen = row.classList.contains('open');
+      document.querySelectorAll('.edge-row.open').forEach(r => r.classList.remove('open'));
+      if (!wasOpen) {
+        row.classList.add('open');
+        selectEdgeOnPiece(e.idx);
+      }
+    });
+
+    edgeList.appendChild(row);
+  });
+
+  updateAttentionPulse();
+}
+
+function makeCtrl(label, groupId, vals, labels, active, onChange) {
+  const g = document.createElement('div');
+  g.className = 'ctrl-group';
+  const l = document.createElement('div');
+  l.className = 'ctrl-label';
+  l.textContent = label;
+  g.appendChild(l);
+  g.appendChild(makeChipRow(groupId, vals, labels, active, onChange));
+  return g;
+}
+
+function makeChipRow(groupId, vals, labels, active, onChange) {
+  const r = document.createElement('div');
+  r.className = 'ctrl-row';
+  r.id = groupId;
+  vals.forEach(v => {
+    const c = document.createElement('div');
+    c.className = 'chip' + (v === active ? ' active' : '');
+    c.dataset.val = v;
+    c.textContent = labels[v] || v;
+    c.addEventListener('click', ev => {
+      ev.stopPropagation();
+      r.querySelectorAll('.chip').forEach(ch => ch.classList.remove('active'));
+      c.classList.add('active');
+      onChange(v);
+    });
+    r.appendChild(c);
+  });
+  return r;
+}
+
+function setChips(groupId, val) {
+  const r = document.getElementById(groupId);
+  if (!r) return;
+  r.querySelectorAll('.chip').forEach(c => c.classList.toggle('active', c.dataset.val === val));
+}
+
+function markResolved(idx) {
+  edges[idx].needsAttention = false;
+  edges[idx].reason = null;
+  updateBanner();
+  updateAttentionPulse();
+  // Update tab count
+  const count = edges.filter(e => e.needsAttention).length;
+  document.getElementById('tab-attention-count').textContent = count || '';
+  if (currentTab === 'attention' && count === 0) {
+    currentTab = 'all';
+    document.getElementById('tab-attention').classList.remove('active');
+    document.getElementById('tab-all').classList.add('active');
+    buildEdgeRows();
+  }
+}
+
+function updateBanner() {
+  const count = edges.filter(e => e.needsAttention).length;
+  const autoCount = edges.filter(e => !e.needsAttention).length;
+  const banner = document.getElementById('attention-banner');
+  const text = document.getElementById('attention-text');
+  const sub = document.getElementById('attention-sub');
+
+  if (count === 0) {
+    banner.classList.remove('needs-attention');
+    banner.classList.add('all-resolved');
+    text.textContent = 'All edges configured';
+    banner.querySelector('.attention-icon').innerHTML = '<svg viewBox="0 0 20 20" fill="none"><circle cx="10" cy="10" r="8" stroke="#3D8B37" stroke-width="1.5"/><path d="M6 10L9 13L14 7" stroke="#3D8B37" stroke-width="1.5"/></svg>';
+    sub.textContent = autoCount + ' auto-configured';
+  } else {
+    banner.classList.add('needs-attention');
+    banner.classList.remove('all-resolved');
+    text.textContent = count + ' of 8 edges need your input';
+    sub.textContent = autoCount + ' auto-configured';
+  }
+}
+
+function updateAttentionPulse() {
+  edges.forEach((e, i) => {
+    const ring = document.getElementById('attn-' + i);
+    if (ring) ring.classList.toggle('pulse', e.needsAttention);
+  });
+}
+
+function selectEdgeOnPiece(idx) {
+  document.querySelectorAll('.edge-line.selected').forEach(el => el.classList.remove('selected'));
+  document.querySelectorAll('.edge-label-svg.selected').forEach(el => el.classList.remove('selected'));
+  const el = document.getElementById('el-' + idx);
+  if (el) el.classList.add('selected');
+  const lbl = document.querySelector(`[data-elbl="${idx}"]`);
+  if (lbl) lbl.classList.add('selected');
+}
+
+function updateEdgeVisual(idx) {
+  const e = edges[idx];
+  const el = document.getElementById('el-' + idx);
+  if (el) {
+    el.classList.remove('exposure-exposed', 'exposure-wall', 'exposure-cabinet', 'exposure-underside');
+    el.classList.add('exposure-' + e.exposure);
+  }
+}
+
+function updateTotals() {
+  let total = 0;
+  edges.forEach((e, i) => {
+    const c = edgeCost(e);
+    const pv = document.getElementById('rpv-' + i);
+    if (pv) pv.textContent = '$' + c.toFixed(2);
+    total += c;
+  });
+  document.getElementById('total-value').textContent = '$' + total.toFixed(2);
+}
+
+// Tab switching
+document.querySelectorAll('.tab-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    currentTab = btn.dataset.tab;
+    buildEdgeRows();
+  });
+});
+
+// Click edge on piece
+document.querySelectorAll('.edge-hitarea, .edge-line').forEach(el => {
+  el.addEventListener('click', ev => {
+    ev.stopPropagation();
+    const idx = parseInt(el.dataset.edge);
+    if (isNaN(idx)) return;
+    selectEdgeOnPiece(idx);
+    // Switch to all-edges tab if needed
+    if (currentTab === 'attention' && !edges[idx].needsAttention) {
+      currentTab = 'all';
+      document.getElementById('tab-attention').classList.remove('active');
+      document.getElementById('tab-all').classList.add('active');
+      buildEdgeRows();
+    }
+    // Open the row
+    const row = document.getElementById('row-' + idx);
+    if (row) {
+      document.querySelectorAll('.edge-row.open').forEach(r => r.classList.remove('open'));
+      row.classList.add('open');
+      row.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    }
+  });
+});
+
+// Init
+buildEdgeRows();
+updateBanner();
+updateTotals();
+</script>
+</body>
+</html>

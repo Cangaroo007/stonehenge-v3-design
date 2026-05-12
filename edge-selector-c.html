@@ -1,0 +1,883 @@
+<!DOCTYPE html>
+<html lang="en-AU">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Edge Selector — Variant C: Two-Column</title>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+:root {
+  --cinnabar: #D63F1A;
+  --cinnabar-light: #D63F1A1A;
+  --cinnabar-mid: #D63F1A33;
+  --ink: #1A1A1A;
+  --ink-secondary: #5C5C5C;
+  --ink-tertiary: #8A8A8A;
+  --surface: #FAFAFA;
+  --surface-raised: #FFFFFF;
+  --border: #E2E2E2;
+  --border-active: #CCCCCC;
+  --exposed: #D63F1A;
+  --wall: #8A8A8A;
+  --cabinet: #5C8A5C;
+  --underside: #5C5C8A;
+  --curved-edge: #2E7D9B;
+  --font-sans: 'IBM Plex Sans', sans-serif;
+  --font-mono: 'IBM Plex Mono', monospace;
+}
+
+body {
+  font-family: var(--font-sans);
+  background: var(--surface);
+  color: var(--ink);
+  -webkit-font-smoothing: antialiased;
+  overflow: hidden;
+  height: 100vh;
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 24px;
+  border-bottom: 1px solid var(--border);
+  background: var(--surface-raised);
+}
+
+.header-left { display: flex; align-items: center; gap: 12px; }
+.header-title { font-size: 14px; font-weight: 600; letter-spacing: -0.01em; }
+.header-subtitle { font-size: 12px; color: var(--ink-secondary); }
+
+.variant-badge {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--cinnabar);
+  background: var(--cinnabar-light);
+  padding: 4px 10px;
+  border: 1px solid var(--cinnabar-mid);
+  letter-spacing: 0.04em;
+}
+
+/* ── Layout ─────────────────────────── */
+.layout {
+  display: flex;
+  height: calc(100vh - 57px);
+}
+
+/* ── Left: piece outline ────────────── */
+.piece-pane {
+  flex: 0 0 440px;
+  display: flex;
+  flex-direction: column;
+  border-right: 1px solid var(--border);
+  background: var(--surface-raised);
+}
+
+.piece-pane-header {
+  padding: 12px 20px;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.piece-pane-title {
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--ink-secondary);
+}
+
+.piece-summary {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--ink-tertiary);
+}
+
+.piece-canvas {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  position: relative;
+}
+
+.piece-canvas svg {
+  width: 100%;
+  height: auto;
+  max-height: 100%;
+}
+
+.edge-line {
+  stroke-width: 3;
+  fill: none;
+  cursor: pointer;
+  transition: stroke-width 0.15s;
+}
+
+.edge-line:hover { stroke-width: 5; }
+.edge-line.selected { stroke-width: 5; }
+
+.edge-line.exposure-exposed { stroke: var(--exposed); }
+.edge-line.exposure-wall { stroke: var(--wall); }
+.edge-line.exposure-cabinet { stroke: var(--cabinet); }
+.edge-line.exposure-underside { stroke: var(--underside); }
+
+.edge-hitarea {
+  stroke-width: 20;
+  stroke: transparent;
+  fill: none;
+  cursor: pointer;
+}
+
+.vertex-dot {
+  fill: var(--surface-raised);
+  stroke: var(--border-active);
+  stroke-width: 1.5;
+}
+
+.dim-label {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  fill: var(--ink-tertiary);
+  pointer-events: none;
+}
+
+.edge-label-svg {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  fill: var(--ink-secondary);
+  pointer-events: none;
+}
+
+.edge-label-svg.selected { fill: var(--ink); font-weight: 500; }
+
+/* Legend */
+.piece-legend {
+  display: flex;
+  gap: 14px;
+  padding: 10px 20px;
+  border-top: 1px solid var(--border);
+  font-size: 11px;
+  color: var(--ink-secondary);
+}
+
+.legend-item {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.legend-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+}
+
+.legend-dot.exposed { background: var(--exposed); }
+.legend-dot.wall { background: var(--wall); }
+.legend-dot.cabinet { background: var(--cabinet); }
+
+/* ── Right: edge cards ──────────────── */
+.cards-pane {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.cards-header {
+  padding: 12px 20px;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: var(--surface-raised);
+  flex-shrink: 0;
+}
+
+.cards-title {
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--ink-secondary);
+}
+
+.cards-count {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--ink-tertiary);
+}
+
+.cards-scroll {
+  flex: 1;
+  overflow-y: auto;
+  padding: 12px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+/* ── Edge card ──────────────────────── */
+.edge-card {
+  background: var(--surface-raised);
+  border: 1px solid var(--border);
+  transition: border-color 0.15s;
+  cursor: pointer;
+}
+
+.edge-card:hover { border-color: var(--border-active); }
+.edge-card.selected { border-color: var(--cinnabar); }
+
+.card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 14px;
+  gap: 8px;
+}
+
+.card-left {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.card-exposure-bar {
+  width: 4px;
+  height: 24px;
+  border-radius: 2px;
+  flex-shrink: 0;
+}
+
+.card-exposure-bar.exposure-exposed { background: var(--exposed); }
+.card-exposure-bar.exposure-wall { background: var(--wall); }
+.card-exposure-bar.exposure-cabinet { background: var(--cabinet); }
+.card-exposure-bar.exposure-underside { background: var(--underside); }
+
+.card-id {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.card-dim {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--ink-tertiary);
+}
+
+.card-curved-badge {
+  font-family: var(--font-mono);
+  font-size: 9px;
+  color: var(--curved-edge);
+  border: 1px solid var(--curved-edge);
+  padding: 1px 5px;
+  letter-spacing: 0.04em;
+}
+
+.card-summary {
+  font-size: 11px;
+  color: var(--ink-tertiary);
+  margin-left: auto;
+}
+
+.card-expand-icon {
+  color: var(--ink-tertiary);
+  transition: transform 0.2s;
+  flex-shrink: 0;
+}
+
+.edge-card.open .card-expand-icon { transform: rotate(180deg); }
+
+/* Card body (expanded controls) */
+.card-body {
+  display: none;
+  padding: 0 14px 14px;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.edge-card.open .card-body { display: flex; }
+
+.ctrl-group { display: flex; flex-direction: column; gap: 6px; }
+
+.ctrl-label {
+  font-size: 10px;
+  font-weight: 500;
+  color: var(--ink-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.ctrl-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+
+.chip {
+  height: 32px;
+  padding: 0 10px;
+  font-family: var(--font-sans);
+  font-size: 11px;
+  color: var(--ink-secondary);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 44px;
+  transition: all 0.12s;
+  user-select: none;
+}
+
+.chip:hover { border-color: var(--border-active); color: var(--ink); }
+
+.chip.active {
+  border-color: var(--cinnabar);
+  color: var(--cinnabar);
+  background: var(--cinnabar-light);
+  font-weight: 500;
+}
+
+.toggle-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.toggle-switch {
+  position: relative;
+  width: 32px;
+  height: 18px;
+  background: var(--border);
+  border-radius: 9px;
+  cursor: pointer;
+  transition: background 0.2s;
+  flex-shrink: 0;
+}
+
+.toggle-switch.on { background: var(--cinnabar); }
+
+.toggle-switch::after {
+  content: '';
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: var(--surface-raised);
+  transition: transform 0.2s;
+}
+
+.toggle-switch.on::after { transform: translateX(14px); }
+
+.buildup-sub {
+  display: none;
+  flex-direction: column;
+  gap: 6px;
+  padding-left: 10px;
+  border-left: 2px solid var(--cinnabar-mid);
+  margin-top: 4px;
+}
+
+.buildup-sub.visible { display: flex; }
+
+.select-ctrl {
+  height: 32px;
+  padding: 0 24px 0 10px;
+  font-family: var(--font-sans);
+  font-size: 11px;
+  color: var(--ink);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  appearance: none;
+  cursor: pointer;
+  width: 100%;
+}
+
+.select-ctrl:focus { outline: none; border-color: var(--cinnabar); }
+
+.card-price {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-top: 8px;
+  border-top: 1px solid var(--border);
+}
+
+.card-price-label {
+  font-size: 10px;
+  color: var(--ink-tertiary);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.card-price-value {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  font-weight: 600;
+}
+
+/* ── Footer total ───────────────────── */
+.total-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 20px;
+  border-top: 1px solid var(--border);
+  background: var(--surface-raised);
+  flex-shrink: 0;
+}
+
+.total-label {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--ink-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.total-value {
+  font-family: var(--font-mono);
+  font-size: 16px;
+  font-weight: 600;
+}
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="header-left">
+    <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+      <rect x="1" y="1" width="18" height="18" stroke="#1A1A1A" stroke-width="1.5" fill="none"/>
+      <path d="M5 15 L5 5 L15 5 L15 10 L10 10 L10 15 Z" stroke="#D63F1A" stroke-width="1.5" fill="none"/>
+    </svg>
+    <div>
+      <div class="header-title">Edge Configuration</div>
+      <div class="header-subtitle">Kitchen Island — L-Shape &middot; 8 edges</div>
+    </div>
+  </div>
+  <div class="variant-badge">VARIANT C &mdash; TWO-COLUMN</div>
+</div>
+
+<div class="layout">
+  <!-- LEFT: PIECE OUTLINE -->
+  <div class="piece-pane">
+    <div class="piece-pane-header">
+      <span class="piece-pane-title">Piece Outline</span>
+      <span class="piece-summary" id="piece-summary">0 / 8 configured</span>
+    </div>
+    <div class="piece-canvas">
+      <svg viewBox="0 0 520 380" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+          <pattern id="grid" width="20" height="20" patternUnits="userSpaceOnUse">
+            <circle cx="10" cy="10" r="0.4" fill="#D4D4D4"/>
+          </pattern>
+        </defs>
+        <rect width="520" height="380" fill="url(#grid)"/>
+
+        <!-- L-shape fill -->
+        <polygon points="60,40 380,40 380,140 260,140 260,330 60,330"
+          fill="#F8F8F8" stroke="none"/>
+
+        <!-- Edges -->
+        <line class="edge-hitarea" data-edge="0" x1="60" y1="40" x2="380" y2="40"/>
+        <line class="edge-line exposure-wall" id="el-0" data-edge="0" x1="60" y1="40" x2="380" y2="40"/>
+
+        <line class="edge-hitarea" data-edge="1" x1="380" y1="40" x2="380" y2="140"/>
+        <line class="edge-line exposure-exposed" id="el-1" data-edge="1" x1="380" y1="40" x2="380" y2="140"/>
+
+        <line class="edge-hitarea" data-edge="2" x1="380" y1="140" x2="260" y2="140"/>
+        <line class="edge-line exposure-cabinet" id="el-2" data-edge="2" x1="380" y1="140" x2="260" y2="140"/>
+
+        <line class="edge-hitarea" data-edge="3" x1="260" y1="140" x2="260" y2="330"/>
+        <line class="edge-line exposure-cabinet" id="el-3" data-edge="3" x1="260" y1="140" x2="260" y2="330"/>
+
+        <line class="edge-hitarea" data-edge="4" x1="260" y1="330" x2="60" y2="330"/>
+        <line class="edge-line exposure-exposed" id="el-4" data-edge="4" x1="260" y1="330" x2="60" y2="330"/>
+
+        <path class="edge-hitarea" data-edge="5" d="M60,330 Q40,330 40,310" style="stroke-width:20;stroke:transparent;fill:none;"/>
+        <path class="edge-line exposure-exposed" id="el-5" data-edge="5" d="M60,330 Q40,330 40,310"/>
+
+        <line class="edge-hitarea" data-edge="6" x1="40" y1="310" x2="40" y2="60"/>
+        <line class="edge-line exposure-exposed" id="el-6" data-edge="6" x1="40" y1="310" x2="40" y2="60"/>
+
+        <path class="edge-hitarea" data-edge="7" d="M40,60 Q40,40 60,40" style="stroke-width:20;stroke:transparent;fill:none;"/>
+        <path class="edge-line exposure-wall" id="el-7" data-edge="7" d="M40,60 Q40,40 60,40"/>
+
+        <!-- Vertices -->
+        <circle class="vertex-dot" cx="60" cy="40" r="3.5"/>
+        <circle class="vertex-dot" cx="380" cy="40" r="3.5"/>
+        <circle class="vertex-dot" cx="380" cy="140" r="3.5"/>
+        <circle class="vertex-dot" cx="260" cy="140" r="3.5"/>
+        <circle class="vertex-dot" cx="260" cy="330" r="3.5"/>
+        <circle class="vertex-dot" cx="60" cy="330" r="3.5"/>
+        <circle class="vertex-dot" cx="40" cy="310" r="3.5"/>
+        <circle class="vertex-dot" cx="40" cy="60" r="3.5"/>
+
+        <!-- Dims -->
+        <text class="dim-label" x="220" y="32" text-anchor="middle">2 400</text>
+        <text class="dim-label" x="400" y="95" text-anchor="start">720</text>
+        <text class="dim-label" x="320" y="158" text-anchor="middle">900</text>
+        <text class="dim-label" x="278" y="240" text-anchor="start">1 080</text>
+        <text class="dim-label" x="160" y="348" text-anchor="middle">1 500</text>
+        <text class="dim-label" x="24" y="185" text-anchor="end">1 440</text>
+
+        <!-- Edge IDs -->
+        <text class="edge-label-svg" data-elbl="0" x="220" y="54" text-anchor="middle">E1</text>
+        <text class="edge-label-svg" data-elbl="1" x="392" y="95" text-anchor="start">E2</text>
+        <text class="edge-label-svg" data-elbl="2" x="320" y="134" text-anchor="middle">E3</text>
+        <text class="edge-label-svg" data-elbl="3" x="248" y="240" text-anchor="end">E4</text>
+        <text class="edge-label-svg" data-elbl="4" x="160" y="324" text-anchor="middle">E5</text>
+        <text class="edge-label-svg" data-elbl="5" x="56" y="324" text-anchor="start" style="font-size:9px">E6</text>
+        <text class="edge-label-svg" data-elbl="6" x="30" y="185" text-anchor="end">E7</text>
+        <text class="edge-label-svg" data-elbl="7" x="56" y="54" text-anchor="start" style="font-size:9px">E8</text>
+      </svg>
+    </div>
+    <div class="piece-legend">
+      <div class="legend-item"><div class="legend-dot exposed"></div> Exposed</div>
+      <div class="legend-item"><div class="legend-dot wall"></div> Wall</div>
+      <div class="legend-item"><div class="legend-dot cabinet"></div> Cabinet</div>
+    </div>
+  </div>
+
+  <!-- RIGHT: EDGE CARDS -->
+  <div class="cards-pane">
+    <div class="cards-header">
+      <span class="cards-title">Edge Configuration</span>
+      <span class="cards-count">8 edges</span>
+    </div>
+    <div class="cards-scroll" id="cards-scroll">
+      <!-- Generated by JS -->
+    </div>
+    <div class="total-bar">
+      <span class="total-label">Total edge work</span>
+      <span class="total-value" id="total-value">$0.00</span>
+    </div>
+  </div>
+</div>
+
+<script>
+const edges = [
+  { id: 'E1', dim: '2 400 mm', dimNum: 2400, curved: false, exposure: 'wall',    profile: null, finish: null, buildup: false, buildupDepth: null, buildupMethod: null, attachment: 'none' },
+  { id: 'E2', dim: '720 mm',   dimNum: 720,  curved: false, exposure: 'exposed', profile: null, finish: null, buildup: false, buildupDepth: null, buildupMethod: null, attachment: 'none' },
+  { id: 'E3', dim: '900 mm',   dimNum: 900,  curved: false, exposure: 'cabinet', profile: null, finish: null, buildup: false, buildupDepth: null, buildupMethod: null, attachment: 'none' },
+  { id: 'E4', dim: '1 080 mm', dimNum: 1080, curved: false, exposure: 'cabinet', profile: null, finish: null, buildup: false, buildupDepth: null, buildupMethod: null, attachment: 'none' },
+  { id: 'E5', dim: '1 500 mm', dimNum: 1500, curved: false, exposure: 'exposed', profile: null, finish: null, buildup: false, buildupDepth: null, buildupMethod: null, attachment: 'none' },
+  { id: 'E6', dim: 'R30',      dimNum: 47,   curved: true,  exposure: 'exposed', profile: null, finish: null, buildup: false, buildupDepth: null, buildupMethod: null, attachment: 'none' },
+  { id: 'E7', dim: '1 440 mm', dimNum: 1440, curved: false, exposure: 'exposed', profile: null, finish: null, buildup: false, buildupDepth: null, buildupMethod: null, attachment: 'none' },
+  { id: 'E8', dim: 'R30',      dimNum: 47,   curved: true,  exposure: 'wall',    profile: null, finish: null, buildup: false, buildupDepth: null, buildupMethod: null, attachment: 'none' },
+];
+
+function edgeCost(e) {
+  if (!e.profile && !e.finish) return 0;
+  let base = (e.dimNum / 1000) * 28;
+  if (e.profile === 'bullnose') base *= 1.4;
+  else if (e.profile === 'ogee') base *= 1.8;
+  else if (e.profile === 'mitred') base *= 1.5;
+  else if (e.profile === 'pencil-round') base *= 1.15;
+  if (e.finish === 'polished') base *= 1.2;
+  else if (e.finish === 'honed') base *= 1.1;
+  if (e.buildup) base *= 1.3;
+  if (e.curved) base *= 1.5;
+  return base;
+}
+
+const profiles = ['raw', 'arris', 'pencil-round', 'bullnose', 'ogee', 'mitred'];
+const profileLabels = { 'raw': 'Raw', 'arris': 'Arris', 'pencil-round': 'Pencil Rnd', 'bullnose': 'Bullnose', 'ogee': 'Ogee', 'mitred': 'Mitred' };
+const finishes = ['polished', 'honed', 'raw', 'leathered'];
+const finishLabels = { polished: 'Polished', honed: 'Honed', raw: 'Raw', leathered: 'Leathered' };
+const exposures = ['exposed', 'wall', 'cabinet', 'underside'];
+const exposureLabels = { exposed: 'Exposed', wall: 'Wall', cabinet: 'Cabinet', underside: 'Underside' };
+
+let selectedEdge = null;
+const cardsScroll = document.getElementById('cards-scroll');
+
+// Build cards
+edges.forEach((e, i) => {
+  const card = document.createElement('div');
+  card.className = 'edge-card';
+  card.id = 'card-' + i;
+  card.dataset.idx = i;
+
+  // Header
+  const hdr = document.createElement('div');
+  hdr.className = 'card-header';
+
+  const left = document.createElement('div');
+  left.className = 'card-left';
+
+  const bar = document.createElement('div');
+  bar.className = 'card-exposure-bar exposure-' + e.exposure;
+  bar.id = 'card-bar-' + i;
+
+  const idEl = document.createElement('span');
+  idEl.className = 'card-id';
+  idEl.textContent = e.id;
+
+  const dimEl = document.createElement('span');
+  dimEl.className = 'card-dim';
+  dimEl.textContent = e.dim;
+
+  left.appendChild(bar);
+  left.appendChild(idEl);
+  left.appendChild(dimEl);
+
+  if (e.curved) {
+    const cb = document.createElement('span');
+    cb.className = 'card-curved-badge';
+    cb.textContent = 'CURVED';
+    left.appendChild(cb);
+  }
+
+  const summary = document.createElement('span');
+  summary.className = 'card-summary';
+  summary.id = 'card-summary-' + i;
+  summary.textContent = '';
+
+  const arrow = document.createElement('span');
+  arrow.className = 'card-expand-icon';
+  arrow.innerHTML = '<svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M3 5L7 9L11 5" stroke="currentColor" stroke-width="1.5"/></svg>';
+
+  hdr.appendChild(left);
+  hdr.appendChild(summary);
+  hdr.appendChild(arrow);
+
+  // Body
+  const body = document.createElement('div');
+  body.className = 'card-body';
+
+  // Exposure chips
+  body.appendChild(makeChipGroup('Exposure', 'exposure-' + i, exposures, exposureLabels, e.exposure, (val) => {
+    edges[i].exposure = val;
+    updateEdgeVisual(i);
+    updateTotals();
+  }));
+
+  // Profile chips
+  body.appendChild(makeChipGroup('Profile', 'profile-' + i, profiles, profileLabels, e.profile, (val) => {
+    edges[i].profile = val;
+    updateCardSummary(i);
+    updateTotals();
+  }));
+
+  // Finish chips
+  body.appendChild(makeChipGroup('Finish', 'finish-' + i, finishes, finishLabels, e.finish, (val) => {
+    edges[i].finish = val;
+    updateCardSummary(i);
+    updateTotals();
+  }));
+
+  // Build-up toggle + sub
+  const buGroup = document.createElement('div');
+  buGroup.className = 'ctrl-group';
+
+  const buRow = document.createElement('div');
+  buRow.className = 'toggle-row';
+  const buLabel = document.createElement('span');
+  buLabel.className = 'ctrl-label';
+  buLabel.style.margin = '0';
+  buLabel.textContent = 'Build-up';
+  const buToggle = document.createElement('div');
+  buToggle.className = 'toggle-switch';
+  buToggle.id = 'bu-toggle-' + i;
+  buRow.appendChild(buLabel);
+  buRow.appendChild(buToggle);
+  buGroup.appendChild(buRow);
+
+  const buSub = document.createElement('div');
+  buSub.className = 'buildup-sub';
+  buSub.id = 'bu-sub-' + i;
+
+  buSub.appendChild(makeChipRow('bu-depth-' + i, ['40', '60'], { '40': '40 mm', '60': '60 mm' }, null, (val) => {
+    edges[i].buildupDepth = val;
+    updateTotals();
+  }));
+
+  buSub.appendChild(makeChipRow('bu-method-' + i, ['mitre', 'square'], { mitre: 'Mitre', square: 'Square' }, null, (val) => {
+    edges[i].buildupMethod = val;
+  }));
+
+  buGroup.appendChild(buSub);
+  body.appendChild(buGroup);
+
+  buToggle.addEventListener('click', () => {
+    const on = !buToggle.classList.contains('on');
+    buToggle.classList.toggle('on', on);
+    edges[i].buildup = on;
+    buSub.classList.toggle('visible', on);
+    if (on && !edges[i].buildupDepth) {
+      edges[i].buildupDepth = '40';
+      edges[i].buildupMethod = 'mitre';
+      setChips('bu-depth-' + i, '40');
+      setChips('bu-method-' + i, 'mitre');
+    }
+    updateTotals();
+  });
+
+  // Attachment
+  const attGroup = document.createElement('div');
+  attGroup.className = 'ctrl-group';
+  const attLabel = document.createElement('div');
+  attLabel.className = 'ctrl-label';
+  attLabel.textContent = 'Attachment';
+  attGroup.appendChild(attLabel);
+  const sel = document.createElement('select');
+  sel.className = 'select-ctrl';
+  ['none:None', 'waterfall:Waterfall return', 'splashback:Splashback', 'upstand:Upstand'].forEach(o => {
+    const [v, l] = o.split(':');
+    const opt = document.createElement('option');
+    opt.value = v;
+    opt.textContent = l;
+    sel.appendChild(opt);
+  });
+  sel.addEventListener('change', () => { edges[i].attachment = sel.value; });
+  attGroup.appendChild(sel);
+  body.appendChild(attGroup);
+
+  // Price row
+  const priceRow = document.createElement('div');
+  priceRow.className = 'card-price';
+  priceRow.innerHTML = `<span class="card-price-label">Edge cost</span><span class="card-price-value" id="card-price-${i}">$0.00</span>`;
+  body.appendChild(priceRow);
+
+  card.appendChild(hdr);
+  card.appendChild(body);
+
+  // Toggle expand on header click
+  hdr.addEventListener('click', () => {
+    const wasOpen = card.classList.contains('open');
+    // Close all
+    document.querySelectorAll('.edge-card.open').forEach(c => c.classList.remove('open'));
+    if (!wasOpen) {
+      card.classList.add('open');
+      selectEdgeOnPiece(i);
+    } else {
+      deselectAll();
+    }
+  });
+
+  cardsScroll.appendChild(card);
+});
+
+function makeChipGroup(label, groupId, values, labels, activeVal, onChange) {
+  const g = document.createElement('div');
+  g.className = 'ctrl-group';
+  const l = document.createElement('div');
+  l.className = 'ctrl-label';
+  l.textContent = label;
+  g.appendChild(l);
+  g.appendChild(makeChipRow(groupId, values, labels, activeVal, onChange));
+  return g;
+}
+
+function makeChipRow(groupId, values, labels, activeVal, onChange) {
+  const row = document.createElement('div');
+  row.className = 'ctrl-row';
+  row.id = groupId;
+  values.forEach(v => {
+    const c = document.createElement('div');
+    c.className = 'chip' + (v === activeVal ? ' active' : '');
+    c.dataset.val = v;
+    c.textContent = labels[v] || v;
+    c.addEventListener('click', (ev) => {
+      ev.stopPropagation();
+      row.querySelectorAll('.chip').forEach(ch => ch.classList.remove('active'));
+      c.classList.add('active');
+      onChange(v);
+    });
+    row.appendChild(c);
+  });
+  return row;
+}
+
+function setChips(groupId, val) {
+  const row = document.getElementById(groupId);
+  if (!row) return;
+  row.querySelectorAll('.chip').forEach(c => c.classList.toggle('active', c.dataset.val === val));
+}
+
+function selectEdgeOnPiece(idx) {
+  selectedEdge = idx;
+  document.querySelectorAll('.edge-line.selected').forEach(el => el.classList.remove('selected'));
+  document.querySelectorAll('.edge-label-svg.selected').forEach(el => el.classList.remove('selected'));
+  document.querySelectorAll('.edge-card.selected').forEach(el => el.classList.remove('selected'));
+
+  const el = document.getElementById('el-' + idx);
+  if (el) el.classList.add('selected');
+  const lbl = document.querySelector(`[data-elbl="${idx}"]`);
+  if (lbl) lbl.classList.add('selected');
+  document.getElementById('card-' + idx).classList.add('selected');
+}
+
+function deselectAll() {
+  selectedEdge = null;
+  document.querySelectorAll('.edge-line.selected').forEach(el => el.classList.remove('selected'));
+  document.querySelectorAll('.edge-label-svg.selected').forEach(el => el.classList.remove('selected'));
+  document.querySelectorAll('.edge-card.selected').forEach(el => el.classList.remove('selected'));
+}
+
+function updateEdgeVisual(idx) {
+  const e = edges[idx];
+  const el = document.getElementById('el-' + idx);
+  if (el) {
+    el.classList.remove('exposure-exposed', 'exposure-wall', 'exposure-cabinet', 'exposure-underside');
+    el.classList.add('exposure-' + e.exposure);
+  }
+  const bar = document.getElementById('card-bar-' + idx);
+  if (bar) {
+    bar.classList.remove('exposure-exposed', 'exposure-wall', 'exposure-cabinet', 'exposure-underside');
+    bar.classList.add('exposure-' + e.exposure);
+  }
+}
+
+function updateCardSummary(idx) {
+  const e = edges[idx];
+  const parts = [];
+  if (e.profile && e.profile !== 'raw') parts.push(profileLabels[e.profile]);
+  if (e.finish && e.finish !== 'raw') parts.push(finishLabels[e.finish]);
+  document.getElementById('card-summary-' + idx).textContent = parts.join(' / ');
+}
+
+function updateTotals() {
+  let total = 0;
+  edges.forEach((e, i) => {
+    const c = edgeCost(e);
+    document.getElementById('card-price-' + i).textContent = '$' + c.toFixed(2);
+    total += c;
+    updateCardSummary(i);
+  });
+  document.getElementById('total-value').textContent = '$' + total.toFixed(2);
+
+  const configured = edges.filter(e => e.profile !== null || e.finish !== null).length;
+  document.getElementById('piece-summary').textContent = configured + ' / 8 configured';
+}
+
+// Click edge on piece → open card
+document.querySelectorAll('.edge-hitarea, .edge-line').forEach(el => {
+  el.addEventListener('click', (ev) => {
+    ev.stopPropagation();
+    const idx = parseInt(el.dataset.edge);
+    if (isNaN(idx)) return;
+    selectEdgeOnPiece(idx);
+    document.querySelectorAll('.edge-card.open').forEach(c => c.classList.remove('open'));
+    const card = document.getElementById('card-' + idx);
+    card.classList.add('open');
+    card.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+  });
+});
+
+updateTotals();
+</script>
+</body>
+</html>

@@ -1,0 +1,741 @@
+<!DOCTYPE html>
+<html lang="en-AU">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Edge Selector — Variant B: Edge Ring</title>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+:root {
+  --cinnabar: #D63F1A;
+  --cinnabar-light: #D63F1A1A;
+  --cinnabar-mid: #D63F1A33;
+  --ink: #1A1A1A;
+  --ink-secondary: #5C5C5C;
+  --ink-tertiary: #8A8A8A;
+  --surface: #FAFAFA;
+  --surface-raised: #FFFFFF;
+  --border: #E2E2E2;
+  --border-active: #CCCCCC;
+  --exposed: #D63F1A;
+  --wall: #8A8A8A;
+  --cabinet: #5C8A5C;
+  --underside: #5C5C8A;
+  --curved-edge: #2E7D9B;
+  --font-sans: 'IBM Plex Sans', sans-serif;
+  --font-mono: 'IBM Plex Mono', monospace;
+}
+
+body {
+  font-family: var(--font-sans);
+  background: var(--surface);
+  color: var(--ink);
+  -webkit-font-smoothing: antialiased;
+  overflow-x: hidden;
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 24px;
+  border-bottom: 1px solid var(--border);
+  background: var(--surface-raised);
+}
+
+.header-left {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.header-title { font-size: 14px; font-weight: 600; letter-spacing: -0.01em; }
+.header-subtitle { font-size: 12px; color: var(--ink-secondary); }
+
+.variant-badge {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--cinnabar);
+  background: var(--cinnabar-light);
+  padding: 4px 10px;
+  border: 1px solid var(--cinnabar-mid);
+  letter-spacing: 0.04em;
+}
+
+/* ── Main layout ────────────────────── */
+.main {
+  display: flex;
+  height: calc(100vh - 57px);
+}
+
+/* ── Ring canvas (left) ─────────────── */
+.ring-area {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  min-width: 0;
+}
+
+.ring-container {
+  position: relative;
+  width: 560px;
+  height: 560px;
+}
+
+/* ── Centre piece ───────────────────── */
+.centre-piece {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+}
+
+.centre-piece svg {
+  width: 200px;
+  height: 180px;
+}
+
+.piece-name {
+  position: absolute;
+  bottom: -20px;
+  left: 50%;
+  transform: translateX(-50%);
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--ink-tertiary);
+  white-space: nowrap;
+}
+
+/* ── Ring segments ──────────────────── */
+.ring-segment {
+  position: absolute;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  cursor: pointer;
+  transition: transform 0.2s;
+  user-select: none;
+}
+
+.ring-segment:hover { transform: scale(1.04); }
+.ring-segment.selected { transform: scale(1.06); }
+
+.seg-bar {
+  width: 100%;
+  height: 6px;
+  border-radius: 3px;
+  transition: height 0.15s, background 0.15s;
+}
+
+.seg-bar.exposure-exposed { background: var(--exposed); }
+.seg-bar.exposure-wall { background: var(--wall); }
+.seg-bar.exposure-cabinet { background: var(--cabinet); }
+.seg-bar.exposure-underside { background: var(--underside); }
+
+.ring-segment.selected .seg-bar { height: 8px; }
+
+.seg-id {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--ink-secondary);
+  margin-top: 4px;
+  transition: color 0.15s;
+}
+
+.ring-segment.selected .seg-id { color: var(--ink); }
+
+.seg-dim {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  color: var(--ink-tertiary);
+}
+
+.seg-profile {
+  font-size: 10px;
+  color: var(--ink-tertiary);
+  margin-top: 2px;
+  min-height: 14px;
+}
+
+.seg-curved {
+  font-family: var(--font-mono);
+  font-size: 9px;
+  color: var(--curved-edge);
+  margin-top: 1px;
+}
+
+/* ── Connector lines ────────────────── */
+.connector-line {
+  position: absolute;
+  background: var(--border);
+  transform-origin: 0 0;
+  z-index: -1;
+  transition: background 0.15s;
+}
+
+.connector-line.active { background: var(--cinnabar-mid); }
+
+/* ── Config panel (right) ───────────── */
+.config-panel {
+  width: 320px;
+  border-left: 1px solid var(--border);
+  background: var(--surface-raised);
+  display: flex;
+  flex-direction: column;
+  overflow-y: auto;
+}
+
+.panel-empty {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 40px;
+  text-align: center;
+}
+
+.panel-empty-text {
+  font-size: 13px;
+  color: var(--ink-tertiary);
+  line-height: 1.6;
+}
+
+.panel-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 20px;
+  border-bottom: 1px solid var(--border);
+}
+
+.panel-edge-id {
+  font-family: var(--font-mono);
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.panel-edge-dim {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  color: var(--ink-tertiary);
+  margin-left: 8px;
+}
+
+.panel-nav {
+  display: flex;
+  gap: 2px;
+}
+
+.nav-btn {
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: none;
+  border: 1px solid var(--border);
+  cursor: pointer;
+  color: var(--ink-secondary);
+}
+
+.nav-btn:hover { border-color: var(--border-active); color: var(--ink); }
+
+.panel-body {
+  padding: 16px 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  flex: 1;
+}
+
+/* ── Control groups ─────────────────── */
+.ctrl-group { display: flex; flex-direction: column; gap: 8px; }
+
+.ctrl-label {
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--ink-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.ctrl-chips { display: flex; flex-wrap: wrap; gap: 4px; }
+
+.chip {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  height: 36px;
+  padding: 0 12px;
+  font-family: var(--font-sans);
+  font-size: 12px;
+  color: var(--ink-secondary);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  cursor: pointer;
+  transition: all 0.12s;
+  min-width: 44px;
+  justify-content: center;
+  user-select: none;
+}
+
+.chip:hover { border-color: var(--border-active); color: var(--ink); }
+
+.chip.active {
+  border-color: var(--cinnabar);
+  color: var(--cinnabar);
+  background: var(--cinnabar-light);
+  font-weight: 500;
+}
+
+.toggle-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.toggle-switch {
+  position: relative;
+  width: 36px;
+  height: 20px;
+  background: var(--border);
+  border-radius: 10px;
+  cursor: pointer;
+  transition: background 0.2s;
+  flex-shrink: 0;
+}
+
+.toggle-switch.on { background: var(--cinnabar); }
+
+.toggle-switch::after {
+  content: '';
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: var(--surface-raised);
+  transition: transform 0.2s;
+}
+
+.toggle-switch.on::after { transform: translateX(16px); }
+
+.buildup-sub {
+  display: none;
+  flex-direction: column;
+  gap: 8px;
+  padding-left: 12px;
+  border-left: 2px solid var(--cinnabar-mid);
+}
+
+.buildup-sub.visible { display: flex; }
+
+.select-wrap { position: relative; }
+
+.select-ctrl {
+  width: 100%;
+  height: 36px;
+  padding: 0 28px 0 12px;
+  font-family: var(--font-sans);
+  font-size: 12px;
+  color: var(--ink);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  appearance: none;
+  cursor: pointer;
+}
+
+.select-ctrl:focus { outline: none; border-color: var(--cinnabar); }
+
+.select-arrow {
+  position: absolute;
+  right: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  pointer-events: none;
+  color: var(--ink-tertiary);
+}
+
+.panel-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 20px;
+  border-top: 1px solid var(--border);
+  background: var(--surface);
+}
+
+.price-label {
+  font-size: 11px;
+  color: var(--ink-tertiary);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.price-value {
+  font-family: var(--font-mono);
+  font-size: 14px;
+  font-weight: 600;
+}
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="header-left">
+    <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+      <rect x="1" y="1" width="18" height="18" stroke="#1A1A1A" stroke-width="1.5" fill="none"/>
+      <path d="M5 15 L5 5 L15 5 L15 10 L10 10 L10 15 Z" stroke="#D63F1A" stroke-width="1.5" fill="none"/>
+    </svg>
+    <div>
+      <div class="header-title">Edge Configuration</div>
+      <div class="header-subtitle">Kitchen Island — L-Shape &middot; 8 edges</div>
+    </div>
+  </div>
+  <div class="variant-badge">VARIANT B &mdash; EDGE RING</div>
+</div>
+
+<div class="main">
+  <!-- RING AREA -->
+  <div class="ring-area">
+    <div class="ring-container" id="ring-container">
+      <!-- Centre piece -->
+      <div class="centre-piece">
+        <svg viewBox="0 0 200 180" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M10,10 L150,10 L150,70 L100,70 L100,170 L10,170 Q5,170 5,165 L5,15 Q5,10 10,10 Z"
+            fill="#F5F5F5" stroke="#E2E2E2" stroke-width="1"/>
+          <!-- Edge colour indicators on the piece -->
+          <line id="piece-e0" x1="10" y1="10" x2="150" y2="10" stroke="#8A8A8A" stroke-width="2.5"/>
+          <line id="piece-e1" x1="150" y1="10" x2="150" y2="70" stroke="#D63F1A" stroke-width="2.5"/>
+          <line id="piece-e2" x1="150" y1="70" x2="100" y2="70" stroke="#5C8A5C" stroke-width="2.5"/>
+          <line id="piece-e3" x1="100" y1="70" x2="100" y2="170" stroke="#5C8A5C" stroke-width="2.5"/>
+          <line id="piece-e4" x1="100" y1="170" x2="10" y2="170" stroke="#D63F1A" stroke-width="2.5"/>
+          <path id="piece-e5" d="M10,170 Q5,170 5,165" stroke="#D63F1A" stroke-width="2.5" fill="none"/>
+          <line id="piece-e6" x1="5" y1="165" x2="5" y2="15" stroke="#D63F1A" stroke-width="2.5"/>
+          <path id="piece-e7" d="M5,15 Q5,10 10,10" stroke="#8A8A8A" stroke-width="2.5" fill="none"/>
+        </svg>
+        <div class="piece-name">Kitchen Island &middot; L-Shape</div>
+      </div>
+
+      <!-- Ring segments will be positioned by JS -->
+    </div>
+  </div>
+
+  <!-- CONFIG PANEL -->
+  <div class="config-panel" id="config-panel">
+    <div class="panel-empty" id="panel-empty">
+      <div class="panel-empty-text">
+        Select an edge segment<br>from the ring to configure<br>profile, finish and exposure
+      </div>
+    </div>
+    <div id="panel-content" style="display:none;">
+      <div class="panel-header">
+        <div>
+          <span class="panel-edge-id" id="pan-id">E1</span>
+          <span class="panel-edge-dim" id="pan-dim">2 400 mm</span>
+        </div>
+        <div class="panel-nav">
+          <button class="nav-btn" id="nav-prev">
+            <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M8 3L4 7L8 11" stroke="currentColor" stroke-width="1.5"/></svg>
+          </button>
+          <button class="nav-btn" id="nav-next">
+            <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M6 3L10 7L6 11" stroke="currentColor" stroke-width="1.5"/></svg>
+          </button>
+        </div>
+      </div>
+      <div class="panel-body">
+        <div class="ctrl-group">
+          <div class="ctrl-label">Exposure</div>
+          <div class="ctrl-chips" id="chips-exposure">
+            <div class="chip" data-val="exposed">Exposed</div>
+            <div class="chip" data-val="wall">Wall</div>
+            <div class="chip" data-val="cabinet">Cabinet</div>
+            <div class="chip" data-val="underside">Underside</div>
+          </div>
+        </div>
+        <div class="ctrl-group">
+          <div class="ctrl-label">Profile</div>
+          <div class="ctrl-chips" id="chips-profile">
+            <div class="chip" data-val="raw">Raw</div>
+            <div class="chip" data-val="arris">Arris</div>
+            <div class="chip" data-val="pencil-round">Pencil Rnd</div>
+            <div class="chip" data-val="bullnose">Bullnose</div>
+            <div class="chip" data-val="ogee">Ogee</div>
+            <div class="chip" data-val="mitred">Mitred</div>
+          </div>
+        </div>
+        <div class="ctrl-group">
+          <div class="ctrl-label">Finish</div>
+          <div class="ctrl-chips" id="chips-finish">
+            <div class="chip" data-val="polished">Polished</div>
+            <div class="chip" data-val="honed">Honed</div>
+            <div class="chip" data-val="raw">Raw</div>
+            <div class="chip" data-val="leathered">Leathered</div>
+          </div>
+        </div>
+        <div class="ctrl-group">
+          <div class="toggle-row">
+            <span class="ctrl-label" style="margin:0">Build-up</span>
+            <div class="toggle-switch" id="toggle-buildup"></div>
+          </div>
+          <div class="buildup-sub" id="buildup-sub">
+            <div class="ctrl-chips" id="chips-buildup">
+              <div class="chip" data-val="40">40 mm</div>
+              <div class="chip" data-val="60">60 mm</div>
+            </div>
+            <div class="ctrl-chips" id="chips-buildup-method">
+              <div class="chip" data-val="mitre">Mitre</div>
+              <div class="chip" data-val="square">Square</div>
+            </div>
+          </div>
+        </div>
+        <div class="ctrl-group">
+          <div class="ctrl-label">Attachment</div>
+          <div class="select-wrap">
+            <select class="select-ctrl" id="select-attachment">
+              <option value="none">None</option>
+              <option value="waterfall">Waterfall return</option>
+              <option value="splashback">Splashback</option>
+              <option value="upstand">Upstand</option>
+            </select>
+            <div class="select-arrow">
+              <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M3 5L6 8L9 5" stroke="currentColor" stroke-width="1.5"/></svg>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="panel-footer">
+        <span class="price-label">Edge cost</span>
+        <span class="price-value" id="pan-price">$0.00</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+const edges = [
+  { id: 'E1', dim: '2 400 mm', dimNum: 2400, curved: false, exposure: 'wall',    profile: null, finish: null, buildup: false, buildupDepth: null, buildupMethod: null, attachment: 'none' },
+  { id: 'E2', dim: '720 mm',   dimNum: 720,  curved: false, exposure: 'exposed', profile: null, finish: null, buildup: false, buildupDepth: null, buildupMethod: null, attachment: 'none' },
+  { id: 'E3', dim: '900 mm',   dimNum: 900,  curved: false, exposure: 'cabinet', profile: null, finish: null, buildup: false, buildupDepth: null, buildupMethod: null, attachment: 'none' },
+  { id: 'E4', dim: '1 080 mm', dimNum: 1080, curved: false, exposure: 'cabinet', profile: null, finish: null, buildup: false, buildupDepth: null, buildupMethod: null, attachment: 'none' },
+  { id: 'E5', dim: '1 500 mm', dimNum: 1500, curved: false, exposure: 'exposed', profile: null, finish: null, buildup: false, buildupDepth: null, buildupMethod: null, attachment: 'none' },
+  { id: 'E6', dim: 'R30',      dimNum: 47,   curved: true,  exposure: 'exposed', profile: null, finish: null, buildup: false, buildupDepth: null, buildupMethod: null, attachment: 'none' },
+  { id: 'E7', dim: '1 440 mm', dimNum: 1440, curved: false, exposure: 'exposed', profile: null, finish: null, buildup: false, buildupDepth: null, buildupMethod: null, attachment: 'none' },
+  { id: 'E8', dim: 'R30',      dimNum: 47,   curved: true,  exposure: 'wall',    profile: null, finish: null, buildup: false, buildupDepth: null, buildupMethod: null, attachment: 'none' },
+];
+
+const exposureColours = {
+  exposed: '#D63F1A', wall: '#8A8A8A', cabinet: '#5C8A5C', underside: '#5C5C8A'
+};
+
+function edgeCost(e) {
+  if (!e.profile && !e.finish) return 0;
+  let base = (e.dimNum / 1000) * 28;
+  if (e.profile === 'bullnose') base *= 1.4;
+  else if (e.profile === 'ogee') base *= 1.8;
+  else if (e.profile === 'mitred') base *= 1.5;
+  else if (e.profile === 'pencil-round') base *= 1.15;
+  if (e.finish === 'polished') base *= 1.2;
+  else if (e.finish === 'honed') base *= 1.1;
+  if (e.buildup) base *= 1.3;
+  if (e.curved) base *= 1.5;
+  return base;
+}
+
+// Ring layout: 8 segments positioned around the centre piece
+// We'll place them at angular positions around the ring
+const ringRadius = 220;
+const containerSize = 560;
+const centre = containerSize / 2;
+
+// Angles for each edge segment (clockwise from top)
+// E1=top, E2=top-right, E3=right, E4=bottom-right, E5=bottom, E6=bottom-left, E7=left, E8=top-left
+const segAngles = [
+  -90,    // E1 — top
+  -45,    // E2 — top right
+  0,      // E3 — right
+  45,     // E4 — bottom right
+  90,     // E5 — bottom
+  135,    // E6 — bottom left
+  180,    // E7 — left
+  -135,   // E8 — top left
+];
+
+// Segment widths proportional to edge length
+const totalPerimeter = edges.reduce((s, e) => s + e.dimNum, 0);
+const segWidths = edges.map(e => Math.max(48, Math.min(120, (e.dimNum / totalPerimeter) * 600)));
+
+let selectedEdge = null;
+const container = document.getElementById('ring-container');
+
+// Create ring segments
+edges.forEach((e, i) => {
+  const angle = segAngles[i];
+  const rad = (angle * Math.PI) / 180;
+  const x = centre + ringRadius * Math.cos(rad);
+  const y = centre + ringRadius * Math.sin(rad);
+
+  const seg = document.createElement('div');
+  seg.className = 'ring-segment';
+  seg.dataset.idx = i;
+  seg.style.left = (x - segWidths[i] / 2) + 'px';
+  seg.style.top = (y - 30) + 'px';
+  seg.style.width = segWidths[i] + 'px';
+  seg.id = 'seg-' + i;
+
+  const bar = document.createElement('div');
+  bar.className = 'seg-bar exposure-' + e.exposure;
+  bar.id = 'seg-bar-' + i;
+
+  const idEl = document.createElement('div');
+  idEl.className = 'seg-id';
+  idEl.textContent = e.id;
+
+  const dimEl = document.createElement('div');
+  dimEl.className = 'seg-dim';
+  dimEl.textContent = e.dim;
+
+  const profEl = document.createElement('div');
+  profEl.className = 'seg-profile';
+  profEl.id = 'seg-profile-' + i;
+
+  seg.appendChild(bar);
+  seg.appendChild(idEl);
+  seg.appendChild(dimEl);
+  seg.appendChild(profEl);
+
+  if (e.curved) {
+    const curvedEl = document.createElement('div');
+    curvedEl.className = 'seg-curved';
+    curvedEl.textContent = 'CURVED';
+    seg.appendChild(curvedEl);
+  }
+
+  seg.addEventListener('click', () => selectEdge(i));
+  container.appendChild(seg);
+});
+
+function selectEdge(idx) {
+  // Remove previous selection
+  document.querySelectorAll('.ring-segment.selected').forEach(el => el.classList.remove('selected'));
+
+  selectedEdge = idx;
+  document.getElementById('seg-' + idx).classList.add('selected');
+
+  // Show panel
+  document.getElementById('panel-empty').style.display = 'none';
+  document.getElementById('panel-content').style.display = 'flex';
+  document.getElementById('panel-content').style.flexDirection = 'column';
+  document.getElementById('panel-content').style.height = '100%';
+
+  const e = edges[idx];
+  document.getElementById('pan-id').textContent = e.id;
+  document.getElementById('pan-dim').textContent = e.dim + (e.curved ? ' (curved)' : '');
+
+  setChipGroup('chips-exposure', e.exposure);
+  setChipGroup('chips-profile', e.profile);
+  setChipGroup('chips-finish', e.finish);
+  setChipGroup('chips-buildup', e.buildupDepth);
+  setChipGroup('chips-buildup-method', e.buildupMethod);
+
+  const toggle = document.getElementById('toggle-buildup');
+  toggle.classList.toggle('on', e.buildup);
+  document.getElementById('buildup-sub').classList.toggle('visible', e.buildup);
+
+  document.getElementById('select-attachment').value = e.attachment || 'none';
+  updatePrice();
+}
+
+function setChipGroup(groupId, val) {
+  document.querySelectorAll(`#${groupId} .chip`).forEach(c => {
+    c.classList.toggle('active', c.dataset.val === val);
+  });
+}
+
+function updatePrice() {
+  if (selectedEdge === null) return;
+  document.getElementById('pan-price').textContent = '$' + edgeCost(edges[selectedEdge]).toFixed(2);
+}
+
+function updateSegmentVisuals(idx) {
+  const e = edges[idx];
+  const bar = document.getElementById('seg-bar-' + idx);
+  bar.className = 'seg-bar exposure-' + e.exposure;
+
+  const prof = document.getElementById('seg-profile-' + idx);
+  const parts = [];
+  if (e.profile) parts.push(e.profile);
+  if (e.finish && e.finish !== 'raw') parts.push(e.finish);
+  prof.textContent = parts.join(' / ');
+
+  // Update centre piece edge colour
+  const pieceEdge = document.getElementById('piece-e' + idx);
+  if (pieceEdge) {
+    pieceEdge.setAttribute('stroke', exposureColours[e.exposure] || '#8A8A8A');
+  }
+}
+
+// Chip group setup
+function setupChipGroup(groupId, field) {
+  document.querySelectorAll(`#${groupId} .chip`).forEach(chip => {
+    chip.addEventListener('click', () => {
+      if (selectedEdge === null) return;
+      edges[selectedEdge][field] = chip.dataset.val;
+      setChipGroup(groupId, chip.dataset.val);
+      updateSegmentVisuals(selectedEdge);
+      updatePrice();
+    });
+  });
+}
+
+setupChipGroup('chips-exposure', 'exposure');
+setupChipGroup('chips-profile', 'profile');
+setupChipGroup('chips-finish', 'finish');
+setupChipGroup('chips-buildup', 'buildupDepth');
+setupChipGroup('chips-buildup-method', 'buildupMethod');
+
+document.getElementById('toggle-buildup').addEventListener('click', function() {
+  if (selectedEdge === null) return;
+  const on = !this.classList.contains('on');
+  this.classList.toggle('on', on);
+  edges[selectedEdge].buildup = on;
+  document.getElementById('buildup-sub').classList.toggle('visible', on);
+  if (on && !edges[selectedEdge].buildupDepth) {
+    edges[selectedEdge].buildupDepth = '40';
+    edges[selectedEdge].buildupMethod = 'mitre';
+    setChipGroup('chips-buildup', '40');
+    setChipGroup('chips-buildup-method', 'mitre');
+  }
+  updatePrice();
+});
+
+document.getElementById('select-attachment').addEventListener('change', function() {
+  if (selectedEdge === null) return;
+  edges[selectedEdge].attachment = this.value;
+});
+
+document.getElementById('nav-prev').addEventListener('click', () => {
+  if (selectedEdge === null) return;
+  selectEdge((selectedEdge + edges.length - 1) % edges.length);
+});
+
+document.getElementById('nav-next').addEventListener('click', () => {
+  if (selectedEdge === null) return;
+  selectEdge((selectedEdge + 1) % edges.length);
+});
+
+document.addEventListener('keydown', (ev) => {
+  if (selectedEdge === null) return;
+  if (ev.key === 'ArrowLeft' || ev.key === 'ArrowUp') { ev.preventDefault(); selectEdge((selectedEdge + edges.length - 1) % edges.length); }
+  if (ev.key === 'ArrowRight' || ev.key === 'ArrowDown') { ev.preventDefault(); selectEdge((selectedEdge + 1) % edges.length); }
+});
+</script>
+</body>
+</html>
