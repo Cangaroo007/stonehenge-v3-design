@@ -1,0 +1,506 @@
+<!DOCTYPE html>
+<html lang="en-AU">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Stonehenge V3 — Drawing Analysis Review</title>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+:root {
+  --cinnabar: #D63F1A; --cinnabar-light: #D63F1A12; --cinnabar-mid: #D63F1A33;
+  --ink: #1A1A1A; --ink-secondary: #5C5C5C; --ink-tertiary: #8A8A8A;
+  --surface: #F5F5F4; --surface-raised: #FFFFFF; --border: #E2E2E2; --border-active: #CCCCCC;
+  --font-sans: 'IBM Plex Sans', sans-serif; --font-mono: 'IBM Plex Mono', monospace;
+  --conf-high: #3D8B37; --conf-high-bg: #3D8B3714;
+  --conf-mid: #E8A317; --conf-mid-bg: #E8A31714;
+  --conf-low: #B83D3D; --conf-low-bg: #B83D3D14;
+  --role-benchtop: #2E7D9B; --role-splashback: #8B5CF6; --role-fascia: #3D8B37;
+}
+body { font-family: var(--font-sans); background: var(--surface); color: var(--ink); -webkit-font-smoothing: antialiased; overflow: hidden; height: 100vh; }
+
+.header { display: flex; align-items: center; justify-content: space-between; height: 56px; padding: 0 24px; background: var(--surface-raised); border-bottom: 1px solid var(--border); }
+.header-left { display: flex; align-items: center; gap: 12px; }
+.back-btn { width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; background: none; border: 1px solid var(--border); cursor: pointer; color: var(--ink-secondary); }
+.header-title { font-size: 14px; font-weight: 600; }
+.header-sub { font-size: 12px; color: var(--ink-secondary); margin-left: 8px; }
+.header-right { display: flex; align-items: center; gap: 8px; }
+.header-badge { font-family: var(--font-mono); font-size: 10px; padding: 4px 10px; }
+.header-badge.pipeline { color: var(--cinnabar); background: var(--cinnabar-light); border: 1px solid var(--cinnabar-mid); }
+
+/* ── Summary bar ────────────────────── */
+.summary-bar {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 10px 24px; background: var(--surface-raised); border-bottom: 1px solid var(--border);
+}
+.summary-stats { display: flex; gap: 20px; }
+.summary-stat { display: flex; align-items: center; gap: 6px; font-size: 12px; }
+.summary-stat-value { font-family: var(--font-mono); font-weight: 600; }
+.summary-stat-label { color: var(--ink-secondary); }
+
+.conf-dot { width: 8px; height: 8px; border-radius: 50%; }
+.conf-dot.high { background: var(--conf-high); }
+.conf-dot.mid { background: var(--conf-mid); }
+.conf-dot.low { background: var(--conf-low); }
+
+.summary-actions { display: flex; gap: 8px; }
+.btn-sm { height: 32px; padding: 0 14px; font-family: var(--font-sans); font-size: 11px; font-weight: 500; cursor: pointer; border: 1px solid var(--border); background: var(--surface-raised); color: var(--ink-secondary); display: flex; align-items: center; gap: 5px; }
+.btn-sm:hover { border-color: var(--border-active); }
+.btn-commit { height: 36px; padding: 0 20px; font-family: var(--font-sans); font-size: 12px; font-weight: 600; cursor: pointer; border: none; background: var(--cinnabar); color: white; display: flex; align-items: center; gap: 6px; }
+.btn-commit:hover { opacity: 0.88; }
+
+/* ── Main split ─────────────────────── */
+.split-view { display: flex; height: calc(100vh - 56px - 44px); }
+
+/* Left: Original drawing */
+.panel-original {
+  flex: 1; display: flex; flex-direction: column;
+  border-right: 1px solid var(--border);
+}
+.panel-header {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 8px 16px; border-bottom: 1px solid var(--border);
+  background: var(--surface); flex-shrink: 0;
+}
+.panel-label { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.06em; color: var(--ink-secondary); }
+.panel-meta { font-family: var(--font-mono); font-size: 10px; color: var(--ink-tertiary); }
+.panel-canvas {
+  flex: 1; display: flex; align-items: center; justify-content: center;
+  background: #EAEAE8; overflow: hidden; position: relative;
+}
+
+/* Right: V3 interpretation */
+.panel-interpreted {
+  flex: 1; display: flex; flex-direction: column;
+}
+
+/* ── Drawing SVGs ───────────────────── */
+.drawing-svg { width: 90%; max-height: 80%; }
+
+/* ── Piece list (right sidebar) ────── */
+.piece-sidebar {
+  width: 300px; background: var(--surface-raised); border-left: 1px solid var(--border);
+  display: flex; flex-direction: column; flex-shrink: 0;
+}
+.ps-header {
+  padding: 10px 16px; border-bottom: 1px solid var(--border);
+  font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.06em; color: var(--ink-secondary);
+  display: flex; align-items: center; justify-content: space-between;
+}
+.ps-count { font-family: var(--font-mono); font-size: 10px; color: var(--ink-tertiary); font-weight: 500; }
+.ps-list { flex: 1; overflow-y: auto; }
+
+.piece-card {
+  padding: 12px 16px; border-bottom: 1px solid var(--border);
+  cursor: pointer; transition: background 0.08s;
+}
+.piece-card:hover { background: var(--surface); }
+.piece-card.selected { background: var(--cinnabar-light); border-left: 3px solid var(--cinnabar); padding-left: 13px; }
+.piece-card.needs-review { border-left: 3px solid var(--conf-mid); padding-left: 13px; }
+
+.pc-top { display: flex; align-items: center; justify-content: space-between; margin-bottom: 6px; }
+.pc-id { font-family: var(--font-mono); font-size: 11px; font-weight: 600; }
+.pc-conf { display: flex; align-items: center; gap: 4px; font-family: var(--font-mono); font-size: 10px; }
+.pc-conf.high { color: var(--conf-high); }
+.pc-conf.mid { color: var(--conf-mid); }
+.pc-conf.low { color: var(--conf-low); }
+
+.pc-name { font-size: 12px; font-weight: 500; margin-bottom: 4px; }
+.pc-dims { font-family: var(--font-mono); font-size: 11px; color: var(--ink-tertiary); margin-bottom: 4px; }
+
+.pc-role-badge {
+  display: inline-flex; align-items: center; gap: 4px;
+  font-family: var(--font-mono); font-size: 9px; padding: 2px 6px;
+  border: 1px solid var(--border); background: var(--surface);
+}
+.pc-role-dot { width: 6px; height: 6px; border-radius: 50%; }
+
+.pc-issues { margin-top: 6px; font-size: 10px; color: var(--conf-mid); display: flex; align-items: center; gap: 4px; }
+
+/* ── Detail panel (appears when piece selected) ── */
+.detail-overlay {
+  display: none; position: absolute; bottom: 0; left: 0; right: 0;
+  background: var(--surface-raised); border-top: 1px solid var(--border);
+  padding: 16px 20px; max-height: 200px; overflow-y: auto;
+}
+.detail-overlay.visible { display: block; }
+.detail-title { font-size: 13px; font-weight: 600; margin-bottom: 10px; display: flex; align-items: center; gap: 8px; }
+.detail-close { width: 24px; height: 24px; display: flex; align-items: center; justify-content: center; background: none; border: 1px solid var(--border); cursor: pointer; color: var(--ink-tertiary); margin-left: auto; }
+
+.dim-edit-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; }
+.dim-edit-item { }
+.dim-edit-label { font-size: 9px; font-weight: 500; color: var(--ink-tertiary); text-transform: uppercase; letter-spacing: 0.04em; margin-bottom: 3px; }
+.dim-edit-row { display: flex; align-items: center; gap: 4px; }
+.dim-edit-ai { font-family: var(--font-mono); font-size: 11px; color: var(--ink-tertiary); text-decoration: line-through; min-width: 50px; }
+.dim-edit-input {
+  width: 80px; height: 28px; padding: 0 8px;
+  font-family: var(--font-mono); font-size: 11px; color: var(--ink);
+  background: var(--surface); border: 1px solid var(--border); text-align: right;
+}
+.dim-edit-input:focus { outline: none; border-color: var(--cinnabar); }
+.dim-edit-input.modified { border-color: var(--cinnabar); background: var(--cinnabar-light); }
+.dim-edit-unit { font-family: var(--font-mono); font-size: 9px; color: var(--ink-tertiary); }
+.dim-match { font-family: var(--font-mono); font-size: 11px; color: var(--conf-high); }
+
+.screen-label { position: fixed; bottom: 12px; right: 320px; font-family: var(--font-mono); font-size: 10px; color: var(--cinnabar); background: var(--cinnabar-light); border: 1px solid var(--cinnabar-mid); padding: 4px 10px; letter-spacing: 0.04em; z-index: 20; }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="header-left">
+    <button class="back-btn"><svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M9 3L5 7L9 11" stroke="currentColor" stroke-width="1.5"/></svg></button>
+    <span class="header-title">Review extraction</span>
+    <span class="header-sub">Sandgate-Kitchen-Plan.pdf</span>
+  </div>
+  <div class="header-right">
+    <span class="header-badge pipeline">PIPELINE A &middot; VECTOR PDF</span>
+  </div>
+</div>
+
+<div class="summary-bar">
+  <div class="summary-stats">
+    <div class="summary-stat">
+      <span class="summary-stat-value">6</span>
+      <span class="summary-stat-label">pieces detected</span>
+    </div>
+    <div class="summary-stat">
+      <span class="summary-stat-value">2</span>
+      <span class="summary-stat-label">cutouts</span>
+    </div>
+    <div class="summary-stat">
+      <div class="conf-dot high"></div>
+      <span class="summary-stat-value" style="color:var(--conf-high)">4 high</span>
+    </div>
+    <div class="summary-stat">
+      <div class="conf-dot mid"></div>
+      <span class="summary-stat-value" style="color:var(--conf-mid)">1 review</span>
+    </div>
+    <div class="summary-stat">
+      <div class="conf-dot low"></div>
+      <span class="summary-stat-value" style="color:var(--conf-low)">1 low</span>
+    </div>
+    <div class="summary-stat" style="margin-left:12px;">
+      <span class="summary-stat-label">Scale:</span>
+      <span class="summary-stat-value">1:50</span>
+      <span class="summary-stat-label">(auto-detected)</span>
+    </div>
+  </div>
+  <div class="summary-actions">
+    <button class="btn-sm">
+      <svg width="10" height="10" viewBox="0 0 10 10" fill="none"><path d="M1 5 L5 1 L9 5 M5 1 V9" stroke="currentColor" stroke-width="1.2"/></svg>
+      Re-upload
+    </button>
+    <button class="btn-sm">Manual trace</button>
+    <button class="btn-commit" id="btn-commit">
+      Commit 6 pieces to quote
+      <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M4 2L8 6L4 10" stroke="currentColor" stroke-width="1.5"/></svg>
+    </button>
+  </div>
+</div>
+
+<div class="split-view">
+  <!-- LEFT: Original drawing -->
+  <div class="panel-original">
+    <div class="panel-header">
+      <span class="panel-label">Original drawing</span>
+      <span class="panel-meta">Sandgate-Kitchen-Plan.pdf &middot; Page 1 of 1</span>
+    </div>
+    <div class="panel-canvas">
+      <svg class="drawing-svg" viewBox="0 0 500 380" xmlns="http://www.w3.org/2000/svg">
+        <!-- Simulated architect's drawing — slightly rough, typical style -->
+        <defs>
+          <pattern id="paper" width="20" height="20" patternUnits="userSpaceOnUse">
+            <rect width="20" height="20" fill="#F8F7F4"/>
+            <line x1="0" y1="20" x2="20" y2="20" stroke="#E8E6E0" stroke-width="0.3"/>
+            <line x1="20" y1="0" x2="20" y2="20" stroke="#E8E6E0" stroke-width="0.3"/>
+          </pattern>
+        </defs>
+        <rect width="500" height="380" fill="url(#paper)"/>
+
+        <!-- Title block -->
+        <text x="20" y="24" fill="#666" font-family="IBM Plex Mono" font-size="8">SANDGATE KITCHEN RENOVATION</text>
+        <text x="20" y="34" fill="#999" font-family="IBM Plex Mono" font-size="6">SCALE 1:50 | DWG NO. A-101 | REV C</text>
+
+        <!-- Room walls (thicker) -->
+        <rect x="40" y="50" width="420" height="300" fill="none" stroke="#333" stroke-width="2.5"/>
+
+        <!-- Main bench along top wall -->
+        <rect x="50" y="58" width="400" height="50" fill="#E8E6E0" stroke="#555" stroke-width="1.2"/>
+        <text x="250" y="88" text-anchor="middle" fill="#555" font-family="IBM Plex Mono" font-size="7">MAIN BENCH</text>
+
+        <!-- Cooktop cutout -->
+        <rect x="280" y="65" width="45" height="36" fill="white" stroke="#555" stroke-width="0.8" stroke-dasharray="3 1.5"/>
+        <text x="302" y="87" text-anchor="middle" fill="#888" font-family="IBM Plex Mono" font-size="5">CT</text>
+
+        <!-- Splashback -->
+        <rect x="50" y="108" width="400" height="35" fill="#F0EDE6" stroke="#555" stroke-width="0.8"/>
+        <text x="250" y="130" text-anchor="middle" fill="#888" font-family="IBM Plex Mono" font-size="6">SPLASH</text>
+
+        <!-- Island bench (L-shape) -->
+        <path d="M140,180 L340,180 L340,240 L260,240 L260,310 L140,310 Z" fill="#E8E6E0" stroke="#555" stroke-width="1.2"/>
+        <text x="240" y="210" text-anchor="middle" fill="#555" font-family="IBM Plex Mono" font-size="7">ISLAND</text>
+
+        <!-- Sink cutout in island -->
+        <rect x="180" y="192" width="50" height="28" fill="white" stroke="#555" stroke-width="0.8" stroke-dasharray="3 1.5"/>
+        <text x="205" y="210" text-anchor="middle" fill="#888" font-family="IBM Plex Mono" font-size="5">SINK</text>
+
+        <!-- Window sill -->
+        <rect x="120" y="322" width="180" height="24" fill="#E8E6E0" stroke="#555" stroke-width="0.8"/>
+        <text x="210" y="338" text-anchor="middle" fill="#888" font-family="IBM Plex Mono" font-size="6">WINDOW SILL</text>
+
+        <!-- Dimension lines (architectural style) -->
+        <line x1="50" y1="48" x2="450" y2="48" stroke="#999" stroke-width="0.4"/>
+        <text x="250" y="46" text-anchor="middle" fill="#999" font-family="IBM Plex Mono" font-size="6">3 600</text>
+        <line x1="455" y1="58" x2="455" y2="108" stroke="#999" stroke-width="0.4"/>
+        <text x="468" y="86" fill="#999" font-family="IBM Plex Mono" font-size="6">600</text>
+
+        <line x1="140" y1="172" x2="340" y2="172" stroke="#999" stroke-width="0.4"/>
+        <text x="240" y="170" text-anchor="middle" fill="#999" font-family="IBM Plex Mono" font-size="6">2 400</text>
+        <line x1="132" y1="180" x2="132" y2="310" stroke="#999" stroke-width="0.4"/>
+        <text x="126" y="250" fill="#999" font-family="IBM Plex Mono" font-size="6" transform="rotate(-90 126 250)">1 560</text>
+
+        <!-- Highlight overlay for selected piece -->
+        <rect x="50" y="58" width="400" height="50" fill="#2E7D9B20" stroke="#2E7D9B" stroke-width="2" id="highlight-original" style="display:none;"/>
+      </svg>
+    </div>
+  </div>
+
+  <!-- RIGHT: V3 interpretation (true proportional) -->
+  <div class="panel-interpreted">
+    <div class="panel-header">
+      <span class="panel-label">V3 interpretation (true proportions)</span>
+      <span class="panel-meta">Re-rendered at detected scale</span>
+    </div>
+    <div class="panel-canvas" style="position:relative;">
+      <svg class="drawing-svg" viewBox="0 0 500 380" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+          <pattern id="grid" width="20" height="20" patternUnits="userSpaceOnUse">
+            <circle cx="10" cy="10" r="0.4" fill="#D4D4D4"/>
+          </pattern>
+        </defs>
+        <rect width="500" height="380" fill="url(#grid)"/>
+
+        <!-- V3's clean rendering — true proportions -->
+        <!-- Main bench -->
+        <rect x="50" y="50" width="400" height="60" fill="#2E7D9B18" stroke="#2E7D9B" stroke-width="2" class="v3-piece" data-piece="1"/>
+        <text x="250" y="84" text-anchor="middle" fill="#2E7D9B" font-family="IBM Plex Mono" font-size="8" font-weight="500">1.1 MAIN BENCH</text>
+        <!-- Confidence indicator -->
+        <circle cx="440" cy="60" r="6" fill="#3D8B37" opacity="0.8"/>
+        <text x="440" y="63" text-anchor="middle" fill="white" font-family="IBM Plex Mono" font-size="6" font-weight="600">H</text>
+
+        <!-- Cooktop cutout -->
+        <rect x="285" y="60" width="50" height="40" fill="white" stroke="#2E7D9B" stroke-width="1" stroke-dasharray="4 2"/>
+        <text x="310" y="84" text-anchor="middle" fill="#8A8A8A" font-family="IBM Plex Mono" font-size="6">COOKTOP</text>
+
+        <!-- Splashback -->
+        <rect x="50" y="110" width="400" height="40" fill="#8B5CF618" stroke="#8B5CF6" stroke-width="1.5" class="v3-piece" data-piece="2"/>
+        <text x="250" y="134" text-anchor="middle" fill="#8B5CF6" font-family="IBM Plex Mono" font-size="8" font-weight="500">1.2 SPLASHBACK</text>
+        <circle cx="440" cy="120" r="6" fill="#3D8B37" opacity="0.8"/>
+        <text x="440" y="123" text-anchor="middle" fill="white" font-family="IBM Plex Mono" font-size="6" font-weight="600">H</text>
+
+        <!-- Island bench (L-shape) -->
+        <path d="M140,180 L340,180 L340,240 L260,240 L260,320 L140,320 Z" fill="#2E7D9B18" stroke="#2E7D9B" stroke-width="2" class="v3-piece" data-piece="3"/>
+        <text x="240" y="206" text-anchor="middle" fill="#2E7D9B" font-family="IBM Plex Mono" font-size="8" font-weight="500">2.1 ISLAND (L-SHAPE)</text>
+        <circle cx="330" cy="190" r="6" fill="#3D8B37" opacity="0.8"/>
+        <text x="330" y="193" text-anchor="middle" fill="white" font-family="IBM Plex Mono" font-size="6" font-weight="600">H</text>
+
+        <!-- Sink cutout -->
+        <rect x="185" y="192" width="50" height="30" fill="white" stroke="#2E7D9B" stroke-width="1" stroke-dasharray="4 2"/>
+        <text x="210" y="211" text-anchor="middle" fill="#8A8A8A" font-family="IBM Plex Mono" font-size="6">SINK</text>
+
+        <!-- Fascia strip (detected with lower confidence) -->
+        <rect x="140" y="316" width="200" height="8" fill="#3D8B3718" stroke="#3D8B37" stroke-width="1.5" class="v3-piece" data-piece="4"/>
+        <text x="240" y="340" text-anchor="middle" fill="#3D8B37" font-family="IBM Plex Mono" font-size="7">2.2 FASCIA</text>
+        <circle cx="332" cy="320" r="6" fill="#E8A317" opacity="0.8"/>
+        <text x="332" y="323" text-anchor="middle" fill="white" font-family="IBM Plex Mono" font-size="6" font-weight="600">M</text>
+
+        <!-- Window sill -->
+        <rect x="130" y="340" width="180" height="28" fill="#2E7D9B18" stroke="#2E7D9B" stroke-width="1.5" class="v3-piece" data-piece="5"/>
+        <text x="220" y="358" text-anchor="middle" fill="#2E7D9B" font-family="IBM Plex Mono" font-size="8" font-weight="500">3.1 WINDOW SILL</text>
+        <circle cx="302" cy="350" r="6" fill="#3D8B37" opacity="0.8"/>
+        <text x="302" y="353" text-anchor="middle" fill="white" font-family="IBM Plex Mono" font-size="6" font-weight="600">H</text>
+
+        <!-- Unknown piece (low confidence) -->
+        <rect x="400" y="200" width="60" height="100" fill="#B83D3D14" stroke="#B83D3D" stroke-width="1.5" stroke-dasharray="4 2" class="v3-piece" data-piece="6"/>
+        <text x="430" y="255" text-anchor="middle" fill="#B83D3D" font-family="IBM Plex Mono" font-size="7">??? PANEL</text>
+        <circle cx="450" cy="210" r="6" fill="#B83D3D" opacity="0.8"/>
+        <text x="450" y="213" text-anchor="middle" fill="white" font-family="IBM Plex Mono" font-size="6" font-weight="600">L</text>
+
+        <!-- Dimension lines (clean, V3 style) -->
+        <line x1="50" y1="42" x2="450" y2="42" stroke="#CCCCCC" stroke-width="0.5"/>
+        <text x="250" y="38" text-anchor="middle" fill="#8A8A8A" font-family="IBM Plex Mono" font-size="7">3 600</text>
+        <line x1="458" y1="50" x2="458" y2="110" stroke="#CCCCCC" stroke-width="0.5"/>
+        <text x="472" y="84" fill="#8A8A8A" font-family="IBM Plex Mono" font-size="7">600</text>
+      </svg>
+
+      <!-- Detail overlay -->
+      <div class="detail-overlay" id="detail-overlay">
+        <div class="detail-title">
+          <span id="detail-piece-name">1.1 Main Bench</span>
+          <span style="font-family:var(--font-mono);font-size:10px;color:var(--conf-high);">98% confidence</span>
+          <button class="detail-close" id="detail-close">
+            <svg width="10" height="10" viewBox="0 0 10 10" fill="none"><path d="M2 2L8 8M8 2L2 8" stroke="currentColor" stroke-width="1.2"/></svg>
+          </button>
+        </div>
+        <div class="dim-edit-grid">
+          <div class="dim-edit-item">
+            <div class="dim-edit-label">Width</div>
+            <div class="dim-edit-row">
+              <span class="dim-match">3 600</span>
+              <input class="dim-edit-input" type="text" value="3600">
+              <span class="dim-edit-unit">mm</span>
+            </div>
+          </div>
+          <div class="dim-edit-item">
+            <div class="dim-edit-label">Depth</div>
+            <div class="dim-edit-row">
+              <span class="dim-match">600</span>
+              <input class="dim-edit-input" type="text" value="600">
+              <span class="dim-edit-unit">mm</span>
+            </div>
+          </div>
+          <div class="dim-edit-item">
+            <div class="dim-edit-label">Role</div>
+            <div class="dim-edit-row">
+              <select style="width:120px;height:28px;padding:0 8px;font-family:var(--font-sans);font-size:11px;color:var(--ink);background:var(--surface);border:1px solid var(--border);appearance:none;">
+                <option selected>Benchtop</option>
+                <option>Splashback</option>
+                <option>Fascia</option>
+                <option>Window sill</option>
+              </select>
+            </div>
+          </div>
+          <div class="dim-edit-item">
+            <div class="dim-edit-label">Cutout 1</div>
+            <div class="dim-edit-row">
+              <span class="dim-match">600 x 500</span>
+              <span class="dim-edit-unit">Cooktop</span>
+            </div>
+          </div>
+          <div class="dim-edit-item">
+            <div class="dim-edit-label">Edges detected</div>
+            <div class="dim-edit-row">
+              <span style="font-family:var(--font-mono);font-size:11px;">4 straight</span>
+            </div>
+          </div>
+          <div class="dim-edit-item">
+            <div class="dim-edit-label">Action</div>
+            <div class="dim-edit-row">
+              <button style="height:28px;padding:0 10px;font-family:var(--font-sans);font-size:10px;font-weight:500;color:var(--conf-low);background:none;border:1px solid #B83D3D30;cursor:pointer;">Remove piece</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- PIECE SIDEBAR -->
+  <div class="piece-sidebar">
+    <div class="ps-header">
+      <span>Detected pieces</span>
+      <span class="ps-count">6 pieces &middot; 2 cutouts</span>
+    </div>
+    <div class="ps-list">
+      <div class="piece-card selected" data-piece="1">
+        <div class="pc-top">
+          <span class="pc-id">1.1</span>
+          <div class="pc-conf high"><div class="conf-dot high"></div> 98%</div>
+        </div>
+        <div class="pc-name">Main Bench</div>
+        <div class="pc-dims">3 600 x 600 mm</div>
+        <span class="pc-role-badge"><span class="pc-role-dot" style="background:var(--role-benchtop)"></span> BENCHTOP</span>
+      </div>
+
+      <div class="piece-card" data-piece="2">
+        <div class="pc-top">
+          <span class="pc-id">1.2</span>
+          <div class="pc-conf high"><div class="conf-dot high"></div> 95%</div>
+        </div>
+        <div class="pc-name">Splashback</div>
+        <div class="pc-dims">3 600 x 400 mm</div>
+        <span class="pc-role-badge"><span class="pc-role-dot" style="background:var(--role-splashback)"></span> SPLASHBACK</span>
+      </div>
+
+      <div class="piece-card" data-piece="3">
+        <div class="pc-top">
+          <span class="pc-id">2.1</span>
+          <div class="pc-conf high"><div class="conf-dot high"></div> 91%</div>
+        </div>
+        <div class="pc-name">Island Bench (L-Shape)</div>
+        <div class="pc-dims">2 400 x 1 560 mm (L)</div>
+        <span class="pc-role-badge"><span class="pc-role-dot" style="background:var(--role-benchtop)"></span> BENCHTOP</span>
+      </div>
+
+      <div class="piece-card needs-review" data-piece="4">
+        <div class="pc-top">
+          <span class="pc-id">2.2</span>
+          <div class="pc-conf mid"><div class="conf-dot mid"></div> 72%</div>
+        </div>
+        <div class="pc-name">Fascia Strip</div>
+        <div class="pc-dims">2 000 x 40 mm</div>
+        <span class="pc-role-badge"><span class="pc-role-dot" style="background:var(--role-fascia)"></span> FASCIA</span>
+        <div class="pc-issues">
+          <svg width="10" height="10" viewBox="0 0 10 10" fill="none"><circle cx="5" cy="5" r="4" stroke="currentColor" stroke-width="1"/><line x1="5" y1="3" x2="5" y2="5.5" stroke="currentColor" stroke-width="0.8"/><circle cx="5" cy="7" r="0.5" fill="currentColor"/></svg>
+          Width uncertain — check against drawing
+        </div>
+      </div>
+
+      <div class="piece-card" data-piece="5">
+        <div class="pc-top">
+          <span class="pc-id">3.1</span>
+          <div class="pc-conf high"><div class="conf-dot high"></div> 88%</div>
+        </div>
+        <div class="pc-name">Window Sill</div>
+        <div class="pc-dims">1 500 x 300 mm</div>
+        <span class="pc-role-badge"><span class="pc-role-dot" style="background:var(--role-benchtop)"></span> BENCHTOP</span>
+      </div>
+
+      <div class="piece-card needs-review" data-piece="6">
+        <div class="pc-top">
+          <span class="pc-id">???</span>
+          <div class="pc-conf low"><div class="conf-dot low"></div> 34%</div>
+        </div>
+        <div class="pc-name">Unknown Panel</div>
+        <div class="pc-dims">600 x 900 mm</div>
+        <span class="pc-role-badge"><span class="pc-role-dot" style="background:var(--ink-tertiary)"></span> UNKNOWN</span>
+        <div class="pc-issues" style="color:var(--conf-low);">
+          <svg width="10" height="10" viewBox="0 0 10 10" fill="none"><circle cx="5" cy="5" r="4" stroke="currentColor" stroke-width="1"/><line x1="5" y1="3" x2="5" y2="5.5" stroke="currentColor" stroke-width="0.8"/><circle cx="5" cy="7" r="0.5" fill="currentColor"/></svg>
+          Could not identify — remove or assign role
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="screen-label">SCREEN 05b &mdash; DRAWING ANALYSIS REVIEW</div>
+
+<script>
+// Piece selection
+document.querySelectorAll('.piece-card').forEach(card => {
+  card.addEventListener('click', () => {
+    document.querySelectorAll('.piece-card').forEach(c => c.classList.remove('selected'));
+    card.classList.add('selected');
+    document.getElementById('detail-overlay').classList.add('visible');
+    document.getElementById('detail-piece-name').textContent = card.querySelector('.pc-name').textContent;
+  });
+});
+
+document.getElementById('detail-close').addEventListener('click', () => {
+  document.getElementById('detail-overlay').classList.remove('visible');
+});
+
+// SVG piece hover
+document.querySelectorAll('.v3-piece').forEach(piece => {
+  piece.style.cursor = 'pointer';
+  piece.addEventListener('click', () => {
+    const id = piece.dataset.piece;
+    document.querySelectorAll('.piece-card').forEach(c => c.classList.remove('selected'));
+    const card = document.querySelector(`.piece-card[data-piece="${id}"]`);
+    if (card) { card.classList.add('selected'); card.scrollIntoView({ block: 'nearest' }); }
+    document.getElementById('detail-overlay').classList.add('visible');
+  });
+});
+</script>
+</body>
+</html>
