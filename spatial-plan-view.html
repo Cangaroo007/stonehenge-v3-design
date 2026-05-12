@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html lang="en-AU">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Stonehenge V3 — Spatial Plan View</title>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+:root {
+  --cinnabar: #D63F1A; --cinnabar-light: #D63F1A12; --cinnabar-mid: #D63F1A33;
+  --ink: #1A1A1A; --ink-secondary: #5C5C5C; --ink-tertiary: #8A8A8A;
+  --surface: #F5F5F4; --surface-raised: #FFFFFF; --border: #E2E2E2;
+  --font-sans: 'IBM Plex Sans', sans-serif; --font-mono: 'IBM Plex Mono', monospace;
+  --role-benchtop: #2E7D9B; --role-fascia: #3D8B37; --role-splashback: #8B5CF6;
+}
+body { font-family: var(--font-sans); background: var(--surface); color: var(--ink); -webkit-font-smoothing: antialiased; overflow: hidden; height: 100vh; }
+
+.header { display: flex; align-items: center; justify-content: space-between; height: 56px; padding: 0 24px; background: var(--surface-raised); border-bottom: 1px solid var(--border); }
+.header-left { display: flex; align-items: center; gap: 12px; }
+.header-title { font-size: 14px; font-weight: 600; }
+.header-sub { font-size: 12px; color: var(--ink-secondary); margin-left: 8px; }
+
+.tab-bar { display: flex; padding: 0 24px; background: var(--surface-raised); border-bottom: 1px solid var(--border); }
+.tab-item { padding: 10px 16px; font-size: 12px; font-weight: 500; color: var(--ink-tertiary); cursor: pointer; border-bottom: 2px solid transparent; }
+.tab-item.active { color: var(--cinnabar); border-bottom-color: var(--cinnabar); }
+
+.layout { display: flex; height: calc(100vh - 98px); }
+
+/* ── Left toolbar ───────────────────── */
+.left-rail {
+  width: 48px; background: var(--surface-raised); border-right: 1px solid var(--border);
+  display: flex; flex-direction: column; align-items: center; padding: 12px 0; gap: 4px;
+}
+.rail-btn {
+  width: 36px; height: 36px; display: flex; align-items: center; justify-content: center;
+  background: none; border: 1px solid transparent; cursor: pointer; color: var(--ink-tertiary);
+}
+.rail-btn:hover { border-color: var(--border); color: var(--ink-secondary); }
+.rail-btn.active { border-color: var(--cinnabar); color: var(--cinnabar); background: var(--cinnabar-light); }
+.rail-sep { width: 24px; height: 1px; background: var(--border); margin: 4px 0; }
+
+/* ── Canvas ─────────────────────────── */
+.canvas-area {
+  flex: 1; position: relative; background: var(--surface);
+  display: flex; align-items: center; justify-content: center;
+}
+
+.view-toggle {
+  position: absolute; top: 12px; left: 12px;
+  display: flex; gap: 0; z-index: 10;
+}
+.view-btn {
+  height: 32px; padding: 0 12px;
+  font-family: var(--font-sans); font-size: 11px; font-weight: 500;
+  color: var(--ink-secondary); background: var(--surface-raised);
+  border: 1px solid var(--border); cursor: pointer;
+}
+.view-btn + .view-btn { border-left: none; }
+.view-btn.active { border-color: var(--cinnabar); color: var(--cinnabar); background: var(--cinnabar-light); }
+
+.zoom-controls {
+  position: absolute; bottom: 12px; right: 12px;
+  display: flex; gap: 2px; z-index: 10;
+}
+.zoom-btn {
+  width: 32px; height: 32px; display: flex; align-items: center; justify-content: center;
+  background: var(--surface-raised); border: 1px solid var(--border); cursor: pointer; color: var(--ink-secondary);
+  font-family: var(--font-mono); font-size: 14px;
+}
+
+.canvas-inner svg { width: 600px; height: 440px; }
+
+/* ── Right panel ────────────────────── */
+.right-panel {
+  width: 280px; background: var(--surface-raised); border-left: 1px solid var(--border);
+  display: flex; flex-direction: column;
+}
+.rp-header {
+  padding: 12px 16px; border-bottom: 1px solid var(--border);
+  font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.06em; color: var(--ink-secondary);
+}
+.rp-body { flex: 1; overflow-y: auto; padding: 12px 16px; }
+
+.legend-section { margin-bottom: 16px; }
+.legend-title { font-size: 10px; font-weight: 500; color: var(--ink-tertiary); text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 8px; }
+
+.legend-item { display: flex; align-items: center; gap: 8px; padding: 6px 0; font-size: 12px; }
+.legend-swatch { width: 12px; height: 12px; flex-shrink: 0; }
+
+.piece-list-item {
+  display: flex; align-items: center; gap: 8px; padding: 8px 0;
+  border-bottom: 1px solid var(--border); cursor: pointer; font-size: 12px;
+}
+.piece-list-item:hover { color: var(--cinnabar); }
+.pli-dot { width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0; }
+.pli-id { font-family: var(--font-mono); font-size: 10px; font-weight: 500; min-width: 24px; }
+.pli-name { flex: 1; }
+.pli-dims { font-family: var(--font-mono); font-size: 10px; color: var(--ink-tertiary); }
+
+.screen-label { position: fixed; bottom: 20px; right: 300px; font-family: var(--font-mono); font-size: 10px; color: var(--cinnabar); background: var(--cinnabar-light); border: 1px solid var(--cinnabar-mid); padding: 4px 10px; letter-spacing: 0.04em; z-index: 20; }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="header-left">
+    <svg width="22" height="22" viewBox="0 0 22 22" fill="none"><rect x="1" y="1" width="20" height="20" stroke="#1A1A1A" stroke-width="1.5" fill="none"/><path d="M5 17 L5 5 L17 5 L17 11 L11 11 L11 17 Z" stroke="#D63F1A" stroke-width="1.5" fill="none"/></svg>
+    <span class="header-title">Q-2026-0042</span>
+    <span class="header-sub">Hashtag Hub &middot; Sandgate Kitchen</span>
+  </div>
+</div>
+
+<div class="tab-bar">
+  <div class="tab-item active">Spatial</div>
+  <div class="tab-item">Config</div>
+  <div class="tab-item">Parts List</div>
+  <div class="tab-item">Pricing</div>
+  <div class="tab-item">PDF</div>
+  <div class="tab-item">Activity</div>
+</div>
+
+<div class="layout">
+  <div class="left-rail">
+    <button class="rail-btn active" title="Select">
+      <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M3 2L3 13L7 10L10 14L12 13L9 9L13 8Z" stroke="currentColor" stroke-width="1.2" fill="none"/></svg>
+    </button>
+    <button class="rail-btn" title="Pan">
+      <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M8 2V14M2 8H14" stroke="currentColor" stroke-width="1.2"/><path d="M8 2L6 4M8 2L10 4M8 14L6 12M8 14L10 12M2 8L4 6M2 8L4 10M14 8L12 6M14 8L12 10" stroke="currentColor" stroke-width="1"/></svg>
+    </button>
+    <button class="rail-btn" title="Measure">
+      <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><line x1="3" y1="13" x2="13" y2="3" stroke="currentColor" stroke-width="1.2"/><line x1="3" y1="13" x2="3" y2="10" stroke="currentColor" stroke-width="1"/><line x1="3" y1="13" x2="6" y2="13" stroke="currentColor" stroke-width="1"/></svg>
+    </button>
+    <div class="rail-sep"></div>
+    <button class="rail-btn" title="Add piece">
+      <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><line x1="8" y1="3" x2="8" y2="13" stroke="currentColor" stroke-width="1.5"/><line x1="3" y1="8" x2="13" y2="8" stroke="currentColor" stroke-width="1.5"/></svg>
+    </button>
+    <button class="rail-btn" title="Import drawing">
+      <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><rect x="3" y="2" width="10" height="12" stroke="currentColor" stroke-width="1.2" fill="none"/><path d="M6 8L8 10L10 8M8 5V10" stroke="currentColor" stroke-width="1"/></svg>
+    </button>
+  </div>
+
+  <div class="canvas-area">
+    <div class="view-toggle">
+      <button class="view-btn active" data-view="plan">Customer</button>
+      <button class="view-btn" data-view="shop">Shop Floor</button>
+      <button class="view-btn" data-view="cut">Cut Card</button>
+    </div>
+
+    <div class="canvas-inner">
+      <svg viewBox="0 0 600 440" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+          <pattern id="grid" width="20" height="20" patternUnits="userSpaceOnUse">
+            <circle cx="10" cy="10" r="0.4" fill="#D4D4D4"/>
+          </pattern>
+        </defs>
+        <rect width="600" height="440" fill="url(#grid)"/>
+
+        <!-- Room walls (light) -->
+        <rect x="40" y="30" width="520" height="380" fill="none" stroke="#D4D4D4" stroke-width="1" stroke-dasharray="6 3"/>
+        <text x="50" y="24" fill="#D4D4D4" font-family="IBM Plex Mono" font-size="10">KITCHEN 4200 x 3600</text>
+
+        <!-- Island bench (centre) — L-shape, customer view = single surface -->
+        <path d="M180,180 L380,180 L380,240 L300,240 L300,340 L180,340 Z"
+          fill="#2E7D9B18" stroke="#2E7D9B" stroke-width="2"/>
+        <text x="280" y="206" fill="#2E7D9B" font-family="IBM Plex Mono" font-size="9" text-anchor="middle">ISLAND BENCH</text>
+
+        <!-- Sink cutout -->
+        <rect x="220" y="195" width="60" height="30" fill="white" stroke="#2E7D9B" stroke-width="1" stroke-dasharray="3 2"/>
+        <text x="250" y="215" fill="#8A8A8A" font-family="IBM Plex Mono" font-size="8" text-anchor="middle">SINK</text>
+
+        <!-- Main bench (along wall) — rectangle -->
+        <rect x="60" y="50" width="480" height="70"
+          fill="#2E7D9B18" stroke="#2E7D9B" stroke-width="2"/>
+        <text x="300" y="90" fill="#2E7D9B" font-family="IBM Plex Mono" font-size="9" text-anchor="middle">MAIN BENCH</text>
+
+        <!-- Cooktop cutout -->
+        <rect x="340" y="62" width="50" height="46" fill="white" stroke="#2E7D9B" stroke-width="1" stroke-dasharray="3 2"/>
+        <text x="365" y="90" fill="#8A8A8A" font-family="IBM Plex Mono" font-size="8" text-anchor="middle">COOK</text>
+
+        <!-- Splashback -->
+        <rect x="60" y="120" width="480" height="40"
+          fill="#8B5CF618" stroke="#8B5CF6" stroke-width="1.5"/>
+        <text x="300" y="144" fill="#8B5CF6" font-family="IBM Plex Mono" font-size="9" text-anchor="middle">SPLASHBACK</text>
+
+        <!-- Window sill -->
+        <rect x="160" y="370" width="200" height="40"
+          fill="#2E7D9B18" stroke="#2E7D9B" stroke-width="1.5"/>
+        <text x="260" y="394" fill="#2E7D9B" font-family="IBM Plex Mono" font-size="9" text-anchor="middle">WINDOW SILL</text>
+
+        <!-- Dimension lines -->
+        <line x1="60" y1="42" x2="540" y2="42" stroke="#D4D4D4" stroke-width="0.5"/>
+        <text x="300" y="38" fill="#8A8A8A" font-family="IBM Plex Mono" font-size="9" text-anchor="middle">3 600</text>
+
+        <line x1="548" y1="50" x2="548" y2="120" stroke="#D4D4D4" stroke-width="0.5"/>
+        <text x="558" y="90" fill="#8A8A8A" font-family="IBM Plex Mono" font-size="9">600</text>
+      </svg>
+    </div>
+
+    <div class="zoom-controls">
+      <button class="zoom-btn">-</button>
+      <button class="zoom-btn" style="font-size:10px;width:48px;">100%</button>
+      <button class="zoom-btn">+</button>
+    </div>
+  </div>
+
+  <div class="right-panel">
+    <div class="rp-header">Pieces</div>
+    <div class="rp-body">
+      <div class="legend-section">
+        <div class="legend-title">Roles</div>
+        <div class="legend-item"><div class="legend-swatch" style="background:#2E7D9B20;border:1px solid #2E7D9B;"></div> Benchtop</div>
+        <div class="legend-item"><div class="legend-swatch" style="background:#3D8B3720;border:1px solid #3D8B37;"></div> Fascia strip</div>
+        <div class="legend-item"><div class="legend-swatch" style="background:#8B5CF620;border:1px solid #8B5CF6;"></div> Splashback</div>
+      </div>
+
+      <div class="legend-title" style="margin-top:16px">In view</div>
+      <div class="piece-list-item"><span class="pli-dot" style="background:#2E7D9B"></span><span class="pli-id">1.1</span><span class="pli-name">Island — Main</span><span class="pli-dims">2400x600</span></div>
+      <div class="piece-list-item"><span class="pli-dot" style="background:#2E7D9B"></span><span class="pli-id">1.2</span><span class="pli-name">Island — Return</span><span class="pli-dims">1500x600</span></div>
+      <div class="piece-list-item"><span class="pli-dot" style="background:#2E7D9B"></span><span class="pli-id">2.1</span><span class="pli-name">Main Bench</span><span class="pli-dims">3600x600</span></div>
+      <div class="piece-list-item"><span class="pli-dot" style="background:#8B5CF6"></span><span class="pli-id">2.2</span><span class="pli-name">Splashback</span><span class="pli-dims">3600x400</span></div>
+      <div class="piece-list-item"><span class="pli-dot" style="background:#2E7D9B"></span><span class="pli-id">3.1</span><span class="pli-name">Window Sill</span><span class="pli-dims">1500x300</span></div>
+    </div>
+  </div>
+</div>
+
+<div class="screen-label">SCREEN 09 — SPATIAL PLAN VIEW</div>
+
+<script>
+document.querySelectorAll('.view-btn').forEach(b => {
+  b.addEventListener('click', () => {
+    document.querySelectorAll('.view-btn').forEach(btn => btn.classList.remove('active'));
+    b.classList.add('active');
+  });
+});
+document.querySelectorAll('.rail-btn').forEach(b => {
+  b.addEventListener('click', () => {
+    document.querySelectorAll('.rail-btn').forEach(btn => btn.classList.remove('active'));
+    b.classList.add('active');
+  });
+});
+</script>
+</body>
+</html>

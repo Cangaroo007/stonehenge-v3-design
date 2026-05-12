@@ -1,0 +1,503 @@
+<!DOCTYPE html>
+<html lang="en-AU">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Stonehenge V3 — Material Options &amp; Quote Options</title>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+:root {
+  --cinnabar: #D63F1A; --cinnabar-light: #D63F1A12; --cinnabar-mid: #D63F1A33;
+  --ink: #1A1A1A; --ink-secondary: #5C5C5C; --ink-tertiary: #8A8A8A;
+  --surface: #F5F5F4; --surface-raised: #FFFFFF; --border: #E2E2E2; --border-active: #CCCCCC;
+  --font-sans: 'IBM Plex Sans', sans-serif; --font-mono: 'IBM Plex Mono', monospace;
+  --option-a: #2E7D9B; --option-b: #8B5CF6; --option-c: #D97706;
+}
+body { font-family: var(--font-sans); background: var(--surface); color: var(--ink); -webkit-font-smoothing: antialiased; }
+
+.header { display: flex; align-items: center; justify-content: space-between; height: 56px; padding: 0 24px; background: var(--surface-raised); border-bottom: 1px solid var(--border); }
+.header-left { display: flex; align-items: center; gap: 12px; }
+.back-btn { width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; background: none; border: 1px solid var(--border); cursor: pointer; color: var(--ink-secondary); }
+.header-title { font-size: 14px; font-weight: 600; }
+.header-sub { font-size: 12px; color: var(--ink-secondary); margin-left: 8px; }
+
+.page { max-width: 1080px; margin: 0 auto; padding: 28px 24px; }
+
+/* ── Concept toggle ─────────────────── */
+.concept-tabs {
+  display: flex;
+  gap: 0;
+  margin-bottom: 24px;
+}
+.concept-tab {
+  flex: 1;
+  padding: 14px 20px;
+  background: var(--surface-raised);
+  border: 1px solid var(--border);
+  cursor: pointer;
+  text-align: center;
+  transition: all 0.12s;
+}
+.concept-tab:first-child { border-right: none; }
+.concept-tab.active {
+  border-color: var(--cinnabar);
+  background: var(--cinnabar-light);
+}
+.concept-tab-title {
+  font-size: 13px;
+  font-weight: 600;
+  margin-bottom: 2px;
+}
+.concept-tab.active .concept-tab-title { color: var(--cinnabar); }
+.concept-tab-desc { font-size: 11px; color: var(--ink-secondary); }
+.concept-tab-gap {
+  font-family: var(--font-mono);
+  font-size: 9px;
+  color: var(--ink-tertiary);
+  margin-top: 4px;
+}
+
+/* ── Panels ─────────────────────────── */
+.concept-panel { display: none; }
+.concept-panel.active { display: block; }
+
+/* ── Material Options (L13) ─────────── */
+.mat-options-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 16px;
+}
+.section-title { font-size: 16px; font-weight: 600; letter-spacing: -0.01em; }
+.add-option-btn {
+  height: 36px; padding: 0 14px;
+  font-family: var(--font-sans); font-size: 12px; font-weight: 500;
+  color: var(--cinnabar); background: none;
+  border: 1px solid var(--cinnabar-mid); cursor: pointer;
+  display: flex; align-items: center; gap: 6px;
+}
+.add-option-btn:hover { background: var(--cinnabar-light); }
+
+.mat-compare {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 24px;
+}
+
+.mat-column {
+  flex: 1;
+  background: var(--surface-raised);
+  border: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+}
+
+.mat-col-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--border);
+}
+
+.mat-col-badge {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  font-weight: 600;
+  padding: 3px 8px;
+  color: white;
+}
+
+.mat-col-badge.primary { background: var(--cinnabar); }
+.mat-col-badge.alt-1 { background: var(--option-a); }
+.mat-col-badge.alt-2 { background: var(--option-b); }
+
+.mat-col-title { font-size: 13px; font-weight: 500; }
+.mat-col-sub { font-size: 11px; color: var(--ink-tertiary); margin-left: auto; }
+
+.mat-swatch-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 16px;
+  border-bottom: 1px solid var(--border);
+}
+
+.mat-swatch {
+  width: 48px; height: 48px;
+  border: 1px solid var(--border);
+  flex-shrink: 0;
+}
+
+.mat-info { flex: 1; }
+.mat-name { font-size: 13px; font-weight: 500; }
+.mat-code { font-family: var(--font-mono); font-size: 10px; color: var(--ink-tertiary); margin-top: 2px; }
+.mat-thickness { font-size: 11px; color: var(--ink-secondary); margin-top: 2px; }
+
+.mat-price-col {
+  text-align: right;
+  flex-shrink: 0;
+}
+.mat-price { font-family: var(--font-mono); font-size: 14px; font-weight: 600; }
+.mat-price-unit { font-family: var(--font-mono); font-size: 10px; color: var(--ink-tertiary); }
+
+.mat-breakdown {
+  padding: 12px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  flex: 1;
+}
+
+.mat-line {
+  display: flex;
+  justify-content: space-between;
+  font-size: 12px;
+}
+.mat-line-label { color: var(--ink-secondary); }
+.mat-line-value { font-family: var(--font-mono); font-weight: 500; }
+
+.mat-total-line {
+  display: flex;
+  justify-content: space-between;
+  padding: 10px 16px;
+  border-top: 1px solid var(--border);
+  background: var(--surface);
+}
+.mat-total-label { font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.04em; }
+.mat-total-value { font-family: var(--font-mono); font-size: 16px; font-weight: 600; }
+
+.mat-diff {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  padding: 2px 6px;
+  margin-left: 6px;
+}
+.mat-diff.up { color: var(--cinnabar); background: #D63F1A12; }
+.mat-diff.down { color: #3D8B37; background: #3D8B3712; }
+
+/* ── Quote Options (L14) ────────────── */
+.quote-options {
+  display: flex;
+  gap: 12px;
+}
+
+.quote-option-card {
+  flex: 1;
+  background: var(--surface-raised);
+  border: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+}
+
+.qo-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--border);
+}
+
+.qo-badge {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 600;
+  padding: 3px 8px;
+  color: white;
+}
+.qo-badge.a { background: var(--option-a); }
+.qo-badge.b { background: var(--option-b); }
+.qo-badge.c { background: var(--option-c); }
+
+.qo-title { font-size: 13px; font-weight: 600; }
+.qo-default { font-family: var(--font-mono); font-size: 9px; color: var(--ink-tertiary); margin-left: auto; border: 1px solid var(--border); padding: 2px 5px; }
+
+.qo-body {
+  padding: 14px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  flex: 1;
+}
+
+.qo-section-label {
+  font-size: 10px;
+  font-weight: 500;
+  color: var(--ink-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  margin-top: 4px;
+}
+
+.qo-line {
+  display: flex;
+  justify-content: space-between;
+  font-size: 12px;
+  padding: 4px 0;
+}
+.qo-line-label { color: var(--ink-secondary); }
+.qo-line-value { font-family: var(--font-mono); font-weight: 500; }
+.qo-line-diff { font-family: var(--font-mono); font-size: 10px; color: var(--ink-tertiary); }
+
+.qo-total {
+  display: flex;
+  justify-content: space-between;
+  padding: 12px 16px;
+  border-top: 1px solid var(--border);
+  background: var(--surface);
+}
+.qo-total-label { font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.04em; }
+.qo-total-value { font-family: var(--font-mono); font-size: 16px; font-weight: 600; }
+
+.qo-send-note {
+  font-size: 11px;
+  color: var(--ink-tertiary);
+  text-align: center;
+  padding: 12px 16px;
+  border-top: 1px solid var(--border);
+}
+
+.screen-label {
+  position: fixed; bottom: 20px; right: 24px;
+  font-family: var(--font-mono); font-size: 10px; color: var(--cinnabar);
+  background: var(--cinnabar-light); border: 1px solid var(--cinnabar-mid);
+  padding: 4px 10px; letter-spacing: 0.04em;
+}
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="header-left">
+    <button class="back-btn"><svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M9 3L5 7L9 11" stroke="currentColor" stroke-width="1.5"/></svg></button>
+    <span class="header-title">Options</span>
+    <span class="header-sub">Q-2026-0042 &middot; Sandgate Kitchen</span>
+  </div>
+</div>
+
+<div class="page">
+  <!-- CONCEPT TABS -->
+  <div class="concept-tabs">
+    <div class="concept-tab active" data-concept="material" id="tab-material">
+      <div class="concept-tab-title">Material Options</div>
+      <div class="concept-tab-desc">Same fabrication, different materials side-by-side</div>
+      <div class="concept-tab-gap">SPEC GAP L13</div>
+    </div>
+    <div class="concept-tab" data-concept="quote" id="tab-quote">
+      <div class="concept-tab-title">Quote Options</div>
+      <div class="concept-tab-desc">Different fab + material combos as Option A/B/C</div>
+      <div class="concept-tab-gap">SPEC GAP L14</div>
+    </div>
+  </div>
+
+  <!-- MATERIAL OPTIONS (L13) -->
+  <div class="concept-panel active" id="panel-material">
+    <div class="mat-options-header">
+      <div class="section-title">Compare materials</div>
+      <button class="add-option-btn">
+        <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><line x1="6" y1="1" x2="6" y2="11" stroke="currentColor" stroke-width="1.5"/><line x1="1" y1="6" x2="11" y2="6" stroke="currentColor" stroke-width="1.5"/></svg>
+        Add material
+      </button>
+    </div>
+
+    <div class="mat-compare">
+      <!-- Primary -->
+      <div class="mat-column">
+        <div class="mat-col-header">
+          <span class="mat-col-badge primary">PRIMARY</span>
+          <span class="mat-col-title">Caesarstone Concrete</span>
+        </div>
+        <div class="mat-swatch-row">
+          <div class="mat-swatch" style="background:#B8B3AA;"></div>
+          <div class="mat-info">
+            <div class="mat-name">Concrete</div>
+            <div class="mat-code">4003 &middot; Metropolitan</div>
+            <div class="mat-thickness">20mm polished</div>
+          </div>
+          <div class="mat-price-col">
+            <div class="mat-price">$285</div>
+            <div class="mat-price-unit">/m&sup2;</div>
+          </div>
+        </div>
+        <div class="mat-breakdown">
+          <div class="mat-line"><span class="mat-line-label">Material (3.2 m&sup2;)</span><span class="mat-line-value">$912.00</span></div>
+          <div class="mat-line"><span class="mat-line-label">Fabrication</span><span class="mat-line-value">$4,287.50</span></div>
+          <div class="mat-line"><span class="mat-line-label">Installation</span><span class="mat-line-value">$1,280.00</span></div>
+        </div>
+        <div class="mat-total-line">
+          <span class="mat-total-label">Total ex GST</span>
+          <span class="mat-total-value">$6,479.50</span>
+        </div>
+      </div>
+
+      <!-- Alt 1 -->
+      <div class="mat-column">
+        <div class="mat-col-header">
+          <span class="mat-col-badge alt-1">ALT 1</span>
+          <span class="mat-col-title">Statuario Maximus</span>
+        </div>
+        <div class="mat-swatch-row">
+          <div class="mat-swatch" style="background:#F0EDE6;"></div>
+          <div class="mat-info">
+            <div class="mat-name">Statuario Maximus</div>
+            <div class="mat-code">5031 &middot; Supernatural</div>
+            <div class="mat-thickness">20mm polished</div>
+          </div>
+          <div class="mat-price-col">
+            <div class="mat-price">$380</div>
+            <div class="mat-price-unit">/m&sup2;</div>
+          </div>
+        </div>
+        <div class="mat-breakdown">
+          <div class="mat-line"><span class="mat-line-label">Material (3.2 m&sup2;)</span><span class="mat-line-value">$1,216.00 <span class="mat-diff up">+$304</span></span></div>
+          <div class="mat-line"><span class="mat-line-label">Fabrication</span><span class="mat-line-value">$4,287.50</span></div>
+          <div class="mat-line"><span class="mat-line-label">Installation</span><span class="mat-line-value">$1,280.00</span></div>
+        </div>
+        <div class="mat-total-line">
+          <span class="mat-total-label">Total ex GST</span>
+          <span class="mat-total-value">$6,783.50 <span class="mat-diff up">+$304</span></span>
+        </div>
+      </div>
+
+      <!-- Alt 2 -->
+      <div class="mat-column">
+        <div class="mat-col-header">
+          <span class="mat-col-badge alt-2">ALT 2</span>
+          <span class="mat-col-title">Piatra Grey</span>
+        </div>
+        <div class="mat-swatch-row">
+          <div class="mat-swatch" style="background:#2C2C2C;"></div>
+          <div class="mat-info">
+            <div class="mat-name">Piatra Grey</div>
+            <div class="mat-code">5003 &middot; Supernatural</div>
+            <div class="mat-thickness">20mm polished</div>
+          </div>
+          <div class="mat-price-col">
+            <div class="mat-price">$340</div>
+            <div class="mat-price-unit">/m&sup2;</div>
+          </div>
+        </div>
+        <div class="mat-breakdown">
+          <div class="mat-line"><span class="mat-line-label">Material (3.2 m&sup2;)</span><span class="mat-line-value">$1,088.00 <span class="mat-diff up">+$176</span></span></div>
+          <div class="mat-line"><span class="mat-line-label">Fabrication</span><span class="mat-line-value">$4,287.50</span></div>
+          <div class="mat-line"><span class="mat-line-label">Installation</span><span class="mat-line-value">$1,280.00</span></div>
+        </div>
+        <div class="mat-total-line">
+          <span class="mat-total-label">Total ex GST</span>
+          <span class="mat-total-value">$6,655.50 <span class="mat-diff up">+$176</span></span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- QUOTE OPTIONS (L14) -->
+  <div class="concept-panel" id="panel-quote">
+    <div class="mat-options-header">
+      <div class="section-title">Quote options</div>
+      <button class="add-option-btn">
+        <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><line x1="6" y1="1" x2="6" y2="11" stroke="currentColor" stroke-width="1.5"/><line x1="1" y1="6" x2="11" y2="6" stroke="currentColor" stroke-width="1.5"/></svg>
+        Add option
+      </button>
+    </div>
+
+    <div class="quote-options">
+      <!-- Option A -->
+      <div class="quote-option-card">
+        <div class="qo-header">
+          <span class="qo-badge a">A</span>
+          <span class="qo-title">Standard</span>
+          <span class="qo-default">DEFAULT</span>
+        </div>
+        <div class="qo-body">
+          <div class="qo-section-label">Material</div>
+          <div class="qo-line"><span class="qo-line-label">Caesarstone Concrete</span><span class="qo-line-value">$285/m&sup2;</span></div>
+          <div class="qo-line"><span class="qo-line-label">20mm polished</span></div>
+
+          <div class="qo-section-label">Edge work</div>
+          <div class="qo-line"><span class="qo-line-label">Profile</span><span class="qo-line-value">Arris</span></div>
+          <div class="qo-line"><span class="qo-line-label">Build-up</span><span class="qo-line-value">None</span></div>
+
+          <div class="qo-section-label">Breakdown</div>
+          <div class="qo-line"><span class="qo-line-label">Material</span><span class="qo-line-value">$912.00</span></div>
+          <div class="qo-line"><span class="qo-line-label">Fabrication</span><span class="qo-line-value">$3,840.00</span></div>
+          <div class="qo-line"><span class="qo-line-label">Installation</span><span class="qo-line-value">$1,280.00</span></div>
+        </div>
+        <div class="qo-total">
+          <span class="qo-total-label">Total ex GST</span>
+          <span class="qo-total-value">$6,032.00</span>
+        </div>
+        <div class="qo-send-note">Included in PDF by default</div>
+      </div>
+
+      <!-- Option B -->
+      <div class="quote-option-card">
+        <div class="qo-header">
+          <span class="qo-badge b">B</span>
+          <span class="qo-title">Premium</span>
+        </div>
+        <div class="qo-body">
+          <div class="qo-section-label">Material</div>
+          <div class="qo-line"><span class="qo-line-label">Statuario Maximus</span><span class="qo-line-value">$380/m&sup2;</span></div>
+          <div class="qo-line"><span class="qo-line-label">20mm polished</span></div>
+
+          <div class="qo-section-label">Edge work</div>
+          <div class="qo-line"><span class="qo-line-label">Profile</span><span class="qo-line-value">Bullnose</span></div>
+          <div class="qo-line"><span class="qo-line-label">Build-up</span><span class="qo-line-value">40mm mitre</span></div>
+
+          <div class="qo-section-label">Breakdown</div>
+          <div class="qo-line"><span class="qo-line-label">Material</span><span class="qo-line-value">$1,216.00</span></div>
+          <div class="qo-line"><span class="qo-line-label">Fabrication</span><span class="qo-line-value">$5,120.00</span></div>
+          <div class="qo-line"><span class="qo-line-label">Installation</span><span class="qo-line-value">$1,440.00</span></div>
+        </div>
+        <div class="qo-total">
+          <span class="qo-total-label">Total ex GST</span>
+          <span class="qo-total-value">$7,776.00</span>
+        </div>
+        <div class="qo-send-note">Optional — customer selects</div>
+      </div>
+
+      <!-- Option C -->
+      <div class="quote-option-card">
+        <div class="qo-header">
+          <span class="qo-badge c">C</span>
+          <span class="qo-title">Budget</span>
+        </div>
+        <div class="qo-body">
+          <div class="qo-section-label">Material</div>
+          <div class="qo-line"><span class="qo-line-label">Essastone Bone White</span><span class="qo-line-value">$195/m&sup2;</span></div>
+          <div class="qo-line"><span class="qo-line-label">20mm polished</span></div>
+
+          <div class="qo-section-label">Edge work</div>
+          <div class="qo-line"><span class="qo-line-label">Profile</span><span class="qo-line-value">Pencil Round</span></div>
+          <div class="qo-line"><span class="qo-line-label">Build-up</span><span class="qo-line-value">None</span></div>
+
+          <div class="qo-section-label">Breakdown</div>
+          <div class="qo-line"><span class="qo-line-label">Material</span><span class="qo-line-value">$624.00</span></div>
+          <div class="qo-line"><span class="qo-line-label">Fabrication</span><span class="qo-line-value">$3,520.00</span></div>
+          <div class="qo-line"><span class="qo-line-label">Installation</span><span class="qo-line-value">$1,120.00</span></div>
+        </div>
+        <div class="qo-total">
+          <span class="qo-total-label">Total ex GST</span>
+          <span class="qo-total-value">$5,264.00</span>
+        </div>
+        <div class="qo-send-note">Optional — customer selects</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="screen-label">SCREEN 07 — MATERIAL OPTIONS + QUOTE OPTIONS</div>
+
+<script>
+document.querySelectorAll('.concept-tab').forEach(tab => {
+  tab.addEventListener('click', () => {
+    document.querySelectorAll('.concept-tab').forEach(t => t.classList.remove('active'));
+    document.querySelectorAll('.concept-panel').forEach(p => p.classList.remove('active'));
+    tab.classList.add('active');
+    document.getElementById('panel-' + tab.dataset.concept).classList.add('active');
+  });
+});
+</script>
+</body>
+</html>

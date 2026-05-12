@@ -1,0 +1,328 @@
+<!DOCTYPE html>
+<html lang="en-AU">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Stonehenge V3 — PDF Preview &amp; Send</title>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+:root {
+  --cinnabar: #D63F1A; --cinnabar-light: #D63F1A12; --cinnabar-mid: #D63F1A33;
+  --ink: #1A1A1A; --ink-secondary: #5C5C5C; --ink-tertiary: #8A8A8A;
+  --surface: #F5F5F4; --surface-raised: #FFFFFF; --border: #E2E2E2;
+  --font-sans: 'IBM Plex Sans', sans-serif; --font-mono: 'IBM Plex Mono', monospace;
+}
+body { font-family: var(--font-sans); background: var(--surface); color: var(--ink); -webkit-font-smoothing: antialiased; overflow: hidden; height: 100vh; }
+
+.header { display: flex; align-items: center; justify-content: space-between; height: 56px; padding: 0 24px; background: var(--surface-raised); border-bottom: 1px solid var(--border); }
+.header-left { display: flex; align-items: center; gap: 12px; }
+.header-title { font-size: 14px; font-weight: 600; }
+.header-sub { font-size: 12px; color: var(--ink-secondary); margin-left: 8px; }
+
+.tab-bar { display: flex; padding: 0 24px; background: var(--surface-raised); border-bottom: 1px solid var(--border); }
+.tab-item { padding: 10px 16px; font-size: 12px; font-weight: 500; color: var(--ink-tertiary); cursor: pointer; border-bottom: 2px solid transparent; }
+.tab-item.active { color: var(--cinnabar); border-bottom-color: var(--cinnabar); }
+
+.layout { display: flex; height: calc(100vh - 98px); }
+
+/* ── Controls panel (left) ──────────── */
+.controls {
+  width: 320px; background: var(--surface-raised); border-right: 1px solid var(--border);
+  display: flex; flex-direction: column; overflow-y: auto;
+}
+.ctrl-section { padding: 16px 20px; border-bottom: 1px solid var(--border); }
+.ctrl-title { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.06em; color: var(--ink-secondary); margin-bottom: 12px; }
+
+.detail-options { display: flex; flex-direction: column; gap: 6px; }
+.detail-option {
+  display: flex; align-items: center; gap: 10px; padding: 10px 12px;
+  border: 1px solid var(--border); cursor: pointer; transition: all 0.12s;
+}
+.detail-option:hover { border-color: var(--border-active); }
+.detail-option.active { border-color: var(--cinnabar); background: var(--cinnabar-light); }
+.detail-radio {
+  width: 16px; height: 16px; border-radius: 50%; border: 1.5px solid var(--border); flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center;
+}
+.detail-option.active .detail-radio { border-color: var(--cinnabar); }
+.detail-option.active .detail-radio::after { content: ''; width: 8px; height: 8px; border-radius: 50%; background: var(--cinnabar); }
+.detail-name { font-size: 12px; font-weight: 500; }
+.detail-desc { font-size: 10px; color: var(--ink-tertiary); margin-top: 2px; }
+
+.toggle-row { display: flex; align-items: center; justify-content: space-between; padding: 8px 0; }
+.toggle-label { font-size: 12px; color: var(--ink-secondary); }
+.toggle-switch {
+  position: relative; width: 36px; height: 20px; background: var(--border);
+  border-radius: 10px; cursor: pointer; transition: background 0.2s;
+}
+.toggle-switch.on { background: var(--cinnabar); }
+.toggle-switch::after {
+  content: ''; position: absolute; top: 2px; left: 2px;
+  width: 16px; height: 16px; border-radius: 50%; background: white; transition: transform 0.2s;
+}
+.toggle-switch.on::after { transform: translateX(16px); }
+
+/* Send section */
+.send-section { padding: 16px 20px; }
+.send-btn {
+  width: 100%; height: 44px; font-family: var(--font-sans); font-size: 13px; font-weight: 600;
+  color: white; background: var(--cinnabar); border: none; cursor: pointer;
+  display: flex; align-items: center; justify-content: center; gap: 8px;
+}
+.send-btn:hover { opacity: 0.88; }
+.download-btn {
+  width: 100%; height: 40px; margin-top: 8px;
+  font-family: var(--font-sans); font-size: 12px; font-weight: 500;
+  color: var(--ink-secondary); background: none; border: 1px solid var(--border); cursor: pointer;
+  display: flex; align-items: center; justify-content: center; gap: 6px;
+}
+
+/* ── Preview area ───────────────────── */
+.preview-area {
+  flex: 1; display: flex; align-items: center; justify-content: center;
+  background: #E8E8E6; padding: 32px; overflow: auto;
+}
+
+.pdf-page {
+  width: 480px; background: white; padding: 40px;
+  border: 1px solid #D4D4D4;
+}
+
+.pdf-logo {
+  display: flex; align-items: center; gap: 10px; margin-bottom: 32px;
+}
+.pdf-logo-mark {
+  width: 40px; height: 40px; background: var(--cinnabar); display: flex; align-items: center; justify-content: center;
+  color: white; font-family: var(--font-mono); font-size: 16px; font-weight: 600;
+}
+.pdf-logo-name { font-size: 16px; font-weight: 600; letter-spacing: -0.02em; }
+.pdf-logo-sub { font-size: 10px; color: var(--ink-tertiary); }
+
+.pdf-meta { display: flex; justify-content: space-between; margin-bottom: 24px; }
+.pdf-meta-block {}
+.pdf-meta-label { font-size: 9px; text-transform: uppercase; letter-spacing: 0.06em; color: var(--ink-tertiary); margin-bottom: 4px; }
+.pdf-meta-value { font-size: 12px; font-weight: 500; }
+.pdf-meta-sub { font-size: 10px; color: var(--ink-secondary); margin-top: 2px; }
+
+.pdf-divider { height: 1px; background: var(--border); margin: 20px 0; }
+
+.pdf-total-section { text-align: center; padding: 20px 0; }
+.pdf-total-label { font-size: 10px; text-transform: uppercase; letter-spacing: 0.06em; color: var(--ink-secondary); margin-bottom: 6px; }
+.pdf-total-value { font-family: var(--font-mono); font-size: 28px; font-weight: 600; }
+.pdf-total-gst { font-family: var(--font-mono); font-size: 11px; color: var(--ink-tertiary); margin-top: 4px; }
+
+.pdf-buckets { display: flex; justify-content: space-between; padding: 16px 0; border-top: 1px solid var(--border); border-bottom: 1px solid var(--border); margin: 16px 0; }
+.pdf-bucket { text-align: center; }
+.pdf-bucket-label { font-size: 9px; text-transform: uppercase; letter-spacing: 0.04em; color: var(--ink-tertiary); margin-bottom: 4px; }
+.pdf-bucket-value { font-family: var(--font-mono); font-size: 14px; font-weight: 600; }
+
+.pdf-expiry { text-align: center; font-size: 11px; color: var(--ink-secondary); padding: 12px 0; }
+
+.pdf-footer { margin-top: 24px; padding-top: 16px; border-top: 1px solid var(--border); font-size: 9px; color: var(--ink-tertiary); line-height: 1.5; }
+
+/* ── Send modal ─────────────────────── */
+.modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.3); z-index: 100; align-items: center; justify-content: center; }
+.modal-overlay.open { display: flex; }
+.modal {
+  width: 480px; background: var(--surface-raised); border: 1px solid var(--border);
+}
+.modal-header { display: flex; align-items: center; justify-content: space-between; padding: 16px 20px; border-bottom: 1px solid var(--border); }
+.modal-title { font-size: 14px; font-weight: 600; }
+.modal-close { width: 28px; height: 28px; display: flex; align-items: center; justify-content: center; background: none; border: none; cursor: pointer; color: var(--ink-tertiary); }
+.modal-body { padding: 20px; display: flex; flex-direction: column; gap: 16px; }
+.field-label { font-size: 10px; font-weight: 500; color: var(--ink-secondary); text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 4px; }
+.field-input { width: 100%; height: 40px; padding: 0 12px; font-family: var(--font-sans); font-size: 13px; color: var(--ink); background: var(--surface); border: 1px solid var(--border); }
+.field-input:focus { outline: none; border-color: var(--cinnabar); }
+.field-textarea { width: 100%; height: 100px; padding: 10px 12px; font-family: var(--font-sans); font-size: 13px; color: var(--ink); background: var(--surface); border: 1px solid var(--border); resize: vertical; }
+.modal-footer { display: flex; justify-content: flex-end; gap: 8px; padding: 16px 20px; border-top: 1px solid var(--border); }
+.modal-btn-secondary { height: 40px; padding: 0 16px; font-family: var(--font-sans); font-size: 12px; color: var(--ink-secondary); background: none; border: 1px solid var(--border); cursor: pointer; }
+.modal-btn-primary { height: 40px; padding: 0 20px; font-family: var(--font-sans); font-size: 12px; font-weight: 600; color: white; background: var(--cinnabar); border: none; cursor: pointer; display: flex; align-items: center; gap: 6px; }
+
+.screen-label { position: fixed; bottom: 20px; right: 24px; font-family: var(--font-mono); font-size: 10px; color: var(--cinnabar); background: var(--cinnabar-light); border: 1px solid var(--cinnabar-mid); padding: 4px 10px; letter-spacing: 0.04em; z-index: 20; }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="header-left">
+    <svg width="22" height="22" viewBox="0 0 22 22" fill="none"><rect x="1" y="1" width="20" height="20" stroke="#1A1A1A" stroke-width="1.5" fill="none"/><path d="M5 17 L5 5 L17 5 L17 11 L11 11 L11 17 Z" stroke="#D63F1A" stroke-width="1.5" fill="none"/></svg>
+    <span class="header-title">Q-2026-0042</span>
+    <span class="header-sub">Hashtag Hub &middot; Sandgate Kitchen</span>
+  </div>
+</div>
+
+<div class="tab-bar">
+  <div class="tab-item">Spatial</div>
+  <div class="tab-item">Config</div>
+  <div class="tab-item">Parts List</div>
+  <div class="tab-item">Pricing</div>
+  <div class="tab-item active">PDF</div>
+  <div class="tab-item">Activity</div>
+</div>
+
+<div class="layout">
+  <!-- CONTROLS -->
+  <div class="controls">
+    <div class="ctrl-section">
+      <div class="ctrl-title">Detail level</div>
+      <div class="detail-options">
+        <div class="detail-option active" data-level="total">
+          <div class="detail-radio"></div>
+          <div><div class="detail-name">Total only</div><div class="detail-desc">Single total, no breakdown</div></div>
+        </div>
+        <div class="detail-option" data-level="category">
+          <div class="detail-radio"></div>
+          <div><div class="detail-name">Category</div><div class="detail-desc">Fabrication / Material / Installation</div></div>
+        </div>
+        <div class="detail-option" data-level="room">
+          <div class="detail-radio"></div>
+          <div><div class="detail-name">Room</div><div class="detail-desc">Per-room subtotals with categories</div></div>
+        </div>
+        <div class="detail-option" data-level="itemised">
+          <div class="detail-radio"></div>
+          <div><div class="detail-name">Fully itemised</div><div class="detail-desc">Every piece, every line item</div></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="ctrl-section">
+      <div class="ctrl-title">Display options</div>
+      <div class="toggle-row"><span class="toggle-label">Show GST breakout</span><div class="toggle-switch on" onclick="this.classList.toggle('on')"></div></div>
+      <div class="toggle-row"><span class="toggle-label">Include spatial preview</span><div class="toggle-switch on" onclick="this.classList.toggle('on')"></div></div>
+      <div class="toggle-row"><span class="toggle-label">Show material swatches</span><div class="toggle-switch" onclick="this.classList.toggle('on')"></div></div>
+      <div class="toggle-row"><span class="toggle-label">Include T&amp;Cs</span><div class="toggle-switch on" onclick="this.classList.toggle('on')"></div></div>
+    </div>
+
+    <div class="ctrl-section">
+      <div class="ctrl-title">Branding</div>
+      <div style="display:flex;gap:8px;align-items:center;margin-bottom:8px;">
+        <div style="width:40px;height:40px;background:var(--cinnabar);display:flex;align-items:center;justify-content:center;color:white;font-family:var(--font-mono);font-size:14px;font-weight:600;">NCS</div>
+        <div><div style="font-size:12px;font-weight:500;">Northcoast Stone</div><div style="font-size:10px;color:var(--ink-tertiary);">Logo + cinnabar accent</div></div>
+      </div>
+    </div>
+
+    <div class="send-section">
+      <button class="send-btn" id="send-btn">
+        <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M2 7L12 2L9 12L7 8L2 7Z" stroke="white" stroke-width="1.2" fill="none"/></svg>
+        Send to customer
+      </button>
+      <button class="download-btn">
+        <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M6 2V8M3 6L6 9L9 6" stroke="currentColor" stroke-width="1.2"/><line x1="2" y1="10" x2="10" y2="10" stroke="currentColor" stroke-width="1.2"/></svg>
+        Download PDF
+      </button>
+    </div>
+  </div>
+
+  <!-- PREVIEW -->
+  <div class="preview-area">
+    <div class="pdf-page">
+      <div class="pdf-logo">
+        <div class="pdf-logo-mark">NCS</div>
+        <div>
+          <div class="pdf-logo-name">Northcoast Stone</div>
+          <div class="pdf-logo-sub">ABN 12 345 678 901 &middot; QBCC Lic 1234567</div>
+        </div>
+      </div>
+
+      <div class="pdf-meta">
+        <div class="pdf-meta-block">
+          <div class="pdf-meta-label">Prepared for</div>
+          <div class="pdf-meta-value">Hashtag Hub Pty Ltd</div>
+          <div class="pdf-meta-sub">Attn: Sarah Mitchell</div>
+        </div>
+        <div class="pdf-meta-block" style="text-align:right;">
+          <div class="pdf-meta-label">Quote</div>
+          <div class="pdf-meta-value">Q-2026-0042</div>
+          <div class="pdf-meta-sub">11/05/2026</div>
+        </div>
+      </div>
+
+      <div class="pdf-meta">
+        <div class="pdf-meta-block">
+          <div class="pdf-meta-label">Project</div>
+          <div class="pdf-meta-value">Sandgate Kitchen Renovation</div>
+          <div class="pdf-meta-sub">14 pieces across 2 rooms</div>
+        </div>
+        <div class="pdf-meta-block" style="text-align:right;">
+          <div class="pdf-meta-label">Material</div>
+          <div class="pdf-meta-value">Caesarstone Concrete 4003</div>
+          <div class="pdf-meta-sub">20mm polished</div>
+        </div>
+      </div>
+
+      <div class="pdf-divider"></div>
+
+      <div class="pdf-total-section">
+        <div class="pdf-total-label">Total (inc. GST)</div>
+        <div class="pdf-total-value">$13,561.08</div>
+        <div class="pdf-total-gst">GST $1,232.83 &middot; Ex-GST $12,328.25</div>
+      </div>
+
+      <div class="pdf-buckets">
+        <div class="pdf-bucket"><div class="pdf-bucket-label">Fabrication</div><div class="pdf-bucket-value">$6,048.25</div></div>
+        <div class="pdf-bucket"><div class="pdf-bucket-label">Materials</div><div class="pdf-bucket-value">$3,840.00</div></div>
+        <div class="pdf-bucket"><div class="pdf-bucket-label">Installation</div><div class="pdf-bucket-value">$2,440.00</div></div>
+      </div>
+
+      <div class="pdf-expiry">Valid until 10/06/2026</div>
+
+      <div class="pdf-footer">
+        Northcoast Stone Pty Ltd &middot; 42 Industrial Ave, Molendinar QLD 4214 &middot; Ph: (07) 5555 0123<br>
+        Terms: 50% deposit on acceptance, balance on completion. All prices in AUD.<br>
+        This quote is subject to Northcoast Stone's standard terms and conditions.
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- SEND MODAL -->
+<div class="modal-overlay" id="send-modal">
+  <div class="modal">
+    <div class="modal-header">
+      <span class="modal-title">Send quote</span>
+      <button class="modal-close" onclick="document.getElementById('send-modal').classList.remove('open')">
+        <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M3 3L11 11M11 3L3 11" stroke="currentColor" stroke-width="1.5"/></svg>
+      </button>
+    </div>
+    <div class="modal-body">
+      <div><div class="field-label">To</div><input class="field-input" value="sarah@hashtaghub.com.au"></div>
+      <div><div class="field-label">CC</div><input class="field-input" placeholder="Add CC recipients..."></div>
+      <div><div class="field-label">Subject</div><input class="field-input" value="Quote Q-2026-0042 — Sandgate Kitchen Renovation"></div>
+      <div><div class="field-label">Message</div><textarea class="field-textarea">Hi Sarah,
+
+Please find attached our quote for the Sandgate Kitchen Renovation. Total is $13,561.08 inc. GST, valid for 30 days.
+
+You can review and accept online at the link below, or reply to this email with any questions.
+
+Kind regards,
+Jay Henderson
+Northcoast Stone</textarea></div>
+      <div class="toggle-row"><span class="toggle-label">Lock quote on send</span><div class="toggle-switch on" onclick="this.classList.toggle('on')"></div></div>
+      <div class="toggle-row"><span class="toggle-label">Track opens</span><div class="toggle-switch on" onclick="this.classList.toggle('on')"></div></div>
+    </div>
+    <div class="modal-footer">
+      <button class="modal-btn-secondary" onclick="document.getElementById('send-modal').classList.remove('open')">Cancel</button>
+      <button class="modal-btn-primary">
+        <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M2 6L10 2L8 10L6 7L2 6Z" stroke="white" stroke-width="1" fill="none"/></svg>
+        Send &amp; lock
+      </button>
+    </div>
+  </div>
+</div>
+
+<div class="screen-label">SCREEN 10 — PDF PREVIEW + SEND</div>
+
+<script>
+document.querySelectorAll('.detail-option').forEach(opt => {
+  opt.addEventListener('click', () => {
+    document.querySelectorAll('.detail-option').forEach(o => o.classList.remove('active'));
+    opt.classList.add('active');
+  });
+});
+document.getElementById('send-btn').addEventListener('click', () => {
+  document.getElementById('send-modal').classList.add('open');
+});
+</script>
+</body>
+</html>

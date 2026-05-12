@@ -1,0 +1,706 @@
+<!DOCTYPE html>
+<html lang="en-AU">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Stonehenge V3 — Quote Dashboard</title>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+:root {
+  --cinnabar: #D63F1A;
+  --cinnabar-light: #D63F1A12;
+  --cinnabar-mid: #D63F1A33;
+  --ink: #1A1A1A;
+  --ink-secondary: #5C5C5C;
+  --ink-tertiary: #8A8A8A;
+  --surface: #F5F5F4;
+  --surface-raised: #FFFFFF;
+  --border: #E2E2E2;
+  --border-active: #CCCCCC;
+  --font-sans: 'IBM Plex Sans', sans-serif;
+  --font-mono: 'IBM Plex Mono', monospace;
+
+  /* Status colours — muted, functional, no emoji */
+  --status-draft: #8A8A8A;
+  --status-draft-bg: #8A8A8A14;
+  --status-sent: #2E7D9B;
+  --status-sent-bg: #2E7D9B14;
+  --status-changes: #E8A317;
+  --status-changes-bg: #E8A31714;
+  --status-accepted: #3D8B37;
+  --status-accepted-bg: #3D8B3714;
+  --status-rejected: #B83D3D;
+  --status-rejected-bg: #B83D3D14;
+  --status-expired: #8A8A8A;
+  --status-expired-bg: #8A8A8A10;
+  --status-job: #D63F1A;
+  --status-job-bg: #D63F1A14;
+  --status-complete: #3D8B37;
+  --status-complete-bg: #3D8B3710;
+}
+
+body {
+  font-family: var(--font-sans);
+  background: var(--surface);
+  color: var(--ink);
+  -webkit-font-smoothing: antialiased;
+  min-height: 100vh;
+}
+
+/* ── Top nav ────────────────────────── */
+.topnav {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 56px;
+  padding: 0 24px;
+  background: var(--surface-raised);
+  border-bottom: 1px solid var(--border);
+}
+
+.topnav-left {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.topnav-logo {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  color: var(--ink);
+  text-decoration: none;
+}
+
+.topnav-sep {
+  width: 1px;
+  height: 20px;
+  background: var(--border);
+}
+
+.topnav-page {
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--ink-secondary);
+}
+
+.topnav-right {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.topnav-tenant {
+  font-size: 12px;
+  color: var(--ink-tertiary);
+  font-family: var(--font-mono);
+}
+
+.avatar {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: var(--cinnabar-light);
+  border: 1px solid var(--cinnabar-mid);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--cinnabar);
+}
+
+/* ── Page container ─────────────────── */
+.page {
+  max-width: 1120px;
+  margin: 0 auto;
+  padding: 28px 24px;
+}
+
+/* ── Stats strip ────────────────────── */
+.stats-strip {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 24px;
+}
+
+.stat-card {
+  flex: 1;
+  padding: 16px 20px;
+  background: var(--surface-raised);
+  border: 1px solid var(--border);
+}
+
+.stat-label {
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--ink-tertiary);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  margin-bottom: 6px;
+}
+
+.stat-value {
+  font-family: var(--font-mono);
+  font-size: 24px;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+}
+
+.stat-sub {
+  font-size: 11px;
+  color: var(--ink-tertiary);
+  margin-top: 4px;
+}
+
+.stat-value.cinnabar { color: var(--cinnabar); }
+
+/* ── Toolbar ────────────────────────── */
+.toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 16px;
+  gap: 12px;
+}
+
+.toolbar-left {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.search-input {
+  width: 280px;
+  height: 40px;
+  padding: 0 12px 0 36px;
+  font-family: var(--font-sans);
+  font-size: 13px;
+  color: var(--ink);
+  background: var(--surface-raised);
+  border: 1px solid var(--border);
+  position: relative;
+}
+
+.search-input:focus {
+  outline: none;
+  border-color: var(--cinnabar);
+}
+
+.search-input::placeholder {
+  color: var(--ink-tertiary);
+}
+
+.search-wrap {
+  position: relative;
+}
+
+.search-icon {
+  position: absolute;
+  left: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--ink-tertiary);
+  pointer-events: none;
+}
+
+.filter-btn {
+  height: 40px;
+  padding: 0 14px;
+  font-family: var(--font-sans);
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--ink-secondary);
+  background: var(--surface-raised);
+  border: 1px solid var(--border);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  transition: border-color 0.12s;
+}
+
+.filter-btn:hover { border-color: var(--border-active); }
+
+.filter-btn.active {
+  border-color: var(--cinnabar);
+  color: var(--cinnabar);
+  background: var(--cinnabar-light);
+}
+
+.new-quote-btn {
+  height: 40px;
+  padding: 0 20px;
+  font-family: var(--font-sans);
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--surface-raised);
+  background: var(--cinnabar);
+  border: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  letter-spacing: -0.01em;
+  transition: opacity 0.12s;
+}
+
+.new-quote-btn:hover { opacity: 0.88; }
+
+/* ── Quote table ────────────────────── */
+.quote-table {
+  width: 100%;
+  background: var(--surface-raised);
+  border: 1px solid var(--border);
+  border-collapse: collapse;
+}
+
+.quote-table th {
+  padding: 10px 16px;
+  text-align: left;
+  font-size: 10px;
+  font-weight: 600;
+  color: var(--ink-tertiary);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  border-bottom: 1px solid var(--border);
+  background: var(--surface);
+  white-space: nowrap;
+  user-select: none;
+}
+
+.quote-table th.sortable { cursor: pointer; }
+.quote-table th.sortable:hover { color: var(--ink-secondary); }
+
+.quote-table td {
+  padding: 14px 16px;
+  font-size: 13px;
+  border-bottom: 1px solid var(--border);
+  vertical-align: middle;
+}
+
+.quote-table tr:last-child td { border-bottom: none; }
+
+.quote-table tbody tr {
+  cursor: pointer;
+  transition: background 0.08s;
+}
+
+.quote-table tbody tr:hover { background: var(--surface); }
+
+.quote-id {
+  font-family: var(--font-mono);
+  font-weight: 500;
+  font-size: 12px;
+  color: var(--ink);
+}
+
+.quote-customer {
+  font-weight: 500;
+  color: var(--ink);
+}
+
+.quote-project {
+  font-size: 12px;
+  color: var(--ink-secondary);
+  margin-top: 2px;
+}
+
+.quote-total {
+  font-family: var(--font-mono);
+  font-weight: 600;
+  font-size: 13px;
+  text-align: right;
+}
+
+.quote-date {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  color: var(--ink-secondary);
+}
+
+.quote-pieces {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  color: var(--ink-tertiary);
+  text-align: center;
+}
+
+/* Status badges */
+.status-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 3px 8px;
+  font-family: var(--font-mono);
+  font-size: 10px;
+  font-weight: 500;
+  letter-spacing: 0.04em;
+  white-space: nowrap;
+}
+
+.status-badge .status-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+}
+
+.status-DRAFT { color: var(--status-draft); background: var(--status-draft-bg); }
+.status-DRAFT .status-dot { background: var(--status-draft); }
+
+.status-SENT { color: var(--status-sent); background: var(--status-sent-bg); }
+.status-SENT .status-dot { background: var(--status-sent); }
+
+.status-CHANGES { color: var(--status-changes); background: var(--status-changes-bg); }
+.status-CHANGES .status-dot { background: var(--status-changes); }
+
+.status-ACCEPTED { color: var(--status-accepted); background: var(--status-accepted-bg); }
+.status-ACCEPTED .status-dot { background: var(--status-accepted); }
+
+.status-REJECTED { color: var(--status-rejected); background: var(--status-rejected-bg); }
+.status-REJECTED .status-dot { background: var(--status-rejected); }
+
+.status-EXPIRED { color: var(--status-expired); background: var(--status-expired-bg); }
+.status-EXPIRED .status-dot { background: var(--status-expired); }
+
+.status-JOB { color: var(--status-job); background: var(--status-job-bg); }
+.status-JOB .status-dot { background: var(--status-job); }
+
+.status-COMPLETE { color: var(--status-complete); background: var(--status-complete-bg); }
+.status-COMPLETE .status-dot { background: var(--status-complete); }
+
+/* ── Empty state ────────────────────── */
+.empty-state {
+  padding: 60px 40px;
+  text-align: center;
+  background: var(--surface-raised);
+  border: 1px solid var(--border);
+}
+
+.empty-icon {
+  margin-bottom: 16px;
+  color: var(--ink-tertiary);
+}
+
+.empty-title {
+  font-size: 14px;
+  font-weight: 600;
+  margin-bottom: 6px;
+}
+
+.empty-sub {
+  font-size: 13px;
+  color: var(--ink-secondary);
+  margin-bottom: 20px;
+}
+
+/* ── Pagination ─────────────────────── */
+.pagination {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 0;
+}
+
+.pagination-info {
+  font-size: 12px;
+  color: var(--ink-tertiary);
+}
+
+.pagination-controls {
+  display: flex;
+  gap: 4px;
+}
+
+.page-btn {
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-mono);
+  font-size: 12px;
+  color: var(--ink-secondary);
+  background: var(--surface-raised);
+  border: 1px solid var(--border);
+  cursor: pointer;
+}
+
+.page-btn:hover { border-color: var(--border-active); }
+.page-btn.active { border-color: var(--cinnabar); color: var(--cinnabar); background: var(--cinnabar-light); }
+
+/* ── Context menu (row actions) ────── */
+.row-actions {
+  position: relative;
+}
+
+.actions-btn {
+  width: 28px;
+  height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: none;
+  border: 1px solid transparent;
+  cursor: pointer;
+  color: var(--ink-tertiary);
+  border-radius: 0;
+}
+
+.actions-btn:hover {
+  border-color: var(--border);
+  color: var(--ink-secondary);
+}
+
+/* NL bar placeholder */
+.nl-bar {
+  position: fixed;
+  bottom: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 480px;
+  height: 44px;
+  background: var(--surface-raised);
+  border: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  padding: 0 16px;
+  gap: 10px;
+}
+
+.nl-bar-icon { color: var(--ink-tertiary); flex-shrink: 0; }
+
+.nl-bar input {
+  flex: 1;
+  border: none;
+  outline: none;
+  font-family: var(--font-sans);
+  font-size: 13px;
+  color: var(--ink);
+  background: transparent;
+}
+
+.nl-bar input::placeholder { color: var(--ink-tertiary); }
+
+/* ── Screen label ───────────────────── */
+.screen-label {
+  position: fixed;
+  bottom: 76px;
+  right: 24px;
+  font-family: var(--font-mono);
+  font-size: 10px;
+  color: var(--cinnabar);
+  background: var(--cinnabar-light);
+  border: 1px solid var(--cinnabar-mid);
+  padding: 4px 10px;
+  letter-spacing: 0.04em;
+}
+</style>
+</head>
+<body>
+
+<!-- TOP NAV -->
+<nav class="topnav">
+  <div class="topnav-left">
+    <a class="topnav-logo" href="#">
+      <svg width="22" height="22" viewBox="0 0 22 22" fill="none">
+        <rect x="1" y="1" width="20" height="20" stroke="#1A1A1A" stroke-width="1.5" fill="none"/>
+        <path d="M5 17 L5 5 L17 5 L17 11 L11 11 L11 17 Z" stroke="#D63F1A" stroke-width="1.5" fill="none"/>
+      </svg>
+      Stonehenge
+    </a>
+    <div class="topnav-sep"></div>
+    <span class="topnav-page">Quotes</span>
+  </div>
+  <div class="topnav-right">
+    <span class="topnav-tenant">Northcoast Stone</span>
+    <div class="avatar">JH</div>
+  </div>
+</nav>
+
+<!-- PAGE -->
+<div class="page">
+
+  <!-- STATS -->
+  <div class="stats-strip">
+    <div class="stat-card">
+      <div class="stat-label">Open quotes</div>
+      <div class="stat-value">12</div>
+      <div class="stat-sub">4 sent, awaiting response</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">Pipeline value</div>
+      <div class="stat-value cinnabar">$187,420</div>
+      <div class="stat-sub">Across 12 open quotes</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">Accepted this month</div>
+      <div class="stat-value">6</div>
+      <div class="stat-sub">$94,210 total</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">Conversion rate</div>
+      <div class="stat-value">68%</div>
+      <div class="stat-sub">Last 90 days</div>
+    </div>
+  </div>
+
+  <!-- TOOLBAR -->
+  <div class="toolbar">
+    <div class="toolbar-left">
+      <div class="search-wrap">
+        <svg class="search-icon" width="16" height="16" viewBox="0 0 16 16" fill="none"><circle cx="7" cy="7" r="5" stroke="currentColor" stroke-width="1.5"/><line x1="11" y1="11" x2="14" y2="14" stroke="currentColor" stroke-width="1.5"/></svg>
+        <input class="search-input" type="text" placeholder="Search quotes, customers, projects..." id="search-input">
+      </div>
+      <button class="filter-btn active" data-filter="all">
+        All
+        <span style="font-family:var(--font-mono);font-size:10px;color:var(--ink-tertiary)">24</span>
+      </button>
+      <button class="filter-btn" data-filter="DRAFT">Draft</button>
+      <button class="filter-btn" data-filter="SENT">Sent</button>
+      <button class="filter-btn" data-filter="CHANGES">Changes req.</button>
+      <button class="filter-btn" data-filter="ACCEPTED">Accepted</button>
+      <button class="filter-btn" data-filter="JOB">Job</button>
+    </div>
+    <button class="new-quote-btn" id="new-quote-btn">
+      <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><line x1="7" y1="2" x2="7" y2="12" stroke="white" stroke-width="1.5"/><line x1="2" y1="7" x2="12" y2="7" stroke="white" stroke-width="1.5"/></svg>
+      New quote
+    </button>
+  </div>
+
+  <!-- QUOTE TABLE -->
+  <table class="quote-table">
+    <thead>
+      <tr>
+        <th class="sortable" style="width:90px">Quote</th>
+        <th class="sortable">Customer / Project</th>
+        <th style="width:100px">Status</th>
+        <th style="width:50px;text-align:center">Pcs</th>
+        <th class="sortable" style="width:110px;text-align:right">Total</th>
+        <th class="sortable" style="width:100px">Updated</th>
+        <th style="width:40px"></th>
+      </tr>
+    </thead>
+    <tbody id="quote-tbody">
+    </tbody>
+  </table>
+
+  <!-- PAGINATION -->
+  <div class="pagination">
+    <span class="pagination-info">Showing 1–15 of 24 quotes</span>
+    <div class="pagination-controls">
+      <button class="page-btn">&lsaquo;</button>
+      <button class="page-btn active">1</button>
+      <button class="page-btn">2</button>
+      <button class="page-btn">&rsaquo;</button>
+    </div>
+  </div>
+</div>
+
+<!-- NL BAR -->
+<div class="nl-bar">
+  <svg class="nl-bar-icon" width="16" height="16" viewBox="0 0 16 16" fill="none">
+    <path d="M2 12L2 4C2 3.4 2.4 3 3 3L13 3C13.6 3 14 3.4 14 4L14 10C14 10.6 13.6 11 13 11L5 11L2 14L2 12Z" stroke="currentColor" stroke-width="1.2" fill="none"/>
+  </svg>
+  <input type="text" placeholder="Ask anything — 'show quotes over $10k' or 'create kitchen quote for Hashtag Hub'">
+</div>
+
+<div class="screen-label">SCREEN 04 — QUOTE DASHBOARD</div>
+
+<script>
+// Demo data matching Northcoast Stone context
+const quotes = [
+  { id: 'Q-2026-0042', customer: 'Hashtag Hub Pty Ltd', project: 'Sandgate Renovation', status: 'DRAFT', pieces: 14, total: 12328.25, updated: '11/05/2026' },
+  { id: 'Q-2026-0041', customer: 'Meridian Homes', project: 'Wavell Heights New Build', status: 'SENT', pieces: 22, total: 28470.00, updated: '10/05/2026' },
+  { id: 'Q-2026-0040', customer: 'Urban Edge Developments', project: 'Clayfield Apartments U3-U6', status: 'SENT', pieces: 48, total: 67215.80, updated: '09/05/2026' },
+  { id: 'Q-2026-0039', customer: 'R. Patterson', project: 'Ascot Kitchen + Ensuite', status: 'CHANGES', pieces: 8, total: 9840.50, updated: '08/05/2026' },
+  { id: 'Q-2026-0038', customer: 'Hashtag Hub Pty Ltd', project: 'Sandgate — Bathroom', status: 'DRAFT', pieces: 6, total: 4120.00, updated: '07/05/2026' },
+  { id: 'Q-2026-0037', customer: 'Bayside Constructions', project: 'Wellington Point Reno', status: 'ACCEPTED', pieces: 18, total: 21890.00, updated: '06/05/2026' },
+  { id: 'Q-2026-0036', customer: 'K. Nakamura', project: 'Paddington Terrace', status: 'ACCEPTED', pieces: 11, total: 15630.00, updated: '05/05/2026' },
+  { id: 'Q-2026-0035', customer: 'LJ Hooker Commercial', project: 'Spring Hill Office Fitout', status: 'JOB', pieces: 32, total: 43275.00, updated: '04/05/2026' },
+  { id: 'Q-2026-0034', customer: 'Meridian Homes', project: 'Hendra Display Home', status: 'JOB', pieces: 26, total: 31450.00, updated: '03/05/2026' },
+  { id: 'Q-2026-0033', customer: 'S. & T. Williams', project: 'Bulimba Kitchen', status: 'SENT', pieces: 9, total: 11240.00, updated: '01/05/2026' },
+  { id: 'Q-2026-0032', customer: 'Urban Edge Developments', project: 'Clayfield Apartments U1-U2', status: 'COMPLETE', pieces: 24, total: 33640.00, updated: '28/04/2026' },
+  { id: 'Q-2026-0031', customer: 'R. Patterson', project: 'Ascot Laundry', status: 'DRAFT', pieces: 3, total: 2180.00, updated: '26/04/2026' },
+  { id: 'Q-2026-0030', customer: 'Bayside Constructions', project: 'Cleveland Commercial', status: 'REJECTED', pieces: 15, total: 19870.00, updated: '24/04/2026' },
+  { id: 'Q-2026-0029', customer: 'K. Nakamura', project: 'Paddington — Outdoor', status: 'EXPIRED', pieces: 7, total: 8950.00, updated: '20/04/2026' },
+  { id: 'Q-2026-0028', customer: 'Hashtag Hub Pty Ltd', project: 'Shorncliffe Deck Bar', status: 'SENT', pieces: 5, total: 6340.00, updated: '18/04/2026' },
+];
+
+const statusLabels = {
+  DRAFT: 'DRAFT',
+  SENT: 'SENT',
+  CHANGES: 'CHANGES REQ',
+  ACCEPTED: 'ACCEPTED',
+  REJECTED: 'REJECTED',
+  EXPIRED: 'EXPIRED',
+  JOB: 'JOB',
+  COMPLETE: 'COMPLETE',
+};
+
+function renderTable(data) {
+  const tbody = document.getElementById('quote-tbody');
+  tbody.innerHTML = '';
+  data.forEach(q => {
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td><span class="quote-id">${q.id}</span></td>
+      <td>
+        <div class="quote-customer">${q.customer}</div>
+        <div class="quote-project">${q.project}</div>
+      </td>
+      <td><span class="status-badge status-${q.status}"><span class="status-dot"></span>${statusLabels[q.status]}</span></td>
+      <td class="quote-pieces">${q.pieces}</td>
+      <td class="quote-total">$${q.total.toLocaleString('en-AU', { minimumFractionDigits: 2 })}</td>
+      <td class="quote-date">${q.updated}</td>
+      <td>
+        <div class="row-actions">
+          <button class="actions-btn" title="Actions">
+            <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+              <circle cx="7" cy="3" r="1" fill="currentColor"/>
+              <circle cx="7" cy="7" r="1" fill="currentColor"/>
+              <circle cx="7" cy="11" r="1" fill="currentColor"/>
+            </svg>
+          </button>
+        </div>
+      </td>
+    `;
+    tbody.appendChild(tr);
+  });
+}
+
+// Filter buttons
+let activeFilter = 'all';
+document.querySelectorAll('.filter-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    activeFilter = btn.dataset.filter;
+    const filtered = activeFilter === 'all' ? quotes : quotes.filter(q => q.status === activeFilter);
+    renderTable(filtered);
+    document.querySelector('.pagination-info').textContent =
+      `Showing 1–${filtered.length} of ${filtered.length} quotes`;
+  });
+});
+
+// Search
+document.getElementById('search-input').addEventListener('input', function() {
+  const term = this.value.toLowerCase();
+  const filtered = quotes.filter(q =>
+    q.id.toLowerCase().includes(term) ||
+    q.customer.toLowerCase().includes(term) ||
+    q.project.toLowerCase().includes(term)
+  );
+  const display = activeFilter === 'all' ? filtered : filtered.filter(q => q.status === activeFilter);
+  renderTable(display);
+});
+
+renderTable(quotes);
+</script>
+</body>
+</html>
