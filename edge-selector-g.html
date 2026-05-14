@@ -1,0 +1,372 @@
+<!DOCTYPE html>
+<html lang="en-AU">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Stonehenge V3 — Edge Builder (Build-up View)</title>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+:root{--cinnabar:#D63F1A;--cinnabar-light:#D63F1A12;--cinnabar-mid:#D63F1A33;--ink:#1A1A1A;--ink-secondary:#5C5C5C;--ink-tertiary:#8A8A8A;--surface:#F5F5F4;--surface-raised:#FFFFFF;--border:#E2E2E2;--font-sans:'IBM Plex Sans',sans-serif;--font-mono:'IBM Plex Mono',monospace;--exposed:#D63F1A;--wall:#8A8A8A;--part-a:#2E7D9B;--part-b:#3D8B37;--part-c:#8B5CF6;--part-d:#E8A317}
+body{font-family:var(--font-sans);background:var(--surface);color:var(--ink);-webkit-font-smoothing:antialiased;min-height:100vh}
+.page{max-width:900px;margin:0 auto;padding:32px 24px}
+.nav-link{font-size:12px;color:var(--ink-tertiary);text-decoration:none;display:flex;align-items:center;gap:4px;margin-bottom:16px}
+.piece-header{display:flex;align-items:baseline;gap:10px;margin-bottom:20px}
+.piece-id{font-size:18px;font-weight:600;letter-spacing:-0.02em}
+.piece-meta{font-size:13px;color:var(--ink-secondary)}
+.piece-badge{font-family:var(--font-mono);font-size:10px;color:var(--cinnabar);border:1px solid var(--cinnabar-mid);padding:2px 8px;margin-left:auto}
+
+/* Edge card with build-up */
+.edge-card{background:var(--surface-raised);border:1px solid var(--border);margin-bottom:4px}
+.edge-card-header{display:flex;align-items:center;padding:10px 16px;cursor:pointer;gap:10px}
+.edge-card-header:hover{background:var(--surface)}
+.ec-mini{width:48px;height:36px;flex-shrink:0;display:flex;align-items:center;justify-content:center;background:var(--surface);border:1px solid var(--border)}
+.ec-line{width:16px;height:3px;flex-shrink:0}
+.ec-line.exposed{background:var(--exposed)}
+.ec-line.wall{background:var(--wall)}
+.ec-info{flex:1}
+.ec-name{font-size:13px;font-weight:500}
+.ec-len{font-family:var(--font-mono);font-size:11px;color:var(--ink-tertiary);margin-left:8px}
+.ec-tags{display:flex;gap:4px;margin-top:3px}
+.ec-tag{font-family:var(--font-mono);font-size:9px;padding:2px 5px;border:1px solid var(--border);background:var(--surface)}
+.ec-tag.exposed-tag{color:var(--exposed);border-color:#D63F1A30;background:#D63F1A08}
+.ec-tag.buildup-tag{color:var(--part-b);border-color:#3D8B3730;background:#3D8B3708}
+.ec-expand{color:var(--ink-tertiary);transition:transform 0.15s;flex-shrink:0}
+.edge-card.open .ec-expand{transform:rotate(90deg)}
+
+.ec-body{display:none;border-top:1px solid var(--border)}
+.edge-card.open .ec-body{display:block}
+
+/* Build-up detail section */
+.buildup-section{padding:16px 20px}
+.bu-title{font-size:13px;font-weight:600;margin-bottom:14px;display:flex;align-items:center;gap:8px}
+.bu-badge{font-family:var(--font-mono);font-size:9px;color:var(--part-b);background:#3D8B3710;border:1px solid #3D8B3730;padding:2px 6px}
+
+/* Two-column: cross section + parts list */
+.bu-layout{display:flex;gap:20px;margin-bottom:16px}
+
+/* Cross-section diagram */
+.bu-cross{flex:0 0 280px;background:var(--surface);border:1px solid var(--border);padding:16px;display:flex;flex-direction:column;align-items:center}
+.bu-cross-label{font-size:9px;font-weight:500;color:var(--ink-tertiary);text-transform:uppercase;letter-spacing:0.06em;margin-bottom:10px;align-self:flex-start}
+
+/* Parts generated */
+.bu-parts{flex:1}
+.bu-parts-label{font-size:9px;font-weight:500;color:var(--ink-tertiary);text-transform:uppercase;letter-spacing:0.06em;margin-bottom:10px}
+
+.part-card{display:flex;align-items:center;gap:10px;padding:10px 12px;border:1px solid var(--border);margin-bottom:4px;background:var(--surface-raised)}
+.part-swatch{width:4px;height:36px;flex-shrink:0}
+.part-info{flex:1}
+.part-id{font-family:var(--font-mono);font-size:10px;font-weight:600;color:var(--ink-secondary)}
+.part-name{font-size:12px;font-weight:500}
+.part-dims{font-family:var(--font-mono);font-size:10px;color:var(--ink-tertiary);margin-top:2px}
+.part-cost{font-family:var(--font-mono);font-size:11px;font-weight:500;text-align:right;flex-shrink:0}
+.part-cost-label{font-size:9px;color:var(--ink-tertiary)}
+
+/* Assembly instructions */
+.bu-assembly{border-top:1px solid var(--border);padding:14px 20px}
+.bu-asm-title{font-size:10px;font-weight:600;color:var(--ink-secondary);text-transform:uppercase;letter-spacing:0.04em;margin-bottom:8px}
+.bu-step{display:flex;gap:8px;padding:6px 0;font-size:12px;color:var(--ink-secondary)}
+.bu-step-num{font-family:var(--font-mono);font-size:10px;font-weight:600;color:var(--ink-tertiary);min-width:20px}
+
+/* Controls row */
+.bu-controls{display:flex;gap:14px;padding:14px 20px;border-top:1px solid var(--border);background:var(--surface);flex-wrap:wrap}
+.ec-field{display:flex;flex-direction:column;gap:3px}
+.ec-label{font-size:9px;font-weight:500;color:var(--ink-tertiary);text-transform:uppercase;letter-spacing:0.04em}
+.ec-pills{display:flex;gap:2px}
+.ec-pill{height:30px;padding:0 12px;font-family:var(--font-sans);font-size:11px;color:var(--ink-secondary);background:var(--surface-raised);border:1px solid var(--border);cursor:pointer;display:flex;align-items:center}
+.ec-pill:hover{border-color:var(--border-active)}
+.ec-pill.active{border-color:var(--cinnabar);color:var(--cinnabar);background:var(--cinnabar-light)}
+
+/* Cost total */
+.bu-cost{display:flex;align-items:center;justify-content:space-between;padding:10px 20px;border-top:1px solid var(--border)}
+.bu-cost-label{font-size:11px;color:var(--ink-secondary)}
+.bu-cost-value{font-family:var(--font-mono);font-size:14px;font-weight:600}
+
+/* Footer */
+.cost-footer{display:flex;align-items:center;justify-content:space-between;padding:14px 16px;background:var(--surface-raised);border:1px solid var(--border);margin-top:16px}
+.cf-label{font-size:12px;color:var(--ink-secondary)}
+.cf-value{font-family:var(--font-mono);font-size:16px;font-weight:600}
+.cf-done{height:40px;padding:0 20px;font-family:var(--font-sans);font-size:12px;font-weight:600;color:white;background:var(--cinnabar);border:none;cursor:pointer;display:flex;align-items:center;gap:6px;text-decoration:none}
+
+.screen-label{position:fixed;bottom:20px;right:24px;font-family:var(--font-mono);font-size:10px;color:var(--cinnabar);background:var(--cinnabar-light);border:1px solid var(--cinnabar-mid);padding:4px 10px;letter-spacing:0.04em}
+</style>
+</head>
+<body>
+<div class="page">
+  <a class="nav-link" href="spatial-plan-view.html"><svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M8 2L4 6L8 10" stroke="currentColor" stroke-width="1.2"/></svg> Back to spatial view</a>
+
+  <div class="piece-header">
+    <span class="piece-id">2.1 Island Bench</span>
+    <span class="piece-meta">L-Shape · 2,400 × 600 + 900 × 1,800 · 6 edges</span>
+    <span class="piece-badge">BENCHTOP</span>
+  </div>
+
+  <!-- FRONT EDGE — HAS 40mm MITRE BUILD-UP (expanded) -->
+  <div class="edge-card open" data-idx="0">
+    <div class="edge-card-header" onclick="this.parentElement.classList.toggle('open')">
+      <div class="ec-mini">
+        <svg viewBox="0 0 44 36" width="44" height="36" fill="none">
+          <path d="M4,4 L32,4 L32,16 L20,16 L20,32 L4,32 Z" fill="none" stroke="#D4D4D4" stroke-width="0.8"/>
+          <line x1="4" y1="3" x2="32" y2="3" stroke="#D63F1A" stroke-width="2.5"/>
+        </svg>
+      </div>
+      <div class="ec-line exposed"></div>
+      <div class="ec-info">
+        <div style="display:flex;align-items:baseline;gap:8px"><span class="ec-name">Front</span><span class="ec-len">2,400 mm</span></div>
+        <div class="ec-tags">
+          <span class="ec-tag exposed-tag">Exposed</span>
+          <span class="ec-tag">Pencil Round</span>
+          <span class="ec-tag">Pol</span>
+          <span class="ec-tag buildup-tag">40mm MITRE</span>
+        </div>
+      </div>
+      <svg class="ec-expand" width="10" height="10" viewBox="0 0 10 10" fill="none"><path d="M3 1L7 5L3 9" stroke="currentColor" stroke-width="1.2"/></svg>
+    </div>
+    <div class="ec-body">
+      <!-- CONTROLS -->
+      <div class="bu-controls">
+        <div class="ec-field"><div class="ec-label">Exposure</div><div class="ec-pills"><div class="ec-pill active" style="border-color:var(--exposed);color:var(--exposed)">Exposed</div><div class="ec-pill">Wall</div><div class="ec-pill">Cabinet</div></div></div>
+        <div class="ec-field"><div class="ec-label">Profile</div><div class="ec-pills"><div class="ec-pill active">Pencil Round</div><div class="ec-pill">Arris</div><div class="ec-pill">Bullnose</div><div class="ec-pill">Bevel</div></div></div>
+        <div class="ec-field"><div class="ec-label">Finish</div><div class="ec-pills"><div class="ec-pill active">Polished</div><div class="ec-pill">Raw</div></div></div>
+        <div class="ec-field"><div class="ec-label">Build-up</div><div class="ec-pills"><div class="ec-pill active">40mm mitre</div><div class="ec-pill">Laminated</div><div class="ec-pill">None</div></div></div>
+      </div>
+
+      <!-- BUILD-UP DETAIL -->
+      <div class="buildup-section">
+        <div class="bu-title">Build-up composition <span class="bu-badge">40mm MITRE</span></div>
+
+        <div class="bu-layout">
+          <!-- CROSS SECTION SVG -->
+          <div class="bu-cross">
+            <div class="bu-cross-label">Cross section (not to scale)</div>
+            <svg viewBox="0 0 240 170" width="240" height="150" fill="none">
+              <!--
+                Cross-section looking at the FRONT EDGE from the side.
+                Left = front (visible face). Right = back (into kitchen).
+                Part A (benchtop) on top, Part B (fascia) below.
+                They meet at a 45° mitre joint at the front edge.
+              -->
+
+              <!-- Part A — Benchtop slab, 20mm thick, extends right -->
+              <!-- Front-bottom corner is mitred at 45° -->
+              <polygon points="40,20 220,20 220,44 40,44 40,24" fill="#2E7D9B15" stroke="#2E7D9B" stroke-width="1.5"/>
+              <!-- The mitre cut on Part A: from front-bottom (40,44) up to (20,24) -->
+              <line x1="40" y1="44" x2="20" y2="24" stroke="#2E7D9B" stroke-width="1.5"/>
+              <!-- Complete Part A shape with mitre -->
+              <polygon points="20,20 220,20 220,44 40,44 20,24" fill="#2E7D9B12" stroke="#2E7D9B" stroke-width="1.2"/>
+              <text x="130" y="36" text-anchor="middle" fill="#2E7D9B" font-family="IBM Plex Mono" font-size="8" font-weight="500">Part A — BENCHTOP 20mm</text>
+
+              <!-- Part B — Fascia strip, hangs below Part A at the front -->
+              <!-- Top-back corner is mitred at 45° to match Part A -->
+              <polygon points="20,24 40,44 40,68 20,68" fill="#3D8B3715" stroke="#3D8B37" stroke-width="1.2"/>
+              <text x="30" y="60" text-anchor="middle" fill="#3D8B37" font-family="IBM Plex Mono" font-size="7" font-weight="500">B</text>
+
+              <!-- GLUE LINE — along the 45° mitre face where A meets B -->
+              <line x1="20" y1="24" x2="40" y2="44" stroke="#D63F1A" stroke-width="2" stroke-dasharray="3 2"/>
+              <text x="8" y="36" fill="#8A8A8A" font-family="IBM Plex Mono" font-size="6">45°</text>
+
+              <!-- Visible front face (left side) — 40mm total -->
+              <line x1="18" y1="20" x2="18" y2="68" stroke="#1A1A1A" stroke-width="0.5" stroke-dasharray="1 1"/>
+
+              <!-- Profile indicator on front face -->
+              <path d="M17,20 Q14,20 14,23 L14,65 Q14,68 17,68" fill="none" stroke="#8B5CF6" stroke-width="1.5"/>
+              <text x="6" y="46" fill="#8B5CF6" font-family="IBM Plex Mono" font-size="6">PR</text>
+
+              <!-- Dimensions -->
+              <!-- 40mm visible edge height -->
+              <line x1="52" y1="20" x2="52" y2="68" stroke="#8A8A8A" stroke-width="0.4"/>
+              <line x1="48" y1="20" x2="56" y2="20" stroke="#8A8A8A" stroke-width="0.4"/>
+              <line x1="48" y1="68" x2="56" y2="68" stroke="#8A8A8A" stroke-width="0.4"/>
+              <text x="60" y="42" fill="#1A1A1A" font-family="IBM Plex Mono" font-size="8" font-weight="600">40mm</text>
+              <text x="60" y="52" fill="#8A8A8A" font-family="IBM Plex Mono" font-size="6">visible edge</text>
+
+              <!-- 20mm slab thickness (right side) -->
+              <line x1="226" y1="20" x2="226" y2="44" stroke="#8A8A8A" stroke-width="0.4"/>
+              <text x="214" y="36" fill="#8A8A8A" font-family="IBM Plex Mono" font-size="7" text-anchor="end">20mm</text>
+
+              <!-- 20mm fascia depth -->
+              <line x1="20" y1="74" x2="40" y2="74" stroke="#8A8A8A" stroke-width="0.4"/>
+              <text x="30" y="82" text-anchor="middle" fill="#8A8A8A" font-family="IBM Plex Mono" font-size="7">20mm</text>
+
+              <!-- Glue line label -->
+              <line x1="50" y1="34" x2="80" y2="34" stroke="#D63F1A" stroke-width="1.5" stroke-dasharray="3 2"/>
+              <text x="84" y="37" fill="#D63F1A" font-family="IBM Plex Mono" font-size="7">glue line (epoxy)</text>
+
+              <!-- Legend -->
+              <rect x="80" y="100" width="10" height="8" fill="#2E7D9B15" stroke="#2E7D9B" stroke-width="0.8"/>
+              <text x="94" y="108" fill="#8A8A8A" font-family="IBM Plex Mono" font-size="6">Benchtop slab (Part A)</text>
+              <rect x="80" y="114" width="10" height="8" fill="#3D8B3715" stroke="#3D8B37" stroke-width="0.8"/>
+              <text x="94" y="122" fill="#8A8A8A" font-family="IBM Plex Mono" font-size="6">Fascia strip (Part B)</text>
+
+              <!-- Directional labels -->
+              <text x="20" y="92" fill="#8A8A8A" font-family="IBM Plex Mono" font-size="6">← FRONT</text>
+              <text x="190" y="56" fill="#8A8A8A" font-family="IBM Plex Mono" font-size="6">INTO KITCHEN →</text>
+            </svg>
+          </div>
+
+          <!-- PARTS GENERATED -->
+          <div class="bu-parts">
+            <div class="bu-parts-label">Parts generated by this build-up</div>
+
+            <div class="part-card">
+              <div class="part-swatch" style="background:var(--part-b)"></div>
+              <div class="part-info">
+                <div class="part-id">Part B</div>
+                <div class="part-name">Fascia strip — Front</div>
+                <div class="part-dims">2,400 × 40 × 20 mm (mitre one long edge at 45°)</div>
+              </div>
+              <div class="part-cost">
+                <div>$422.00</div>
+                <div class="part-cost-label">fab + mat</div>
+              </div>
+            </div>
+
+            <div class="part-card">
+              <div class="part-swatch" style="background:var(--part-c)"></div>
+              <div class="part-info">
+                <div class="part-id">Part C</div>
+                <div class="part-name">Return strip — Front</div>
+                <div class="part-dims">2,400 × 60 × 20 mm</div>
+              </div>
+              <div class="part-cost">
+                <div>$248.00</div>
+                <div class="part-cost-label">fab + mat</div>
+              </div>
+            </div>
+
+            <div style="margin-top:12px;padding:10px 12px;background:var(--surface);border:1px solid var(--border);font-size:11px;color:var(--ink-secondary)">
+              <strong style="color:var(--ink);font-weight:600">Build-up summary:</strong>
+              2 sub-pieces auto-generated from this edge. Material cut from same slab. Total visible thickness: 40mm (20mm benchtop + 20mm fascia, mitred at 45°).
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ASSEMBLY INSTRUCTIONS -->
+      <div class="bu-assembly">
+        <div class="bu-asm-title">Assembly instructions</div>
+        <div class="bu-step"><span class="bu-step-num">1.</span> Mitre Part A (benchtop) front edge at 45° — full 2,400mm length</div>
+        <div class="bu-step"><span class="bu-step-num">2.</span> Mitre Part B (fascia) inside edge at 45° to match</div>
+        <div class="bu-step"><span class="bu-step-num">3.</span> Dry-fit, check alignment, mark registration</div>
+        <div class="bu-step"><span class="bu-step-num">4.</span> Apply Akemi epoxy to mitre faces, clamp, 24hr cure</div>
+        <div class="bu-step"><span class="bu-step-num">5.</span> Polish join seam — Pencil Round profile across full 40mm face</div>
+      </div>
+
+      <!-- BUILD-UP COST -->
+      <div class="bu-cost">
+        <span class="bu-cost-label">Build-up cost (this edge)</span>
+        <span class="bu-cost-value">$670.00</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- RETURN FRONT — ALSO HAS BUILD-UP -->
+  <div class="edge-card" data-idx="1">
+    <div class="edge-card-header" onclick="this.parentElement.classList.toggle('open')">
+      <div class="ec-mini">
+        <svg viewBox="0 0 44 36" width="44" height="36" fill="none">
+          <path d="M4,4 L32,4 L32,16 L20,16 L20,32 L4,32 Z" fill="none" stroke="#D4D4D4" stroke-width="0.8"/>
+          <line x1="20" y1="17" x2="20" y2="32" stroke="#D63F1A" stroke-width="2.5"/>
+        </svg>
+      </div>
+      <div class="ec-line exposed"></div>
+      <div class="ec-info">
+        <div style="display:flex;align-items:baseline;gap:8px"><span class="ec-name">Return front</span><span class="ec-len">1,200 mm</span></div>
+        <div class="ec-tags"><span class="ec-tag exposed-tag">Exposed</span><span class="ec-tag">Pencil Round</span><span class="ec-tag">Pol</span><span class="ec-tag buildup-tag">40mm MITRE</span></div>
+      </div>
+      <svg class="ec-expand" width="10" height="10" viewBox="0 0 10 10" fill="none"><path d="M3 1L7 5L3 9" stroke="currentColor" stroke-width="1.2"/></svg>
+    </div>
+    <div class="ec-body"><div class="bu-controls"><div style="font-size:12px;color:var(--ink-secondary);padding:8px 0">Same build-up as Front edge — 40mm mitre with fascia + return strips. 2 sub-pieces generated.</div></div></div>
+  </div>
+
+  <!-- RIGHT END — EXPOSED, NO BUILD-UP -->
+  <div class="edge-card" data-idx="2">
+    <div class="edge-card-header" onclick="this.parentElement.classList.toggle('open')">
+      <div class="ec-mini">
+        <svg viewBox="0 0 44 36" width="44" height="36" fill="none">
+          <path d="M4,4 L32,4 L32,16 L20,16 L20,32 L4,32 Z" fill="none" stroke="#D4D4D4" stroke-width="0.8"/>
+          <line x1="33" y1="4" x2="33" y2="16" stroke="#D63F1A" stroke-width="2.5"/>
+        </svg>
+      </div>
+      <div class="ec-line exposed"></div>
+      <div class="ec-info">
+        <div style="display:flex;align-items:baseline;gap:8px"><span class="ec-name">Right end</span><span class="ec-len">600 mm</span></div>
+        <div class="ec-tags"><span class="ec-tag exposed-tag">Exposed</span><span class="ec-tag">Arris</span><span class="ec-tag">Pol</span><span class="ec-tag">—</span></div>
+      </div>
+      <svg class="ec-expand" width="10" height="10" viewBox="0 0 10 10" fill="none"><path d="M3 1L7 5L3 9" stroke="currentColor" stroke-width="1.2"/></svg>
+    </div>
+    <div class="ec-body"><div class="bu-controls">
+      <div class="ec-field"><div class="ec-label">Profile</div><div class="ec-pills"><div class="ec-pill">Pencil Round</div><div class="ec-pill active">Arris</div><div class="ec-pill">Bullnose</div></div></div>
+      <div class="ec-field"><div class="ec-label">Build-up</div><div class="ec-pills"><div class="ec-pill">40mm</div><div class="ec-pill active">None</div><div class="ec-pill">Laminated</div></div></div>
+    </div></div>
+  </div>
+
+  <!-- BACK — WALL -->
+  <div class="edge-card" data-idx="3">
+    <div class="edge-card-header" onclick="this.parentElement.classList.toggle('open')">
+      <div class="ec-mini">
+        <svg viewBox="0 0 44 36" width="44" height="36" fill="none">
+          <path d="M4,4 L32,4 L32,16 L20,16 L20,32 L4,32 Z" fill="none" stroke="#D4D4D4" stroke-width="0.8"/>
+          <line x1="32" y1="17" x2="20" y2="17" stroke="#D63F1A" stroke-width="2.5"/>
+        </svg>
+      </div>
+      <div class="ec-line wall"></div>
+      <div class="ec-info">
+        <div style="display:flex;align-items:baseline;gap:8px"><span class="ec-name">Inner step</span><span class="ec-len">1,200 mm</span></div>
+        <div class="ec-tags"><span class="ec-tag">Cabinet</span><span class="ec-tag">Raw</span><span class="ec-tag">Raw</span><span class="ec-tag">—</span></div>
+      </div>
+      <svg class="ec-expand" width="10" height="10" viewBox="0 0 10 10" fill="none"><path d="M3 1L7 5L3 9" stroke="currentColor" stroke-width="1.2"/></svg>
+    </div>
+    <div class="ec-body"><div class="bu-controls"><div class="ec-field"><div class="ec-label">Exposure</div><div class="ec-pills"><div class="ec-pill">Exposed</div><div class="ec-pill">Wall</div><div class="ec-pill active" style="color:var(--ink-secondary)">Cabinet</div></div></div></div></div>
+  </div>
+
+  <!-- BACK WALL + LEFT WALL — collapsed, no build-up -->
+  <div class="edge-card" data-idx="4">
+    <div class="edge-card-header" onclick="this.parentElement.classList.toggle('open')">
+      <div class="ec-mini">
+        <svg viewBox="0 0 44 36" width="44" height="36" fill="none">
+          <path d="M4,4 L32,4 L32,16 L20,16 L20,32 L4,32 Z" fill="none" stroke="#D4D4D4" stroke-width="0.8"/>
+          <line x1="4" y1="33" x2="4" y2="4" stroke="#D63F1A" stroke-width="2.5"/>
+        </svg>
+      </div>
+      <div class="ec-line wall"></div>
+      <div class="ec-info">
+        <div style="display:flex;align-items:baseline;gap:8px"><span class="ec-name">Left wall</span><span class="ec-len">1,800 mm</span></div>
+        <div class="ec-tags"><span class="ec-tag" style="color:var(--wall)">Wall</span><span class="ec-tag">Raw</span><span class="ec-tag">Raw</span><span class="ec-tag">—</span></div>
+      </div>
+      <svg class="ec-expand" width="10" height="10" viewBox="0 0 10 10" fill="none"><path d="M3 1L7 5L3 9" stroke="currentColor" stroke-width="1.2"/></svg>
+    </div>
+    <div class="ec-body"><div class="bu-controls"><div style="font-size:12px;color:var(--ink-tertiary)">Against wall — raw edge, no profile, no build-up.</div></div></div>
+  </div>
+
+  <div class="edge-card" data-idx="5">
+    <div class="edge-card-header" onclick="this.parentElement.classList.toggle('open')">
+      <div class="ec-mini">
+        <svg viewBox="0 0 44 36" width="44" height="36" fill="none">
+          <path d="M4,4 L32,4 L32,16 L20,16 L20,32 L4,32 Z" fill="none" stroke="#D4D4D4" stroke-width="0.8"/>
+          <line x1="20" y1="33" x2="4" y2="33" stroke="#D63F1A" stroke-width="2.5"/>
+        </svg>
+      </div>
+      <div class="ec-line wall"></div>
+      <div class="ec-info">
+        <div style="display:flex;align-items:baseline;gap:8px"><span class="ec-name">Bottom wall</span><span class="ec-len">900 mm</span></div>
+        <div class="ec-tags"><span class="ec-tag" style="color:var(--wall)">Wall</span><span class="ec-tag">Raw</span><span class="ec-tag">Raw</span><span class="ec-tag">—</span></div>
+      </div>
+      <svg class="ec-expand" width="10" height="10" viewBox="0 0 10 10" fill="none"><path d="M3 1L7 5L3 9" stroke="currentColor" stroke-width="1.2"/></svg>
+    </div>
+    <div class="ec-body"><div class="bu-controls"><div style="font-size:12px;color:var(--ink-tertiary)">Against wall — raw edge, no profile, no build-up.</div></div></div>
+  </div>
+
+  <div class="cost-footer">
+    <div><span class="cf-label">Edge work estimate (inc. build-ups)</span><div class="cf-value">$2,187.50</div></div>
+    <a class="cf-done" href="spatial-plan-view.html">Done <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M3 6L5 8L9 4" stroke="currentColor" stroke-width="1.5"/></svg></a>
+  </div>
+</div>
+
+<div class="screen-label">EDGE BUILDER G — BUILD-UP VIEW (L-SHAPE)</div>
+
+<script>
+document.querySelectorAll('.ec-pills').forEach(g=>{g.querySelectorAll('.ec-pill').forEach(p=>{p.addEventListener('click',e=>{e.stopPropagation();g.querySelectorAll('.ec-pill').forEach(x=>x.classList.remove('active'));p.classList.add('active');});});});
+</script>
+</body>
+</html>
