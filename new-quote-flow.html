@@ -3,814 +3,391 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Stonehenge V3 — New Quote</title>
+<title>Stonehenge V3 — Quote Workspace</title>
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
 <style>
-*, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+:root{--cinnabar:#D63F1A;--cinnabar-light:#D63F1A12;--cinnabar-mid:#D63F1A33;--ink:#1A1A1A;--ink-secondary:#5C5C5C;--ink-tertiary:#8A8A8A;--surface:#F5F5F4;--surface-raised:#FFFFFF;--border:#E2E2E2;--border-active:#CCCCCC;--font-sans:'IBM Plex Sans',sans-serif;--font-mono:'IBM Plex Mono',monospace}
+body{font-family:var(--font-sans);background:var(--surface);color:var(--ink);-webkit-font-smoothing:antialiased;overflow:hidden;height:100vh;display:flex;flex-direction:column}
 
-:root {
-  --cinnabar: #D63F1A;
-  --cinnabar-light: #D63F1A12;
-  --cinnabar-mid: #D63F1A33;
-  --ink: #1A1A1A;
-  --ink-secondary: #5C5C5C;
-  --ink-tertiary: #8A8A8A;
-  --surface: #F5F5F4;
-  --surface-raised: #FFFFFF;
-  --border: #E2E2E2;
-  --border-active: #CCCCCC;
-  --font-sans: 'IBM Plex Sans', sans-serif;
-  --font-mono: 'IBM Plex Mono', monospace;
-}
+/* ── Top nav ────────────────────────── */
+.topnav{display:flex;align-items:center;justify-content:space-between;height:44px;padding:0 20px;background:var(--surface-raised);border-bottom:1px solid var(--border);flex-shrink:0}
+.topnav-left{display:flex;align-items:center;gap:10px}
+.topnav-logo{display:flex;align-items:center;gap:6px;font-size:13px;font-weight:600;letter-spacing:-0.02em;text-decoration:none;color:var(--ink)}
+.topnav-tabs{display:flex;margin-left:16px}
+.topnav-tab{padding:12px 14px;font-size:12px;font-weight:500;color:var(--ink-tertiary);text-decoration:none;border-bottom:2px solid transparent}
+.topnav-tab:hover{color:var(--ink-secondary)}
+.topnav-tab.active{color:var(--cinnabar);border-bottom-color:var(--cinnabar)}
+.topnav-right{display:flex;align-items:center;gap:10px}
+.topnav-tenant{font-family:var(--font-mono);font-size:11px;color:var(--ink-tertiary)}
+.avatar{width:26px;height:26px;display:flex;align-items:center;justify-content:center;background:var(--cinnabar-light);border:1px solid var(--cinnabar-mid);font-size:9px;font-weight:600;color:var(--cinnabar)}
 
-body {
-  font-family: var(--font-sans);
-  background: var(--surface);
-  color: var(--ink);
-  -webkit-font-smoothing: antialiased;
-  min-height: 100vh;
-}
+/* ── Quote header + tabs ────────────── */
+.quote-bar{display:flex;align-items:center;height:36px;padding:0 20px;background:var(--surface-raised);border-bottom:1px solid var(--border);flex-shrink:0;gap:10px}
+.qb-back{width:24px;height:24px;display:flex;align-items:center;justify-content:center;background:none;border:1px solid var(--border);cursor:pointer;color:var(--ink-secondary);text-decoration:none}
+.qb-id{font-family:var(--font-mono);font-size:11px;font-weight:600}
+.qb-status{font-family:var(--font-mono);font-size:9px;color:var(--ink-tertiary);background:var(--surface);border:1px solid var(--border);padding:1px 5px}
+.qb-sep{width:1px;height:14px;background:var(--border)}
+.qb-tabs{display:flex;margin-left:4px}
+.qb-tab{padding:8px 12px;font-size:11px;font-weight:500;color:var(--ink-tertiary);cursor:pointer;border-bottom:2px solid transparent;text-decoration:none}
+.qb-tab:hover{color:var(--ink-secondary)}
+.qb-tab.active{color:var(--cinnabar);border-bottom-color:var(--cinnabar)}
+.qb-right{margin-left:auto;font-family:var(--font-mono);font-size:10px;color:var(--ink-tertiary)}
 
-/* ── Header ─────────────────────────── */
-.header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  height: 56px;
-  padding: 0 24px;
-  background: var(--surface-raised);
-  border-bottom: 1px solid var(--border);
-}
+/* ── Setup strip (replaces left rail) ── */
+.setup-strip{display:flex;align-items:center;padding:0 20px;height:36px;background:var(--surface-raised);border-bottom:1px solid var(--border);flex-shrink:0;gap:4px;overflow-x:auto}
+.ss-field{display:flex;align-items:center;gap:5px;padding:0 10px;height:28px;background:var(--surface);border:1px solid var(--border);cursor:pointer;transition:border-color 0.12s;flex-shrink:0;max-width:200px}
+.ss-field:hover{border-color:var(--border-active)}
+.ss-label{font-size:9px;color:var(--ink-tertiary);text-transform:uppercase;letter-spacing:0.04em;flex-shrink:0}
+.ss-value{font-size:11px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ss-value.placeholder{color:var(--ink-tertiary);font-weight:400}
+.ss-swatch{width:12px;height:12px;border:1px solid var(--border);flex-shrink:0}
+.ss-arrow{color:var(--ink-tertiary);flex-shrink:0}
+.ss-sep{width:1px;height:18px;background:var(--border);margin:0 4px;flex-shrink:0}
+.ss-expand{display:flex;align-items:center;gap:3px;padding:0 8px;height:28px;font-family:var(--font-sans);font-size:10px;color:var(--ink-tertiary);background:none;border:1px solid var(--border);cursor:pointer;flex-shrink:0}
+.ss-expand:hover{border-color:var(--border-active);color:var(--ink-secondary)}
 
-.header-left {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-}
+/* ── Main canvas ────────────────────── */
+.main-area{flex:1;display:flex;flex-direction:column;overflow:hidden}
 
-.back-btn {
-  width: 32px;
-  height: 32px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: none;
-  border: 1px solid var(--border);
-  cursor: pointer;
-  color: var(--ink-secondary);
-}
+/* Canvas toolbar */
+.canvas-toolbar{display:flex;align-items:center;padding:4px 12px;background:var(--surface-raised);border-bottom:1px solid var(--border);gap:3px;flex-shrink:0}
+.ct-group{display:flex;gap:1px;background:var(--border);border:1px solid var(--border)}
+.ct-btn{width:30px;height:30px;display:flex;align-items:center;justify-content:center;background:var(--surface-raised);border:none;cursor:pointer;color:var(--ink-tertiary)}
+.ct-btn:hover{color:var(--ink-secondary);background:var(--surface)}
+.ct-btn.active{color:var(--cinnabar);background:var(--cinnabar-light)}
+.ct-sep{width:1px;height:18px;background:var(--border);margin:0 6px}
+.ct-label-btn{height:28px;padding:0 10px;font-family:var(--font-mono);font-size:10px;background:var(--surface-raised);border:1px solid var(--border);cursor:pointer;color:var(--ink-secondary);display:flex;align-items:center;gap:4px}
+.ct-label-btn:hover{border-color:var(--border-active)}
+.ct-label-btn.active{border-color:var(--cinnabar);color:var(--cinnabar);background:var(--cinnabar-light)}
+.ct-text{font-size:10px;color:var(--ink-tertiary);margin:0 4px}
 
-.back-btn:hover { border-color: var(--border-active); }
+/* Canvas */
+.canvas{flex:1;display:flex;align-items:center;justify-content:center;position:relative}
 
-.header-title { font-size: 14px; font-weight: 600; }
+/* Empty state */
+.empty-state{max-width:560px;width:100%;text-align:center;padding:20px}
+.es-drop{border:2px dashed var(--cinnabar-mid);background:var(--cinnabar-light);padding:32px 24px;cursor:pointer;transition:all 0.15s;margin-bottom:16px;position:relative}
+.es-drop:hover{border-color:var(--cinnabar);background:#D63F1A0A}
+.es-drop-badge{position:absolute;top:8px;right:8px;font-family:var(--font-mono);font-size:9px;color:var(--cinnabar);background:var(--surface-raised);border:1px solid var(--cinnabar-mid);padding:2px 6px}
+.es-drop-icon{margin-bottom:8px;color:var(--cinnabar)}
+.es-drop-title{font-size:14px;font-weight:600;margin-bottom:4px}
+.es-drop-desc{font-size:12px;color:var(--ink-secondary);line-height:1.5;margin-bottom:6px}
+.es-drop-formats{font-family:var(--font-mono);font-size:10px;color:var(--ink-tertiary)}
+.upload-input{display:none}
+.es-or{font-size:10px;color:var(--ink-tertiary);margin-bottom:12px;display:flex;align-items:center;gap:10px}
+.es-or::before,.es-or::after{content:'';flex:1;height:1px;background:var(--border)}
+.es-alts{display:flex;gap:8px}
+.es-alt{flex:1;padding:14px;background:var(--surface-raised);border:1px solid var(--border);cursor:pointer;text-align:left;text-decoration:none;color:var(--ink);transition:border-color 0.12s}
+.es-alt:hover{border-color:var(--border-active)}
+.es-alt-icon{margin-bottom:4px;color:var(--ink-tertiary)}
+.es-alt-title{font-size:12px;font-weight:600;margin-bottom:2px}
+.es-alt-desc{font-size:10px;color:var(--ink-secondary);line-height:1.4}
+.es-alt-hint{font-size:9px;color:var(--cinnabar);margin-top:4px}
 
-/* ── Steps indicator ────────────────── */
-.steps-bar {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 16px 24px;
-  background: var(--surface-raised);
-  border-bottom: 1px solid var(--border);
-  gap: 0;
-}
+/* ── Pricing footer ─────────────────── */
+.pricing-bar{display:flex;align-items:center;justify-content:space-between;padding:6px 20px;background:var(--surface-raised);border-top:1px solid var(--border);flex-shrink:0}
+.pb-buckets{display:flex;gap:16px}
+.pb-bucket{text-align:center}
+.pb-bucket-label{font-size:8px;color:var(--ink-tertiary);text-transform:uppercase;letter-spacing:0.04em}
+.pb-bucket-value{font-family:var(--font-mono);font-size:12px;font-weight:600}
+.pb-bucket-value.empty{color:var(--ink-tertiary)}
+.pb-right{display:flex;align-items:center;gap:12px}
+.pb-total{text-align:right}
+.pb-total-label{font-size:8px;color:var(--ink-tertiary);text-transform:uppercase;letter-spacing:0.04em}
+.pb-total-value{font-family:var(--font-mono);font-size:16px;font-weight:600}
+.pb-total-value.empty{color:var(--ink-tertiary)}
+.pb-btns{display:flex;gap:4px}
+.pb-btn{height:32px;padding:0 14px;font-family:var(--font-sans);font-size:11px;font-weight:500;cursor:pointer;border:1px solid var(--border);background:var(--surface-raised);color:var(--ink-secondary);display:flex;align-items:center;gap:4px;text-decoration:none}
+.pb-btn:hover{border-color:var(--border-active)}
+.pb-btn.primary{border:none;background:var(--cinnabar);color:white;font-weight:600}
+.pb-btn.primary:hover{opacity:0.88}
 
-.step {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  cursor: pointer;
-}
+/* ── Popovers ───────────────────────── */
+.popover{display:none;position:fixed;background:var(--surface-raised);border:1px solid var(--border);padding:12px;z-index:200;width:280px;box-shadow:0 2px 8px rgba(0,0,0,0.06)}
+.popover.open{display:block}
+.pop-title{font-size:11px;font-weight:600;margin-bottom:8px;display:flex;align-items:center;justify-content:space-between}
+.pop-close{background:none;border:none;cursor:pointer;color:var(--ink-tertiary);padding:2px}
+.pop-input{width:100%;height:34px;padding:0 10px;font-family:var(--font-sans);font-size:12px;color:var(--ink);background:var(--surface);border:1px solid var(--border);margin-bottom:6px}
+.pop-input:focus{outline:none;border-color:var(--cinnabar)}
+.pop-input::placeholder{color:var(--ink-tertiary)}
+.pop-pick{display:flex;align-items:center;gap:8px;padding:7px 8px;border:1px solid var(--border);cursor:pointer;margin-bottom:3px;transition:background 0.08s}
+.pop-pick:hover{background:var(--surface)}
+.pop-pick.selected{border-color:var(--cinnabar);background:var(--cinnabar-light)}
+.pop-avatar{width:22px;height:22px;display:flex;align-items:center;justify-content:center;background:var(--surface);border:1px solid var(--border);font-family:var(--font-mono);font-size:8px;font-weight:600;color:var(--ink-secondary);flex-shrink:0}
+.pop-name{font-size:11px;font-weight:500}
+.pop-type{font-family:var(--font-mono);font-size:8px;color:var(--ink-tertiary);margin-left:auto}
+.pop-new{display:flex;align-items:center;gap:4px;padding:6px 8px;font-family:var(--font-sans);font-size:10px;color:var(--cinnabar);background:none;border:1px dashed var(--cinnabar-mid);cursor:pointer;width:100%;margin-top:4px}
+.pop-new:hover{background:var(--cinnabar-light)}
+.pop-new-form{display:none;margin-top:6px;padding:8px;background:var(--cinnabar-light);border:1px solid var(--cinnabar-mid)}
+.pop-new-form.open{display:block}
+.pop-row{display:flex;gap:4px;margin-bottom:4px}
+.pop-row .pop-input{flex:1;margin-bottom:0}
+.pop-select{height:34px;padding:0 8px;font-family:var(--font-sans);font-size:11px;color:var(--ink);background:var(--surface);border:1px solid var(--border);appearance:none;cursor:pointer;min-width:90px}
+.pop-btn{height:30px;padding:0 12px;font-family:var(--font-sans);font-size:10px;font-weight:600;cursor:pointer;border:none;background:var(--cinnabar);color:white}
+.pop-mat{display:flex;align-items:center;gap:6px;padding:7px 8px;border:1px solid var(--border);cursor:pointer;margin-bottom:3px}
+.pop-mat:hover{background:var(--surface)}
+.pop-mat.selected{border-color:var(--cinnabar);background:var(--cinnabar-light)}
+.pop-mat-swatch{width:18px;height:18px;border:1px solid var(--border);flex-shrink:0}
+.pop-mat-name{font-size:11px;font-weight:500}
+.pop-mat-detail{font-size:9px;color:var(--ink-tertiary)}
+.pop-mat-price{font-family:var(--font-mono);font-size:10px;color:var(--ink-secondary);margin-left:auto}
+.pop-note{font-size:9px;color:var(--ink-tertiary);margin-top:6px;padding:6px 8px;background:var(--surface);border:1px solid var(--border)}
 
-.step-num {
-  width: 28px;
-  height: 28px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-family: var(--font-mono);
-  font-size: 12px;
-  font-weight: 600;
-  border: 1.5px solid var(--border);
-  color: var(--ink-tertiary);
-  transition: all 0.15s;
-}
-
-.step.active .step-num {
-  border-color: var(--cinnabar);
-  color: var(--cinnabar);
-  background: var(--cinnabar-light);
-}
-
-.step.done .step-num {
-  border-color: var(--cinnabar);
-  background: var(--cinnabar);
-  color: white;
-}
-
-.step-label {
-  font-size: 12px;
-  font-weight: 500;
-  color: var(--ink-tertiary);
-  transition: color 0.15s;
-}
-
-.step.active .step-label { color: var(--ink); }
-.step.done .step-label { color: var(--ink-secondary); }
-
-.step-connector {
-  width: 40px;
-  height: 1px;
-  background: var(--border);
-  margin: 0 8px;
-}
-
-.step-connector.done { background: var(--cinnabar); }
-
-/* ── Page content ───────────────────── */
-.page-content {
-  max-width: 720px;
-  margin: 32px auto;
-  padding: 0 24px;
-}
-
-.section-title {
-  font-size: 16px;
-  font-weight: 600;
-  margin-bottom: 20px;
-  letter-spacing: -0.01em;
-}
-
-/* ── Step panels ────────────────────── */
-.step-panel { display: none; }
-.step-panel.active { display: block; }
-
-/* ── Form fields ────────────────────── */
-.field-group {
-  margin-bottom: 20px;
-}
-
-.field-label {
-  font-size: 11px;
-  font-weight: 500;
-  color: var(--ink-secondary);
-  text-transform: uppercase;
-  letter-spacing: 0.06em;
-  margin-bottom: 6px;
-}
-
-.field-input {
-  width: 100%;
-  height: 44px;
-  padding: 0 14px;
-  font-family: var(--font-sans);
-  font-size: 13px;
-  color: var(--ink);
-  background: var(--surface-raised);
-  border: 1px solid var(--border);
-}
-
-.field-input:focus { outline: none; border-color: var(--cinnabar); }
-
-.field-input::placeholder { color: var(--ink-tertiary); }
-
-.field-row {
-  display: flex;
-  gap: 12px;
-}
-
-.field-row .field-group { flex: 1; }
-
-.field-select {
-  width: 100%;
-  height: 44px;
-  padding: 0 14px;
-  font-family: var(--font-sans);
-  font-size: 13px;
-  color: var(--ink);
-  background: var(--surface-raised);
-  border: 1px solid var(--border);
-  appearance: none;
-  cursor: pointer;
-}
-
-.field-select:focus { outline: none; border-color: var(--cinnabar); }
-
-/* ── Customer list ──────────────────── */
-.customer-search-wrap {
-  position: relative;
-  margin-bottom: 16px;
-}
-
-.customer-search {
-  width: 100%;
-  height: 44px;
-  padding: 0 14px 0 40px;
-  font-family: var(--font-sans);
-  font-size: 13px;
-  color: var(--ink);
-  background: var(--surface-raised);
-  border: 1px solid var(--border);
-}
-
-.customer-search:focus { outline: none; border-color: var(--cinnabar); }
-
-.customer-search-icon {
-  position: absolute;
-  left: 14px;
-  top: 50%;
-  transform: translateY(-50%);
-  color: var(--ink-tertiary);
-}
-
-.customer-list {
-  border: 1px solid var(--border);
-  background: var(--surface-raised);
-  max-height: 300px;
-  overflow-y: auto;
-}
-
-.customer-row {
-  display: flex;
-  align-items: center;
-  padding: 12px 16px;
-  gap: 12px;
-  cursor: pointer;
-  border-bottom: 1px solid var(--border);
-  transition: background 0.08s;
-}
-
-.customer-row:last-child { border-bottom: none; }
-.customer-row:hover { background: var(--surface); }
-.customer-row.selected { background: var(--cinnabar-light); border-color: var(--cinnabar-mid); }
-
-.customer-avatar {
-  width: 36px;
-  height: 36px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: var(--surface);
-  border: 1px solid var(--border);
-  font-family: var(--font-mono);
-  font-size: 11px;
-  font-weight: 600;
-  color: var(--ink-secondary);
-  flex-shrink: 0;
-}
-
-.customer-info { flex: 1; min-width: 0; }
-
-.customer-name {
-  font-size: 13px;
-  font-weight: 500;
-}
-
-.customer-detail {
-  font-size: 11px;
-  color: var(--ink-tertiary);
-  margin-top: 2px;
-}
-
-.customer-type-badge {
-  font-family: var(--font-mono);
-  font-size: 9px;
-  font-weight: 500;
-  color: var(--ink-tertiary);
-  background: var(--surface);
-  border: 1px solid var(--border);
-  padding: 2px 6px;
-  letter-spacing: 0.04em;
-}
-
-.add-customer-btn {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 12px 16px;
-  font-family: var(--font-sans);
-  font-size: 13px;
-  color: var(--cinnabar);
-  background: none;
-  border: 1px dashed var(--cinnabar-mid);
-  cursor: pointer;
-  width: 100%;
-  margin-top: 8px;
-}
-
-.add-customer-btn:hover { background: var(--cinnabar-light); }
-
-/* ── Material picker (three-panel) ─── */
-.material-picker {
-  display: flex;
-  border: 1px solid var(--border);
-  background: var(--surface-raised);
-  height: 420px;
-}
-
-.material-panel {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  border-right: 1px solid var(--border);
-  min-width: 0;
-}
-
-.material-panel:last-child { border-right: none; }
-
-.panel-title {
-  padding: 10px 14px;
-  font-size: 10px;
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.06em;
-  color: var(--ink-tertiary);
-  border-bottom: 1px solid var(--border);
-  background: var(--surface);
-  flex-shrink: 0;
-}
-
-.panel-list {
-  flex: 1;
-  overflow-y: auto;
-}
-
-.panel-item {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 10px 14px;
-  cursor: pointer;
-  border-bottom: 1px solid var(--border);
-  transition: background 0.08s;
-  font-size: 13px;
-}
-
-.panel-item:hover { background: var(--surface); }
-.panel-item.selected { background: var(--cinnabar-light); }
-
-.panel-item-count {
-  font-family: var(--font-mono);
-  font-size: 10px;
-  color: var(--ink-tertiary);
-  margin-left: auto;
-}
-
-.panel-item-arrow {
-  color: var(--ink-tertiary);
-  flex-shrink: 0;
-}
-
-/* Material swatch */
-.swatch {
-  width: 40px;
-  height: 40px;
-  border: 1px solid var(--border);
-  flex-shrink: 0;
-}
-
-.material-name {
-  font-size: 12px;
-  font-weight: 500;
-}
-
-.material-detail {
-  font-size: 10px;
-  color: var(--ink-tertiary);
-  margin-top: 2px;
-}
-
-.material-price {
-  font-family: var(--font-mono);
-  font-size: 11px;
-  font-weight: 500;
-  margin-left: auto;
-  flex-shrink: 0;
-}
-
-/* ── Footer actions ─────────────────── */
-.footer-actions {
-  display: flex;
-  justify-content: space-between;
-  margin-top: 28px;
-  padding-top: 20px;
-  border-top: 1px solid var(--border);
-}
-
-.btn-secondary {
-  height: 44px;
-  padding: 0 20px;
-  font-family: var(--font-sans);
-  font-size: 13px;
-  font-weight: 500;
-  color: var(--ink-secondary);
-  background: var(--surface-raised);
-  border: 1px solid var(--border);
-  cursor: pointer;
-}
-
-.btn-secondary:hover { border-color: var(--border-active); }
-
-.btn-primary {
-  height: 44px;
-  padding: 0 24px;
-  font-family: var(--font-sans);
-  font-size: 13px;
-  font-weight: 600;
-  color: white;
-  background: var(--cinnabar);
-  border: none;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  gap: 6px;
-}
-
-.btn-primary:hover { opacity: 0.88; }
-
-.btn-primary:disabled {
-  opacity: 0.4;
-  cursor: not-allowed;
-}
-
-/* Screen label */
-.screen-label {
-  position: fixed;
-  bottom: 20px;
-  right: 24px;
-  font-family: var(--font-mono);
-  font-size: 10px;
-  color: var(--cinnabar);
-  background: var(--cinnabar-light);
-  border: 1px solid var(--cinnabar-mid);
-  padding: 4px 10px;
-  letter-spacing: 0.04em;
-}
+.screen-label{position:fixed;bottom:44px;right:20px;font-family:var(--font-mono);font-size:10px;color:var(--cinnabar);background:var(--cinnabar-light);border:1px solid var(--cinnabar-mid);padding:4px 10px;letter-spacing:0.04em;z-index:50}
 </style>
 </head>
 <body>
 
-<!-- HEADER -->
-<div class="header">
-  <div class="header-left">
-    <button class="back-btn">
-      <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M9 3L5 7L9 11" stroke="currentColor" stroke-width="1.5"/></svg>
-    </button>
-    <span class="header-title">New Quote</span>
+<!-- TOP NAV (shared, per Q7) -->
+<nav class="topnav">
+  <div class="topnav-left">
+    <a class="topnav-logo" href="index.html" title="Back to design index"><svg width="16" height="16" viewBox="0 0 16 16" fill="none"><rect x="1" y="1" width="14" height="14" stroke="#1A1A1A" stroke-width="1.5" fill="none"/><path d="M3.5 12.5 L3.5 3.5 L12.5 3.5 L12.5 8 L8 8 L8 12.5 Z" stroke="#D63F1A" stroke-width="1.5" fill="none"/></svg> Stonehenge</a>
+    <div class="topnav-tabs">
+      <a class="topnav-tab active" href="quote-dashboard.html" title="All quotes — your main quote list">Quotes</a>
+      <a class="topnav-tab" href="mfg-job-board.html" title="Manufacturing job board — kanban view of active jobs">Jobs</a>
+      <a class="topnav-tab" href="#" title="Material catalogue — supplier rates, collections, colours (future)">Materials</a>
+      <a class="topnav-tab" href="#" title="Production schedule — calendar of upcoming installs and fab dates (future)">Schedule</a>
+      <a class="topnav-tab" href="#" title="Customer database — all customers, their quotes, jobs, and history (future)">Customers</a>
+    </div>
   </div>
+  <div class="topnav-right"><span class="topnav-tenant">Northcoast Stone</span><div class="avatar">JH</div></div>
+</nav>
+
+<!-- QUOTE BAR -->
+<div class="quote-bar">
+  <a class="qb-back" href="quote-dashboard.html" title="Back to quote dashboard"><svg width="10" height="10" viewBox="0 0 10 10" fill="none"><path d="M7 1L3 5L7 9" stroke="currentColor" stroke-width="1.2"/></svg></a>
+  <span class="qb-id">Q-2026-0043</span>
+  <span class="qb-status">DRAFT</span>
+  <div class="qb-sep"></div>
+  <div class="qb-tabs">
+    <a class="qb-tab" href="configuration-tab.html" title="Quote settings — customer, project, pricing overrides, deposit %, validity">Config</a>
+    <span class="qb-tab active" title="Visual editor — place and edit pieces on the room layout canvas">Spatial</span>
+    <a class="qb-tab" href="parts-list.html" title="Tree view of all pieces — Room → Unit → Piece with per-piece costs">Parts</a>
+    <a class="qb-tab" href="pricing-tab.html" title="Full pricing breakdown — three-bucket subtotals, overrides, rule trace">Pricing</a>
+    <a class="qb-tab" href="pdf-preview-send.html" title="Customer-facing PDF — preview, set detail level, branding, send via email">PDF</a>
+    <a class="qb-tab" href="#" title="Audit log — every change, status transition, and notification for this quote">Activity</a>
+  </div>
+  <div class="qb-right">Saved just now</div>
 </div>
 
-<!-- STEPS -->
-<div class="steps-bar">
-  <div class="step active" data-step="1" id="step-ind-1">
-    <div class="step-num">1</div>
-    <span class="step-label">Customer</span>
+<!-- SETUP STRIP (compact, replaces left rail) -->
+<div class="setup-strip">
+  <div class="ss-field" id="ss-customer" title="Who is this quote for? Select existing customer or add new.">
+    <span class="ss-label">Customer</span>
+    <span class="ss-value placeholder" id="ss-cust-val">Select...</span>
+    <svg class="ss-arrow" width="8" height="8" viewBox="0 0 8 8" fill="none"><path d="M2 3L4 5L6 3" stroke="currentColor" stroke-width="1"/></svg>
   </div>
-  <div class="step-connector" id="conn-1"></div>
-  <div class="step" data-step="2" id="step-ind-2">
-    <div class="step-num">2</div>
-    <span class="step-label">Project</span>
+  <div class="ss-field" id="ss-project" title="Project name — e.g. 'Sandgate Kitchen Renovation'. Click to edit.">
+    <span class="ss-label">Project</span>
+    <span class="ss-value placeholder" id="ss-proj-val">Name...</span>
   </div>
-  <div class="step-connector" id="conn-2"></div>
-  <div class="step" data-step="3" id="step-ind-3">
-    <div class="step-num">3</div>
-    <span class="step-label">Material</span>
+  <div class="ss-field" id="ss-address" title="Site address for delivery and installation. Click to edit.">
+    <span class="ss-label">Address</span>
+    <span class="ss-value placeholder" id="ss-addr-val">Location...</span>
   </div>
+  <div class="ss-sep"></div>
+  <div class="ss-field" id="ss-material" title="Default material for all pieces. Individual pieces can be overridden in the Parts tab. Use 'Change material' in Parts for bulk updates.">
+    <span class="ss-swatch" id="ss-mat-swatch"></span>
+    <span class="ss-label">Material</span>
+    <span class="ss-value placeholder" id="ss-mat-val">Select...</span>
+    <svg class="ss-arrow" width="8" height="8" viewBox="0 0 8 8" fill="none"><path d="M2 3L4 5L6 3" stroke="currentColor" stroke-width="1"/></svg>
+  </div>
+  <div class="ss-sep"></div>
+  <button class="ss-expand" id="ss-more" title="More quote settings — validity, room, internal notes, deposit %, pricing overrides">
+    <svg width="10" height="10" viewBox="0 0 10 10" fill="none"><circle cx="2" cy="5" r="1" fill="currentColor"/><circle cx="5" cy="5" r="1" fill="currentColor"/><circle cx="8" cy="5" r="1" fill="currentColor"/></svg>
+    More
+  </button>
 </div>
 
-<!-- STEP 1: CUSTOMER -->
-<div class="page-content">
-  <div class="step-panel active" id="panel-1">
-    <div class="section-title">Select customer</div>
-
-    <div class="customer-search-wrap">
-      <svg class="customer-search-icon" width="16" height="16" viewBox="0 0 16 16" fill="none"><circle cx="7" cy="7" r="5" stroke="currentColor" stroke-width="1.5"/><line x1="11" y1="11" x2="14" y2="14" stroke="currentColor" stroke-width="1.5"/></svg>
-      <input class="customer-search" type="text" placeholder="Search customers..." id="cust-search">
+<!-- MAIN AREA -->
+<div class="main-area">
+  <!-- CANVAS TOOLBAR -->
+  <div class="canvas-toolbar">
+    <!-- Tool group -->
+    <div class="ct-group">
+      <button class="ct-btn active" title="Select tool — click pieces to select, drag to move. Shift+click for multi-select."><svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M2 1.5L2 11.5L5.5 8.5L8 13L10 12L7.5 7.5L11 7Z" stroke="currentColor" stroke-width="1" fill="none"/></svg></button>
+      <button class="ct-btn" title="Pan tool — drag the canvas to move your view. Also: hold Space + drag."><svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M7 2V12M2 7H12" stroke="currentColor" stroke-width="0.8"/></svg></button>
+      <button class="ct-btn" title="Measure tool — click two points to see the distance between them in mm."><svg width="14" height="14" viewBox="0 0 14 14" fill="none"><line x1="3" y1="11" x2="11" y2="3" stroke="currentColor" stroke-width="0.8"/><line x1="3" y1="11" x2="3" y2="9" stroke="currentColor" stroke-width="0.6"/><line x1="3" y1="11" x2="5" y2="11" stroke="currentColor" stroke-width="0.6"/></svg></button>
     </div>
-
-    <div class="customer-list" id="customer-list">
-      <div class="customer-row" data-cust="hashtag">
-        <div class="customer-avatar">HH</div>
-        <div class="customer-info">
-          <div class="customer-name">Hashtag Hub Pty Ltd</div>
-          <div class="customer-detail">3 active quotes &middot; Last: 07/05/2026</div>
-        </div>
-        <span class="customer-type-badge">BUILDER</span>
-      </div>
-      <div class="customer-row" data-cust="meridian">
-        <div class="customer-avatar">MH</div>
-        <div class="customer-info">
-          <div class="customer-name">Meridian Homes</div>
-          <div class="customer-detail">2 active quotes &middot; Last: 10/05/2026</div>
-        </div>
-        <span class="customer-type-badge">BUILDER</span>
-      </div>
-      <div class="customer-row" data-cust="urban">
-        <div class="customer-avatar">UE</div>
-        <div class="customer-info">
-          <div class="customer-name">Urban Edge Developments</div>
-          <div class="customer-detail">1 active quote &middot; Last: 09/05/2026</div>
-        </div>
-        <span class="customer-type-badge">BUILDER</span>
-      </div>
-      <div class="customer-row" data-cust="patterson">
-        <div class="customer-avatar">RP</div>
-        <div class="customer-info">
-          <div class="customer-name">R. Patterson</div>
-          <div class="customer-detail">2 active quotes &middot; Last: 08/05/2026</div>
-        </div>
-        <span class="customer-type-badge">HOMEOWNER</span>
-      </div>
-      <div class="customer-row" data-cust="bayside">
-        <div class="customer-avatar">BC</div>
-        <div class="customer-info">
-          <div class="customer-name">Bayside Constructions</div>
-          <div class="customer-detail">1 active quote &middot; Last: 06/05/2026</div>
-        </div>
-        <span class="customer-type-badge">BUILDER</span>
-      </div>
-      <div class="customer-row" data-cust="nakamura">
-        <div class="customer-avatar">KN</div>
-        <div class="customer-info">
-          <div class="customer-name">K. Nakamura</div>
-          <div class="customer-detail">1 active quote &middot; Last: 05/05/2026</div>
-        </div>
-        <span class="customer-type-badge">ARCHITECT</span>
-      </div>
-    </div>
-
-    <button class="add-customer-btn">
-      <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><line x1="7" y1="2" x2="7" y2="12" stroke="currentColor" stroke-width="1.5"/><line x1="2" y1="7" x2="12" y2="7" stroke="currentColor" stroke-width="1.5"/></svg>
-      Add new customer
-    </button>
-
-    <div class="footer-actions">
-      <button class="btn-secondary">Cancel</button>
-      <button class="btn-primary" id="btn-next-1" disabled>
-        Next
-        <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M5 3L9 7L5 11" stroke="currentColor" stroke-width="1.5"/></svg>
-      </button>
-    </div>
+    <div class="ct-sep"></div>
+    <!-- Add group -->
+    <a class="ct-label-btn" href="piece-template-picker.html" title="Add piece — choose from 11 templates (L-shape, rectangle, peninsula, etc.) or build from scratch.">
+      <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><rect x="2" y="2" width="8" height="8" stroke="currentColor" stroke-width="0.8" fill="none"/><line x1="6" y1="4" x2="6" y2="8" stroke="currentColor" stroke-width="0.8"/><line x1="4" y1="6" x2="8" y2="6" stroke="currentColor" stroke-width="0.8"/></svg>
+      Add piece
+    </a>
+    <span class="ct-label-btn" title="Add cutout — sink, cooktop, tap hole, powerpoint. Drag onto a piece to position. (Needs at least one piece first.)" style="opacity:0.5;cursor:default">
+      <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><rect x="1" y="1" width="10" height="10" stroke="currentColor" stroke-width="0.8" fill="none"/><rect x="4" y="4" width="4" height="4" stroke="currentColor" stroke-width="0.8" fill="none" stroke-dasharray="2 1"/></svg>
+      Add cutout
+    </span>
+    <a class="ct-label-btn" href="#" title="Import drawing — upload a PDF/DXF/DWG or photo. Same as the drop zone below." onclick="document.getElementById('file-input-main').click();return false;">
+      <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><rect x="2" y="1" width="8" height="10" stroke="currentColor" stroke-width="0.8" fill="none"/><path d="M6 3V7M4 5L6 7L8 5" stroke="currentColor" stroke-width="0.8"/></svg>
+      Import drawing
+    </a>
+    <div class="ct-sep"></div>
+    <!-- View modes (§24.2) -->
+    <span class="ct-text">View:</span>
+    <a class="ct-label-btn active" href="spatial-plan-view.html" title="Customer view — shows logical units as single surfaces. What the customer sees in their quote PDF. No piece IDs, no assembly detail.">Customer</a>
+    <a class="ct-label-btn" href="spatial-plan-view.html" title="Shop Floor view — shows individual pieces with role colours (benchtop=blue, fascia=green, splashback=purple). Build-up strips visible. Piece IDs labelled. For internal team review.">Shop Floor</a>
+    <a class="ct-label-btn" href="#" title="Cut Card view — pieces nested on actual slab dimensions by the §31 slab optimiser. Shows kerf lines, grain arrows, cut order. Drives the physical cut card document. (Needs pieces first.)">Cut Card</a>
+    <div class="ct-sep"></div>
+    <!-- Zoom -->
+    <span class="ct-text" style="margin-left:auto">100%</span>
+    <button class="ct-btn" title="Zoom in" style="width:24px;height:24px;font-size:14px">+</button>
+    <button class="ct-btn" title="Zoom out" style="width:24px;height:24px;font-size:14px">-</button>
+    <button class="ct-btn" title="Fit all pieces to screen" style="width:24px;height:24px"><svg width="12" height="12" viewBox="0 0 12 12" fill="none"><rect x="1" y="1" width="10" height="10" stroke="currentColor" stroke-width="0.8" fill="none"/><rect x="3" y="3" width="6" height="6" stroke="currentColor" stroke-width="0.6" fill="none" stroke-dasharray="1.5 1"/></svg></button>
   </div>
 
-  <!-- STEP 2: PROJECT -->
-  <div class="step-panel" id="panel-2">
-    <div class="section-title">Project details</div>
-
-    <div class="field-group">
-      <div class="field-label">Project name</div>
-      <input class="field-input" type="text" placeholder="e.g. Sandgate Kitchen Renovation" id="proj-name">
-    </div>
-
-    <div class="field-row">
-      <div class="field-group">
-        <div class="field-label">Room</div>
-        <input class="field-input" type="text" placeholder="e.g. Kitchen" id="proj-room">
+  <!-- CANVAS (full width — no left rail!) -->
+  <div class="canvas">
+    <div class="empty-state">
+      <div class="es-drop" id="drop-zone" onclick="document.getElementById('file-input-main').click()">
+        <span class="es-drop-badge">95% OF JOBS HAVE DRAWINGS</span>
+        <div class="es-drop-icon"><svg width="36" height="36" viewBox="0 0 36 36" fill="none"><rect x="3" y="3" width="30" height="30" stroke="currentColor" stroke-width="1.2" fill="none"/><path d="M10 26L18 14L26 26" stroke="currentColor" stroke-width="1.2" fill="none"/><circle cx="27" cy="10" r="2.5" stroke="currentColor" stroke-width="1" fill="none"/></svg></div>
+        <div class="es-drop-title">Drop a drawing to start</div>
+        <div class="es-drop-desc">We'll extract pieces, dimensions, cutouts, and edge profiles. Review everything before committing.</div>
+        <div class="es-drop-formats">PDF · DXF · DWG · PNG · JPG · HEIC</div>
+        <input type="file" id="file-input-main" class="upload-input" accept=".pdf,.dxf,.dwg,.png,.jpg,.jpeg,.heic">
       </div>
-      <div class="field-group">
-        <div class="field-label">Address</div>
-        <input class="field-input" type="text" placeholder="Street address" id="proj-address">
-      </div>
-    </div>
-
-    <div class="field-row">
-      <div class="field-group">
-        <div class="field-label">Quote reference</div>
-        <input class="field-input" type="text" value="Q-2026-0043" readonly style="color:var(--ink-tertiary);background:var(--surface)">
-      </div>
-      <div class="field-group">
-        <div class="field-label">Valid for</div>
-        <select class="field-select">
-          <option>30 days</option>
-          <option>14 days</option>
-          <option>60 days</option>
-          <option>90 days</option>
-        </select>
-      </div>
-    </div>
-
-    <div class="field-group">
-      <div class="field-label">Notes (internal)</div>
-      <textarea class="field-input" style="height:80px;padding-top:10px;resize:vertical;" placeholder="Notes visible only to your team..."></textarea>
-    </div>
-
-    <div class="footer-actions">
-      <button class="btn-secondary" id="btn-back-2">Back</button>
-      <button class="btn-primary" id="btn-next-2">
-        Next
-        <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M5 3L9 7L5 11" stroke="currentColor" stroke-width="1.5"/></svg>
-      </button>
-    </div>
-  </div>
-
-  <!-- STEP 3: MATERIAL -->
-  <div class="step-panel" id="panel-3" style="max-width:960px;">
-    <div class="section-title">Choose primary material</div>
-
-    <div class="material-picker">
-      <!-- Panel 1: Suppliers -->
-      <div class="material-panel">
-        <div class="panel-title">Supplier</div>
-        <div class="panel-list" id="supplier-list">
-          <div class="panel-item selected" data-supplier="caesarstone">
-            <span>Caesarstone</span>
-            <span class="panel-item-count">24</span>
-            <svg class="panel-item-arrow" width="10" height="10" viewBox="0 0 10 10" fill="none"><path d="M4 2L7 5L4 8" stroke="currentColor" stroke-width="1.2"/></svg>
-          </div>
-          <div class="panel-item" data-supplier="smartstone">
-            <span>Smartstone</span>
-            <span class="panel-item-count">18</span>
-            <svg class="panel-item-arrow" width="10" height="10" viewBox="0 0 10 10" fill="none"><path d="M4 2L7 5L4 8" stroke="currentColor" stroke-width="1.2"/></svg>
-          </div>
-          <div class="panel-item" data-supplier="essastone">
-            <span>Essastone</span>
-            <span class="panel-item-count">14</span>
-            <svg class="panel-item-arrow" width="10" height="10" viewBox="0 0 10 10" fill="none"><path d="M4 2L7 5L4 8" stroke="currentColor" stroke-width="1.2"/></svg>
-          </div>
-          <div class="panel-item" data-supplier="natural">
-            <span>Natural Stone Co</span>
-            <span class="panel-item-count">32</span>
-            <svg class="panel-item-arrow" width="10" height="10" viewBox="0 0 10 10" fill="none"><path d="M4 2L7 5L4 8" stroke="currentColor" stroke-width="1.2"/></svg>
-          </div>
-          <div class="panel-item" data-supplier="cdkstone">
-            <span>CDK Stone</span>
-            <span class="panel-item-count">28</span>
-            <svg class="panel-item-arrow" width="10" height="10" viewBox="0 0 10 10" fill="none"><path d="M4 2L7 5L4 8" stroke="currentColor" stroke-width="1.2"/></svg>
-          </div>
+      <div class="es-or">or start manually</div>
+      <div class="es-alts">
+        <a class="es-alt" href="piece-template-picker.html" title="Choose from 11 pre-built shape templates: Rectangle, L-Shape, U-Shape, Bay Window, Radius End, Full Circle, Angular Corner, Splayed Corner, Trapezoid, Peninsula, Custom. Enter dimensions and place on canvas.">
+          <div class="es-alt-icon"><svg width="18" height="18" viewBox="0 0 18 18" fill="none"><rect x="2" y="2" width="14" height="14" stroke="currentColor" stroke-width="0.8" fill="none"/><path d="M2 2L9 2L9 9L16 9L16 16L2 16Z" stroke="currentColor" stroke-width="0.8" fill="none" stroke-dasharray="2 1.5"/></svg></div>
+          <div class="es-alt-title">Pick a template</div>
+          <div class="es-alt-desc">11 common shapes. Enter dimensions.</div>
+          <div class="es-alt-hint">You can save your own reusable templates</div>
+        </a>
+        <div class="es-alt" title="Activate polygon draw mode — tap corners on the canvas to trace piece outlines freehand. Polar tracking at 0°/45°/90° for straight edges. Close the shape by tapping the first point again.">
+          <div class="es-alt-icon"><svg width="18" height="18" viewBox="0 0 18 18" fill="none"><path d="M3 15L3 3L15 3" stroke="currentColor" stroke-width="0.8" fill="none"/><circle cx="3" cy="3" r="1.5" stroke="currentColor" stroke-width="0.7" fill="none"/><circle cx="15" cy="3" r="1.5" stroke="currentColor" stroke-width="0.7" fill="none"/><circle cx="3" cy="15" r="1.5" stroke="currentColor" stroke-width="0.7" fill="none"/></svg></div>
+          <div class="es-alt-title">Build your own</div>
+          <div class="es-alt-desc">Tap corners on canvas to draw.</div>
         </div>
       </div>
-
-      <!-- Panel 2: Collections -->
-      <div class="material-panel">
-        <div class="panel-title">Collection</div>
-        <div class="panel-list" id="collection-list">
-          <div class="panel-item selected" data-collection="metro">
-            <span>Metropolitan</span>
-            <span class="panel-item-count">6</span>
-            <svg class="panel-item-arrow" width="10" height="10" viewBox="0 0 10 10" fill="none"><path d="M4 2L7 5L4 8" stroke="currentColor" stroke-width="1.2"/></svg>
-          </div>
-          <div class="panel-item" data-collection="outdoor">
-            <span>Outdoor</span>
-            <span class="panel-item-count">4</span>
-            <svg class="panel-item-arrow" width="10" height="10" viewBox="0 0 10 10" fill="none"><path d="M4 2L7 5L4 8" stroke="currentColor" stroke-width="1.2"/></svg>
-          </div>
-          <div class="panel-item" data-collection="supernatural">
-            <span>Supernatural</span>
-            <span class="panel-item-count">8</span>
-            <svg class="panel-item-arrow" width="10" height="10" viewBox="0 0 10 10" fill="none"><path d="M4 2L7 5L4 8" stroke="currentColor" stroke-width="1.2"/></svg>
-          </div>
-          <div class="panel-item" data-collection="classico">
-            <span>Classico</span>
-            <span class="panel-item-count">6</span>
-            <svg class="panel-item-arrow" width="10" height="10" viewBox="0 0 10 10" fill="none"><path d="M4 2L7 5L4 8" stroke="currentColor" stroke-width="1.2"/></svg>
-          </div>
-        </div>
-      </div>
-
-      <!-- Panel 3: Materials -->
-      <div class="material-panel">
-        <div class="panel-title">Colour / Finish</div>
-        <div class="panel-list" id="material-list">
-          <div class="panel-item selected">
-            <div class="swatch" style="background:#B8B3AA;"></div>
-            <div>
-              <div class="material-name">Concrete</div>
-              <div class="material-detail">4003 &middot; 20mm &middot; Polished</div>
-            </div>
-            <span class="material-price">$285/m&sup2;</span>
-          </div>
-          <div class="panel-item">
-            <div class="swatch" style="background:#E8E4DD;"></div>
-            <div>
-              <div class="material-name">Cloudburst Concrete</div>
-              <div class="material-detail">4011 &middot; 20mm &middot; Polished</div>
-            </div>
-            <span class="material-price">$310/m&sup2;</span>
-          </div>
-          <div class="panel-item">
-            <div class="swatch" style="background:#DAD5CC;"></div>
-            <div>
-              <div class="material-name">Airy Concrete</div>
-              <div class="material-detail">4044 &middot; 20mm &middot; Polished</div>
-            </div>
-            <span class="material-price">$295/m&sup2;</span>
-          </div>
-          <div class="panel-item">
-            <div class="swatch" style="background:#2C2C2C;"></div>
-            <div>
-              <div class="material-name">Piatra Grey</div>
-              <div class="material-detail">5003 &middot; 20mm &middot; Polished</div>
-            </div>
-            <span class="material-price">$340/m&sup2;</span>
-          </div>
-          <div class="panel-item">
-            <div class="swatch" style="background:#F0EDE6;"></div>
-            <div>
-              <div class="material-name">Statuario Maximus</div>
-              <div class="material-detail">5031 &middot; 20mm &middot; Polished</div>
-            </div>
-            <span class="material-price">$380/m&sup2;</span>
-          </div>
-          <div class="panel-item">
-            <div class="swatch" style="background:#F5F2EB;"></div>
-            <div>
-              <div class="material-name">Calacatta Nuvo</div>
-              <div class="material-detail">5131 &middot; 20mm &middot; Polished</div>
-            </div>
-            <span class="material-price">$395/m&sup2;</span>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <div class="footer-actions">
-      <button class="btn-secondary" id="btn-back-3">Back</button>
-      <button class="btn-primary" id="btn-create">
-        Create quote
-        <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M5 3L9 7L5 11" stroke="currentColor" stroke-width="1.5"/></svg>
-      </button>
     </div>
   </div>
 </div>
 
-<div class="screen-label">SCREEN 05 — NEW QUOTE FLOW</div>
+<!-- PRICING FOOTER -->
+<div class="pricing-bar">
+  <div class="pb-buckets">
+    <div class="pb-bucket" title="Total fabrication cost — cutting, profiling, polishing, assembly labour"><div class="pb-bucket-label">Fabrication</div><div class="pb-bucket-value empty">—</div></div>
+    <div class="pb-bucket" title="Total material cost — slab area × $/m² for the selected material"><div class="pb-bucket-label">Material</div><div class="pb-bucket-value empty">—</div></div>
+    <div class="pb-bucket" title="Total installation cost — delivery, on-site fitting, cutout templating"><div class="pb-bucket-label">Installation</div><div class="pb-bucket-value empty">—</div></div>
+  </div>
+  <div class="pb-right">
+    <div class="pb-total"><div class="pb-total-label">Total ex GST</div><div class="pb-total-value empty">$0.00</div></div>
+    <div class="pb-btns">
+      <a class="pb-btn" href="pdf-preview-send.html" title="Preview the customer-facing PDF — choose detail level, check branding, then send">Preview PDF</a>
+      <a class="pb-btn primary" href="pdf-preview-send.html" title="Generate PDF and open the send modal — email to customer with tracking">Send Quote</a>
+    </div>
+  </div>
+</div>
+
+<!-- POPOVERS -->
+
+<!-- Customer popover -->
+<div class="popover" id="pop-customer">
+  <div class="pop-title">Customer <button class="pop-close" onclick="closePop()"><svg width="10" height="10" viewBox="0 0 10 10" fill="none"><path d="M2 2L8 8M8 2L2 8" stroke="currentColor" stroke-width="1.2"/></svg></button></div>
+  <input class="pop-input" placeholder="Search or type name..." id="pop-cust-search">
+  <div class="pop-pick" data-name="Hashtag Hub Pty Ltd" onclick="pickCust(this)"><div class="pop-avatar">HH</div><span class="pop-name">Hashtag Hub Pty Ltd</span><span class="pop-type">BUILDER</span></div>
+  <div class="pop-pick" data-name="Meridian Homes" onclick="pickCust(this)"><div class="pop-avatar">MH</div><span class="pop-name">Meridian Homes</span><span class="pop-type">BUILDER</span></div>
+  <div class="pop-pick" data-name="R. Patterson" onclick="pickCust(this)"><div class="pop-avatar">RP</div><span class="pop-name">R. Patterson</span><span class="pop-type">HOMEOWNER</span></div>
+  <div class="pop-pick" data-name="K. Nakamura" onclick="pickCust(this)"><div class="pop-avatar">KN</div><span class="pop-name">K. Nakamura</span><span class="pop-type">ARCHITECT</span></div>
+  <button class="pop-new" onclick="document.getElementById('pop-cust-new').classList.toggle('open')"><svg width="8" height="8" viewBox="0 0 8 8" fill="none"><line x1="4" y1="1" x2="4" y2="7" stroke="currentColor" stroke-width="1"/><line x1="1" y1="4" x2="7" y2="4" stroke="currentColor" stroke-width="1"/></svg> Add new customer</button>
+  <div class="pop-new-form" id="pop-cust-new">
+    <div class="pop-row"><input class="pop-input" placeholder="Company or person name" id="pop-new-name" style="margin-bottom:0"><select class="pop-select"><option>Builder</option><option>Architect</option><option>Designer</option><option>Homeowner</option></select></div>
+    <div class="pop-row"><input class="pop-input" placeholder="Contact name" style="margin-bottom:0"><input class="pop-input" placeholder="Email" style="margin-bottom:0"></div>
+    <div class="pop-row"><input class="pop-input" placeholder="Phone" style="margin-bottom:0"><button class="pop-btn" onclick="saveNewCust()">Save</button></div>
+  </div>
+</div>
+
+<!-- Material popover -->
+<div class="popover" id="pop-material">
+  <div class="pop-title">Default material <button class="pop-close" onclick="closePop()"><svg width="10" height="10" viewBox="0 0 10 10" fill="none"><path d="M2 2L8 8M8 2L2 8" stroke="currentColor" stroke-width="1.2"/></svg></button></div>
+  <div class="pop-mat" data-mat="Caesarstone Concrete" data-color="#B8B3AA" onclick="pickMat(this)"><div class="pop-mat-swatch" style="background:#B8B3AA"></div><div><div class="pop-mat-name">Caesarstone Concrete</div><div class="pop-mat-detail">4003 · 20mm polished</div></div><span class="pop-mat-price">$285/m²</span></div>
+  <div class="pop-mat" data-mat="Piatra Grey" data-color="#2C2C2C" onclick="pickMat(this)"><div class="pop-mat-swatch" style="background:#2C2C2C"></div><div><div class="pop-mat-name">Piatra Grey</div><div class="pop-mat-detail">5003 · 20mm polished</div></div><span class="pop-mat-price">$340/m²</span></div>
+  <div class="pop-mat" data-mat="Statuario Maximus" data-color="#F0EDE6" onclick="pickMat(this)"><div class="pop-mat-swatch" style="background:#F0EDE6"></div><div><div class="pop-mat-name">Statuario Maximus</div><div class="pop-mat-detail">5031 · 20mm polished</div></div><span class="pop-mat-price">$380/m²</span></div>
+  <div class="pop-mat" data-mat="Essastone Bone White" data-color="#F5F0E8" onclick="pickMat(this)"><div class="pop-mat-swatch" style="background:#F5F0E8"></div><div><div class="pop-mat-name">Essastone Bone White</div><div class="pop-mat-detail">20mm polished</div></div><span class="pop-mat-price">$195/m²</span></div>
+  <button style="width:100%;padding:7px;font-family:var(--font-sans);font-size:10px;color:var(--cinnabar);background:none;border:1px dashed var(--cinnabar-mid);cursor:pointer;margin-top:4px">Browse full catalogue →</button>
+  <div class="pop-note">This sets the quote-level default. Override per-piece in the <strong>Parts</strong> tab, or use <strong>bulk material change</strong> to update multiple pieces at once.</div>
+</div>
+
+<!-- Project inline edit -->
+<div class="popover" id="pop-project" style="width:240px">
+  <div class="pop-title">Project name <button class="pop-close" onclick="closePop()"><svg width="10" height="10" viewBox="0 0 10 10" fill="none"><path d="M2 2L8 8M8 2L2 8" stroke="currentColor" stroke-width="1.2"/></svg></button></div>
+  <input class="pop-input" placeholder="e.g. Sandgate Kitchen Renovation" id="pop-proj-input">
+  <div style="display:flex;justify-content:flex-end;margin-top:4px"><button class="pop-btn" onclick="saveProj()">Done</button></div>
+</div>
+
+<!-- Address inline edit -->
+<div class="popover" id="pop-address" style="width:260px">
+  <div class="pop-title">Site address <button class="pop-close" onclick="closePop()"><svg width="10" height="10" viewBox="0 0 10 10" fill="none"><path d="M2 2L8 8M8 2L2 8" stroke="currentColor" stroke-width="1.2"/></svg></button></div>
+  <input class="pop-input" placeholder="Street address" id="pop-addr-input">
+  <div class="pop-row"><input class="pop-input" placeholder="Suburb" style="margin-bottom:0"><input class="pop-input" placeholder="QLD" style="margin-bottom:0;width:60px"><input class="pop-input" placeholder="4017" style="margin-bottom:0;width:60px"></div>
+  <div style="display:flex;justify-content:flex-end;margin-top:4px"><button class="pop-btn" onclick="saveAddr()">Done</button></div>
+</div>
+
+<!-- More settings popover -->
+<div class="popover" id="pop-more" style="width:260px">
+  <div class="pop-title">More settings <button class="pop-close" onclick="closePop()"><svg width="10" height="10" viewBox="0 0 10 10" fill="none"><path d="M2 2L8 8M8 2L2 8" stroke="currentColor" stroke-width="1.2"/></svg></button></div>
+  <div style="margin-bottom:8px"><span style="font-size:9px;font-weight:500;color:var(--ink-tertiary);text-transform:uppercase;letter-spacing:0.04em">Room</span><input class="pop-input" placeholder="e.g. Kitchen" style="margin-top:3px"></div>
+  <div style="margin-bottom:8px"><span style="font-size:9px;font-weight:500;color:var(--ink-tertiary);text-transform:uppercase;letter-spacing:0.04em">Valid for</span><select class="pop-select" style="width:100%;margin-top:3px"><option>30 days</option><option>14 days</option><option>60 days</option><option>90 days</option></select></div>
+  <div><span style="font-size:9px;font-weight:500;color:var(--ink-tertiary);text-transform:uppercase;letter-spacing:0.04em">Internal notes</span><textarea style="width:100%;height:50px;padding:6px 8px;font-family:var(--font-sans);font-size:11px;color:var(--ink);background:var(--surface);border:1px solid var(--border);resize:vertical;margin-top:3px" placeholder="Visible only to your team..."></textarea></div>
+  <div class="pop-note">Full settings available in the <a href="configuration-tab.html" style="color:var(--cinnabar)">Config tab</a> — deposit %, pricing overrides, PDF defaults.</div>
+</div>
+
+<div class="screen-label">QUOTE WORKSPACE — EMPTY STATE</div>
 
 <script>
-let currentStep = 1;
-let selectedCustomer = null;
-
-function goToStep(n) {
-  currentStep = n;
-  document.querySelectorAll('.step-panel').forEach(p => p.classList.remove('active'));
-  document.getElementById('panel-' + n).classList.add('active');
-
-  for (let i = 1; i <= 3; i++) {
-    const ind = document.getElementById('step-ind-' + i);
-    ind.classList.remove('active', 'done');
-    if (i < n) ind.classList.add('done');
-    if (i === n) ind.classList.add('active');
-  }
-  for (let i = 1; i <= 2; i++) {
-    const conn = document.getElementById('conn-' + i);
-    conn.classList.toggle('done', i < n);
-  }
+let activePop=null;
+function openPop(id,anchor){
+  closePop();
+  const pop=document.getElementById(id);
+  const r=anchor.getBoundingClientRect();
+  pop.style.top=(r.bottom+4)+'px';
+  pop.style.left=Math.min(r.left,window.innerWidth-290)+'px';
+  pop.classList.add('open');
+  activePop=id;
 }
+function closePop(){document.querySelectorAll('.popover').forEach(p=>p.classList.remove('open'));activePop=null;}
+document.addEventListener('click',e=>{if(activePop&&!e.target.closest('.popover')&&!e.target.closest('.ss-field')&&!e.target.closest('.ss-expand'))closePop();});
+document.querySelectorAll('.popover').forEach(p=>p.addEventListener('click',e=>e.stopPropagation()));
 
-// Customer selection
-document.querySelectorAll('.customer-row').forEach(row => {
-  row.addEventListener('click', () => {
-    document.querySelectorAll('.customer-row').forEach(r => r.classList.remove('selected'));
-    row.classList.add('selected');
-    selectedCustomer = row.dataset.cust;
-    document.getElementById('btn-next-1').disabled = false;
-  });
-});
+document.getElementById('ss-customer').addEventListener('click',function(e){e.stopPropagation();openPop('pop-customer',this);});
+document.getElementById('ss-project').addEventListener('click',function(e){e.stopPropagation();openPop('pop-project',this);});
+document.getElementById('ss-address').addEventListener('click',function(e){e.stopPropagation();openPop('pop-address',this);});
+document.getElementById('ss-material').addEventListener('click',function(e){e.stopPropagation();openPop('pop-material',this);});
+document.getElementById('ss-more').addEventListener('click',function(e){e.stopPropagation();openPop('pop-more',this);});
 
-document.getElementById('btn-next-1').addEventListener('click', () => goToStep(2));
-document.getElementById('btn-next-2').addEventListener('click', () => goToStep(3));
-document.getElementById('btn-back-2').addEventListener('click', () => goToStep(1));
-document.getElementById('btn-back-3').addEventListener('click', () => goToStep(2));
+function pickCust(el){
+  const v=document.getElementById('ss-cust-val');v.textContent=el.dataset.name;v.classList.remove('placeholder');
+  document.querySelectorAll('.pop-pick').forEach(p=>p.classList.remove('selected'));el.classList.add('selected');closePop();
+}
+function saveNewCust(){
+  const n=document.getElementById('pop-new-name').value;
+  if(n){document.getElementById('ss-cust-val').textContent=n;document.getElementById('ss-cust-val').classList.remove('placeholder');closePop();}
+}
+function pickMat(el){
+  const v=document.getElementById('ss-mat-val');v.textContent=el.dataset.mat;v.classList.remove('placeholder');
+  document.getElementById('ss-mat-swatch').style.background=el.dataset.color;
+  document.querySelectorAll('.pop-mat').forEach(m=>m.classList.remove('selected'));el.classList.add('selected');closePop();
+}
+function saveProj(){
+  const n=document.getElementById('pop-proj-input').value;
+  if(n){document.getElementById('ss-proj-val').textContent=n;document.getElementById('ss-proj-val').classList.remove('placeholder');closePop();}
+}
+function saveAddr(){
+  const n=document.getElementById('pop-addr-input').value;
+  if(n){document.getElementById('ss-addr-val').textContent=n;document.getElementById('ss-addr-val').classList.remove('placeholder');closePop();}
+}
+document.getElementById('pop-cust-search').addEventListener('input',function(){const t=this.value.toLowerCase();document.querySelectorAll('.pop-pick').forEach(p=>{p.style.display=p.querySelector('.pop-name').textContent.toLowerCase().includes(t)?'flex':'none';});});
 
-// Step indicator click
-document.querySelectorAll('.step').forEach(s => {
-  s.addEventListener('click', () => {
-    const n = parseInt(s.dataset.step);
-    if (n <= currentStep || (n === currentStep + 1 && selectedCustomer)) goToStep(n);
-  });
-});
-
-// Supplier panel selection
-document.querySelectorAll('#supplier-list .panel-item').forEach(item => {
-  item.addEventListener('click', () => {
-    document.querySelectorAll('#supplier-list .panel-item').forEach(i => i.classList.remove('selected'));
-    item.classList.add('selected');
-  });
-});
-
-// Collection panel selection
-document.querySelectorAll('#collection-list .panel-item').forEach(item => {
-  item.addEventListener('click', () => {
-    document.querySelectorAll('#collection-list .panel-item').forEach(i => i.classList.remove('selected'));
-    item.classList.add('selected');
-  });
-});
-
-// Material panel selection
-document.querySelectorAll('#material-list .panel-item').forEach(item => {
-  item.addEventListener('click', () => {
-    document.querySelectorAll('#material-list .panel-item').forEach(i => i.classList.remove('selected'));
-    item.classList.add('selected');
-  });
-});
-
-// Customer search filter
-document.getElementById('cust-search').addEventListener('input', function() {
-  const term = this.value.toLowerCase();
-  document.querySelectorAll('.customer-row').forEach(row => {
-    const name = row.querySelector('.customer-name').textContent.toLowerCase();
-    row.style.display = name.includes(term) ? 'flex' : 'none';
-  });
-});
+// Drop zone
+const dz=document.getElementById('drop-zone');
+dz.addEventListener('dragover',e=>{e.preventDefault();dz.style.borderColor='var(--cinnabar)';dz.style.background='#D63F1A18';});
+dz.addEventListener('dragleave',()=>{dz.style.borderColor='';dz.style.background='';});
+dz.addEventListener('drop',e=>{e.preventDefault();window.location.href='drawing-review.html';});
+document.getElementById('file-input-main').addEventListener('change',function(){if(this.files[0])window.location.href='drawing-review.html';});
 </script>
 </body>
 </html>
