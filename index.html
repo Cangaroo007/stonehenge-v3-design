@@ -55,14 +55,49 @@ h1 {
   font-family: var(--font-mono);
   font-size: 11px;
   color: var(--ink-tertiary);
-  margin-bottom: 40px;
+  margin-bottom: 32px;
   padding-bottom: 20px;
   border-bottom: 1px solid var(--border);
 }
 
-/* ── Section ────────────────────────── */
+/* ── Module header ──────────────────── */
+.module-header {
+  margin-top: 40px;
+  margin-bottom: 16px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid var(--ink);
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+}
+
+.module-header:first-of-type { margin-top: 0; }
+
+.module-title {
+  font-size: 16px;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+}
+
+.module-num {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  font-weight: 600;
+  color: var(--cinnabar);
+  letter-spacing: 0.08em;
+}
+
+.module-desc {
+  font-size: 12px;
+  color: var(--ink-secondary);
+  line-height: 1.5;
+  margin-bottom: 20px;
+  max-width: 640px;
+}
+
+/* ── Section (subsection of module) ── */
 .section {
-  margin-bottom: 32px;
+  margin-bottom: 28px;
 }
 
 .section-title {
@@ -98,9 +133,10 @@ h1 {
   transition: border-color 0.12s;
 }
 
-.card:hover {
-  border-color: var(--border-active);
-}
+.card:hover { border-color: var(--border-active); }
+
+.card.planned { cursor: default; opacity: 0.85; }
+.card.planned:hover { border-color: var(--border); }
 
 .card-top {
   display: flex;
@@ -171,16 +207,48 @@ h1 {
 }
 
 /* Variant cards (smaller) */
-.card.variant {
-  padding: 12px 14px;
+.card.variant { padding: 12px 14px; }
+.card.variant .card-title { font-size: 12px; }
+.card.variant .card-desc { font-size: 10px; }
+
+/* ── Nav indicator ──────────────────── */
+.nav-strip {
+  display: flex;
+  gap: 0;
+  padding: 12px 16px;
+  background: var(--surface-raised);
+  border: 1px solid var(--ink);
+  margin-bottom: 32px;
+  align-items: center;
 }
 
-.card.variant .card-title {
-  font-size: 12px;
-}
-
-.card.variant .card-desc {
+.nav-strip-label {
+  font-family: var(--font-mono);
   font-size: 10px;
+  color: var(--ink-tertiary);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  margin-right: 14px;
+}
+
+.nav-strip-tab {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--ink);
+  padding: 4px 10px;
+  border-right: 1px solid var(--border);
+}
+
+.nav-strip-tab:last-of-type { border-right: none; }
+
+.nav-strip-tab.proposed {
+  color: var(--ink-tertiary);
+  font-style: italic;
+}
+
+.nav-strip-gear {
+  margin-left: auto;
+  color: var(--ink-tertiary);
 }
 
 /* ── Footer ─────────────────────────── */
@@ -194,6 +262,18 @@ h1 {
 }
 
 .footer strong { color: var(--ink-secondary); font-weight: 600; }
+
+.coordination-note {
+  margin-top: 16px;
+  padding: 12px 14px;
+  background: var(--cinnabar-light);
+  border: 1px solid var(--cinnabar-mid);
+  font-size: 11px;
+  color: var(--ink);
+  line-height: 1.5;
+}
+
+.coordination-note strong { color: var(--cinnabar); font-weight: 600; }
 </style>
 </head>
 <body>
@@ -201,12 +281,42 @@ h1 {
 
   <h1>Stonehenge V3 — Design mockups</h1>
   <p class="subtitle">
-    Interactive HTML mockups for the V3 quote builder, manufacturing interface, and customer portal.
-    These are design references for Wave 4+ agents — not functional prototypes. Every screen maps to a spec section.
+    Interactive HTML mockups for the V3 platform. Quote Builder, Manufacturing, and supporting modules.
+    Reference material for Wave 4+ agents — not functional prototypes. Every screen maps to a spec section.
   </p>
-  <div class="meta">v0.2 · 11/05/2026 · IBM Plex Sans + Mono · Cinnabar #D63F1A · 4px grid · 44px tap targets</div>
+  <div class="meta">v0.3 · 11/05/2026 · IBM Plex Sans + Mono · Cinnabar #D63F1A · 4px grid · 44px tap targets</div>
 
-  <!-- ── EDGE SELECTOR VARIANTS ─────── -->
+  <!-- ── PROPOSED UNIFIED NAV ───────────── -->
+  <div class="nav-strip">
+    <span class="nav-strip-label">PROPOSED NAV</span>
+    <span class="nav-strip-tab">Quotes</span>
+    <span class="nav-strip-tab">Jobs</span>
+    <span class="nav-strip-tab proposed">Materials</span>
+    <span class="nav-strip-tab proposed">Schedule</span>
+    <span class="nav-strip-tab proposed">Customers</span>
+    <span class="nav-strip-gear">
+      <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+        <circle cx="7" cy="7" r="2" stroke="currentColor" stroke-width="1.2"/>
+        <path d="M7 1 L7 3 M7 11 L7 13 M1 7 L3 7 M11 7 L13 7 M2.5 2.5 L4 4 M10 10 L11.5 11.5 M2.5 11.5 L4 10 M10 4 L11.5 2.5" stroke="currentColor" stroke-width="1.2"/>
+      </svg>
+    </span>
+  </div>
+
+  <!-- ════════════════════════════════════ -->
+  <!--  MODULE 01 — QUOTE BUILDER         -->
+  <!-- ════════════════════════════════════ -->
+  <div class="module-header">
+    <div>
+      <span class="module-num">MODULE 01</span>
+      <div class="module-title">Quote Builder</div>
+    </div>
+  </div>
+  <p class="module-desc">
+    From customer enquiry to PDF send. Workspace, edge configuration, pricing breakdown, parts list,
+    spatial plan view, and quote delivery. The starting point for every job.
+  </p>
+
+  <!-- Edge selector variants -->
   <div class="section">
     <div class="section-title">Edge selector — variants for review</div>
     <div class="card-grid quad">
@@ -249,9 +359,9 @@ h1 {
     </div>
   </div>
 
-  <!-- ── WORKSPACE (EXISTING) ───────── -->
+  <!-- Workspace -->
   <div class="section">
-    <div class="section-title">Quote builder — workspace</div>
+    <div class="section-title">Workspace</div>
     <div class="card-grid">
       <a class="card" href="workspace.html">
         <div class="card-top">
@@ -296,9 +406,9 @@ h1 {
     </div>
   </div>
 
-  <!-- ── FLOWS ──────────────────────── -->
+  <!-- Flows -->
   <div class="section">
-    <div class="section-title">Quote builder — flows</div>
+    <div class="section-title">Flows</div>
     <div class="card-grid">
       <a class="card" href="quote-dashboard.html">
         <div class="card-top">
@@ -343,9 +453,9 @@ h1 {
     </div>
   </div>
 
-  <!-- ── REVIEW & DELIVER ───────────── -->
+  <!-- Review & Deliver -->
   <div class="section">
-    <div class="section-title">Quote builder — review and deliver</div>
+    <div class="section-title">Review and deliver</div>
     <div class="card-grid">
       <a class="card" href="parts-list.html">
         <div class="card-top">
@@ -380,53 +490,308 @@ h1 {
     </div>
   </div>
 
-  <!-- ── PLANNED ────────────────────── -->
+  <!-- ════════════════════════════════════ -->
+  <!--  MODULE 02 — MANUFACTURING         -->
+  <!-- ════════════════════════════════════ -->
+  <div class="module-header">
+    <div>
+      <span class="module-num">MODULE 02</span>
+      <div class="module-title">Manufacturing</div>
+    </div>
+  </div>
+  <p class="module-desc">
+    From accepted quote to installed kitchen. Kanban board, per-piece station routing, cut card,
+    DXF export, BOM, templating review, and the daily floor view. Tenant-customisable workflow templates.
+  </p>
+
+  <!-- Core flow -->
   <div class="section">
-    <div class="section-title">Planned</div>
+    <div class="section-title">Core flow — Batch 1</div>
     <div class="card-grid">
-      <div class="card" style="cursor:default;">
+      <a class="card" href="mfg-job-board.html">
         <div class="card-top">
-          <span class="card-num">12</span>
+          <span class="card-num">M01</span>
+          <span class="card-badge live">LIVE</span>
+        </div>
+        <div class="card-title">Job board (Kanban)</div>
+        <div class="card-desc">10-stage NCS workflow as columns. Drag to advance. Jobs as cards with material swatch, piece count, due date, flags. NL input bar.</div>
+        <div class="card-spec">§34.1, §34.7, D.9</div>
+        <div class="card-arrow">Open →</div>
+      </a>
+      <div class="card planned">
+        <div class="card-top">
+          <span class="card-num">M02</span>
+          <span class="card-badge planned">PLANNED</span>
+        </div>
+        <div class="card-title">Job board (List)</div>
+        <div class="card-desc">Table view toggle. Same data as M01, dashboard-style rows. Filters and search match the quote dashboard pattern.</div>
+        <div class="card-spec">§34.7</div>
+      </div>
+      <div class="card planned">
+        <div class="card-top">
+          <span class="card-num">M03</span>
+          <span class="card-badge planned">PLANNED</span>
+        </div>
+        <div class="card-title">Job detail — Overview</div>
+        <div class="card-desc">Job metadata, status timeline, key actions, right summary panel. Hub for the five other job-detail tabs.</div>
+        <div class="card-spec">§34.1, D.9.1</div>
+      </div>
+      <div class="card planned">
+        <div class="card-top">
+          <span class="card-num">M03a</span>
+          <span class="card-badge planned">PLANNED</span>
+        </div>
+        <div class="card-title">Job detail — Cut Card tab</div>
+        <div class="card-desc">Embedded cut card view. Per-slab layout, piece checklist, mark-complete-with-photo flow.</div>
+        <div class="card-spec">§34.3, D.9.2</div>
+      </div>
+      <div class="card planned">
+        <div class="card-top">
+          <span class="card-num">M03b</span>
+          <span class="card-badge planned">PLANNED</span>
+        </div>
+        <div class="card-title">Job detail — BOM tab</div>
+        <div class="card-desc">Bill of materials: slabs, adhesives, tooling, consumables. Diff vs quoted material cost.</div>
+        <div class="card-spec">§34.6, D.9.4</div>
+      </div>
+      <div class="card planned">
+        <div class="card-top">
+          <span class="card-num">M03c</span>
+          <span class="card-badge planned">PLANNED</span>
+        </div>
+        <div class="card-title">Job detail — Photos tab</div>
+        <div class="card-desc">Stage-gate photos grouped by piece and stage. Templating / Fab / Install / Completion.</div>
+        <div class="card-spec">§34.9</div>
+      </div>
+      <div class="card planned">
+        <div class="card-top">
+          <span class="card-num">M03d</span>
+          <span class="card-badge planned">PLANNED</span>
+        </div>
+        <div class="card-title">Job detail — Activity tab</div>
+        <div class="card-desc">Audit log: status transitions, photos added, notes, re-costs. Same pattern as quote Activity tab (D.1.7).</div>
+        <div class="card-spec">§41.13</div>
+      </div>
+      <div class="card planned">
+        <div class="card-top">
+          <span class="card-num">M03e</span>
+          <span class="card-badge planned">PLANNED</span>
+        </div>
+        <div class="card-title">Job detail — Production Matrix</div>
+        <div class="card-desc">Per-piece station routing (Main Saw → Polisher → CNC → Water Jet → Hand Finish → Mitres). Operator assignment per stage.</div>
+        <div class="card-spec">§34.3 — new finding M02</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Workflow surfaces -->
+  <div class="section">
+    <div class="section-title">Workflow surfaces — Batch 2</div>
+    <div class="card-grid">
+      <div class="card planned">
+        <div class="card-top">
+          <span class="card-num">M04</span>
+          <span class="card-badge planned">PLANNED</span>
+        </div>
+        <div class="card-title">Cut Card (full screen)</div>
+        <div class="card-desc">Shop-floor document. Slab layout SVG with piece positions, cut order, grain arrows, kerf lines, profile annotations.</div>
+        <div class="card-spec">§34.3, D.9.2</div>
+      </div>
+      <div class="card planned">
+        <div class="card-top">
+          <span class="card-num">M05</span>
+          <span class="card-badge planned">PLANNED</span>
+        </div>
+        <div class="card-title">DXF Export</div>
+        <div class="card-desc">Controls + preview layout. Per-piece DXF, bundle download, layer visibility (OUTLINE / CUTOUTS / DRILL_HOLES / PROFILES).</div>
+        <div class="card-spec">§34.4, D.9.3</div>
+      </div>
+      <div class="card planned">
+        <div class="card-top">
+          <span class="card-num">M06</span>
+          <span class="card-badge planned">PLANNED</span>
+        </div>
+        <div class="card-title">Templating Review</div>
+        <div class="card-desc">Side-by-side: quoted vs templated dimensions. Diff highlighting. Price impact. >5% / >2% threshold gates.</div>
+        <div class="card-spec">§34.2</div>
+      </div>
+      <div class="card planned">
+        <div class="card-top">
+          <span class="card-num">M07</span>
+          <span class="card-badge planned">PLANNED</span>
+        </div>
+        <div class="card-title">Remake / Issue ticket</div>
+        <div class="card-desc">Declare a remake or rework. Reason codes, piece affected, photo evidence, cost attribution. New finding M05.</div>
+        <div class="card-spec">§34 amendment pending</div>
+      </div>
+      <div class="card planned">
+        <div class="card-top">
+          <span class="card-num">M08</span>
+          <span class="card-badge planned">PLANNED</span>
+        </div>
+        <div class="card-title">New Job wizard</div>
+        <div class="card-desc">Start a job without a quote. Customer + project + pieces + material + due date in one wizard.</div>
+        <div class="card-spec">§F.4 — new finding M03</div>
+      </div>
+      <div class="card planned">
+        <div class="card-top">
+          <span class="card-num">M09</span>
+          <span class="card-badge planned">PLANNED</span>
+        </div>
+        <div class="card-title">Workflow customisation</div>
+        <div class="card-desc">HubSpot-style pipeline editor. Add/remove/reorder stages, assign roles, set transition rules. M15 in gap register.</div>
+        <div class="card-spec">§34 amendment pending — M15</div>
+      </div>
+      <div class="card planned">
+        <div class="card-top">
+          <span class="card-num">M10</span>
+          <span class="card-badge planned">PLANNED</span>
+        </div>
+        <div class="card-title">Floor Assistant (NL chat)</div>
+        <div class="card-desc">Full-screen conversational interface. Status updates, schedule changes, remakes, queries — all in plain English.</div>
+        <div class="card-spec">§34A amendment pending — M16</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Adjacent surfaces -->
+  <div class="section">
+    <div class="section-title">Adjacent surfaces — Batch 3</div>
+    <div class="card-grid">
+      <div class="card planned">
+        <div class="card-top">
+          <span class="card-num">S01</span>
+          <span class="card-badge planned">PLANNED</span>
+        </div>
+        <div class="card-title">Schedule / Calendar</div>
+        <div class="card-desc">Week view of measures, fab slots, installs. Drag to reschedule. Top-nav peer.</div>
+        <div class="card-spec">§34.7</div>
+      </div>
+      <div class="card planned">
+        <div class="card-top">
+          <span class="card-num">S02</span>
+          <span class="card-badge planned">PLANNED</span>
+        </div>
+        <div class="card-title">Materials inventory</div>
+        <div class="card-desc">Slab catalogue. On-hand / on-order / reserved / batch tracking. Top-nav peer.</div>
+        <div class="card-spec">§10.24</div>
+      </div>
+      <div class="card planned">
+        <div class="card-top">
+          <span class="card-num">S03</span>
+          <span class="card-badge planned">PLANNED</span>
+        </div>
+        <div class="card-title">Slab detail</div>
+        <div class="card-desc">Per-slab view with dimensions, batch, supplier, reservation history, photo.</div>
+        <div class="card-spec">§10.24</div>
+      </div>
+      <div class="card planned">
+        <div class="card-top">
+          <span class="card-num">S04</span>
+          <span class="card-badge planned">PLANNED</span>
+        </div>
+        <div class="card-title">Daily Grain-Match queue</div>
+        <div class="card-desc">Today's jobs needing grain-match photos. Worklist surface separate from main board.</div>
+        <div class="card-spec">§15 — new finding M08</div>
+      </div>
+      <div class="card planned">
+        <div class="card-top">
+          <span class="card-num">S05</span>
+          <span class="card-badge planned">PLANNED</span>
+        </div>
+        <div class="card-title">Shop-floor mobile</div>
+        <div class="card-desc">Tablet/phone view. Cut card with mark-complete + photo. Dark mode for workshop conditions.</div>
+        <div class="card-spec">§28.2, §28.6, D.3.2</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ════════════════════════════════════ -->
+  <!--  MODULE 03 — CROSS-MODULE          -->
+  <!-- ════════════════════════════════════ -->
+  <div class="module-header">
+    <div>
+      <span class="module-num">MODULE 03</span>
+      <div class="module-title">Cross-module</div>
+    </div>
+  </div>
+  <p class="module-desc">
+    Surfaces that span Quote Builder and Manufacturing. Customer relationships, settings, and platform configuration.
+    Owned at the platform level, not by either module.
+  </p>
+
+  <div class="section">
+    <div class="section-title">Cross-module surfaces — Batch 4</div>
+    <div class="card-grid">
+      <div class="card planned">
+        <div class="card-top">
+          <span class="card-num">X01</span>
+          <span class="card-badge planned">PLANNED</span>
+        </div>
+        <div class="card-title">Customers</div>
+        <div class="card-desc">First-class entity. Per-customer history: all quotes, all jobs, all invoices, maintenance. Tradie vs retail segmentation. Top-nav peer. M17 finding.</div>
+        <div class="card-spec">§10.x — amendment pending</div>
+      </div>
+      <div class="card planned">
+        <div class="card-top">
+          <span class="card-num">X02</span>
           <span class="card-badge planned">PLANNED</span>
         </div>
         <div class="card-title">Customer portal</div>
-        <div class="card-desc">Inbox, quote detail, accept/reject/request changes, messaging, signature pad.</div>
+        <div class="card-desc">Customer-facing. Quote accept/reject, install-day status, photos, invoice, warranty. Owned by Quote Builder per Q6.</div>
         <div class="card-spec">§27, D.2</div>
       </div>
-      <div class="card" style="cursor:default;">
+      <div class="card planned">
         <div class="card-top">
-          <span class="card-num">13</span>
+          <span class="card-num">X03</span>
           <span class="card-badge planned">PLANNED</span>
         </div>
-        <div class="card-title">Manufacturing dashboard</div>
-        <div class="card-desc">Job scheduling, cut card generation, stage-gate photos, shop floor tablet view.</div>
-        <div class="card-spec">§34, D.7</div>
+        <div class="card-title">Settings — workflow templates</div>
+        <div class="card-desc">HubSpot-style. Manage manufacturing pipelines. Northcoast template ships as default. M15.</div>
+        <div class="card-spec">§34 amendment — M15</div>
       </div>
-      <div class="card" style="cursor:default;">
+      <div class="card planned">
         <div class="card-top">
-          <span class="card-num">14</span>
+          <span class="card-num">X04</span>
+          <span class="card-badge planned">PLANNED</span>
+        </div>
+        <div class="card-title">Settings — stations &amp; routes</div>
+        <div class="card-desc">Catalogue of fabrication stations per tenant. Default piece-role routes. Per-piece overrides.</div>
+        <div class="card-spec">§34 amendment — M02</div>
+      </div>
+      <div class="card planned">
+        <div class="card-top">
+          <span class="card-num">X05</span>
           <span class="card-badge planned">PLANNED</span>
         </div>
         <div class="card-title">Onboarding flow</div>
-        <div class="card-desc">Tenant signup, demo environment, first-quote walkthrough, material library import.</div>
+        <div class="card-desc">Tenant signup, demo environment, first-quote walkthrough, material library import. Cross-module entry.</div>
         <div class="card-spec">§29, D.4</div>
       </div>
-      <div class="card" style="cursor:default;">
+      <div class="card planned">
         <div class="card-top">
-          <span class="card-num">15</span>
+          <span class="card-num">X06</span>
           <span class="card-badge planned">PLANNED</span>
         </div>
         <div class="card-title">Drawing import</div>
-        <div class="card-desc">Pipeline picker, vector/raster/photo flows, calibration step, confidence indicators.</div>
+        <div class="card-desc">Pipeline picker, vector/raster/photo flows, calibration, confidence indicators. Crosses Quote (capture) and Mfg (override).</div>
         <div class="card-spec">§30, D.5</div>
       </div>
     </div>
   </div>
 
+  <!-- ── COORDINATION NOTE ─────────────── -->
+  <div class="coordination-note">
+    <strong>Coordination in progress.</strong> The unified nav (Quotes / Jobs / Materials / Schedule / Customers + Settings gear)
+    is a Manufacturing-track proposal awaiting Quote Builder track review. See <code>COORDINATION-BRIEF-FOR-QUOTE-BUILDER.md</code>
+    for the seven open questions. Cross-module surfaces (X01–X06) are owned at the platform level.
+  </div>
+
   <div class="footer">
-    <strong>Stonehenge V3</strong> · AI-first quoting platform for Australian stone fabricators<br>
+    <strong>Stonehenge V3</strong> · AI-first quoting and manufacturing platform for Australian stone fabricators<br>
     Design tokens: IBM Plex Sans/Mono · Cinnabar #D63F1A · 4px grid · 44px tap targets<br>
-    Spec: <code>stonehenge-v3-spec-v2.1-MERGED.md</code> · 124 features catalogued · Waves 1–3 complete (457 tests)
+    Spec: <code>stonehenge-v3-spec-v2.1-MERGED.md</code> · Waves 1–2 merged (Wave 1 foundation + Wave 2 geometry/pricing)<br>
+    Modules: Quote Builder (16 screens drafted) · Manufacturing (M01 live, 22 planned) · Cross-module (6 planned)
   </div>
 
 </div>
