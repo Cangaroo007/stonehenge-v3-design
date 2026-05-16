@@ -4,245 +4,304 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Stonehenge V3 — Quote Workspace</title>
-<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@300;400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
 *,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
-:root{--cinnabar:#D63F1A;--cinnabar-light:#D63F1A12;--cinnabar-mid:#D63F1A33;--ink:#1A1A1A;--ink-secondary:#5C5C5C;--ink-tertiary:#8A8A8A;--surface:#F5F5F4;--surface-raised:#FFFFFF;--border:#E2E2E2;--border-active:#CCCCCC;--font-sans:'IBM Plex Sans',sans-serif;--font-mono:'IBM Plex Mono',monospace}
-body{font-family:var(--font-sans);background:var(--surface);color:var(--ink);-webkit-font-smoothing:antialiased;overflow:hidden;height:100vh;display:flex;flex-direction:column}
+:root{
+  /* Warm-cream palette — §3.1 */
+  --surface: #F4F1EA;
+  --surface-sunken: #EBE7DC;
+  --surface-raised: #FFFFFF;
+  --surface-inverse: #0E0E0E;
 
-/* ── Top nav ────────────────────────── */
-.topnav{display:flex;align-items:center;justify-content:space-between;height:44px;padding:0 20px;background:var(--surface-raised);border-bottom:1px solid var(--border);flex-shrink:0}
+  /* Ink hierarchy — §3.2 */
+  --ink: #0E0E0E;
+  --ink-secondary: #5A5957;
+  --ink-muted: #8A8782;
+  --ink-subtle: #B0ACA3;
+  --ink-inverse: #F4F1EA;
+
+  /* Borders — §4.4 */
+  --border: #D4CFC4;
+  --border-strong: #1A1A1A;
+
+  /* Cinnabar — §3.3 */
+  --colour-primary: #D63F1A;
+
+  /* Semantic — §3.5 */
+  --success: #3D8B37;
+  --warning: #C68A17;
+  --danger: #B83D3D;
+
+  /* Type — §2 */
+  --font-sans: 'IBM Plex Sans', -apple-system, sans-serif;
+  --font-mono: 'IBM Plex Mono', 'SF Mono', monospace;
+
+  /* Motion — §5 */
+  --duration-fast: 120ms;
+  --duration-normal: 200ms;
+  --ease: cubic-bezier(0.20, 0.00, 0.00, 1.00);
+}
+
+body{font-family:var(--font-sans);background:var(--surface);color:var(--ink);-webkit-font-smoothing:antialiased;overflow:hidden;height:100vh;display:flex;flex-direction:column;font-size:15px;line-height:1.47}
+
+/* Numeric utility — §2.2 (load-bearing rule) */
+.numeric{font-family:var(--font-mono);font-variant-numeric:tabular-nums;font-feature-settings:'zero' 1}
+
+/* ── Top nav — §7.10 ────────────────── */
+.topnav{display:flex;align-items:center;justify-content:space-between;height:44px;padding:0 20px;background:var(--surface);border-bottom:1px solid var(--border-strong);flex-shrink:0}
 .topnav-left{display:flex;align-items:center;gap:10px}
 .topnav-logo{display:flex;align-items:center;gap:6px;font-size:13px;font-weight:600;letter-spacing:-0.02em;text-decoration:none;color:var(--ink)}
 .topnav-tabs{display:flex;margin-left:16px}
-.topnav-tab{padding:12px 14px;font-size:12px;font-weight:500;color:var(--ink-tertiary);text-decoration:none;border-bottom:2px solid transparent}
-.topnav-tab:hover{color:var(--ink-secondary)}
-.topnav-tab.active{color:var(--cinnabar);border-bottom-color:var(--cinnabar)}
+.topnav-tab{padding:12px 14px;font-family:var(--font-sans);font-size:13px;font-weight:500;color:var(--ink-secondary);text-decoration:none;border-bottom:2px solid transparent;transition:color var(--duration-fast) var(--ease)}
+.topnav-tab:hover{color:var(--ink)}
+.topnav-tab.active{color:var(--ink);border-bottom-color:var(--ink)}
 .topnav-right{display:flex;align-items:center;gap:10px}
-.topnav-tenant{font-family:var(--font-mono);font-size:11px;color:var(--ink-tertiary)}
-.avatar{width:26px;height:26px;display:flex;align-items:center;justify-content:center;background:var(--cinnabar-light);border:1px solid var(--cinnabar-mid);font-size:9px;font-weight:600;color:var(--cinnabar)}
+.topnav-tenant{font-family:var(--font-mono);font-size:11px;color:var(--ink-muted);letter-spacing:0.02em}
+.avatar{width:28px;height:28px;display:flex;align-items:center;justify-content:center;background:var(--surface-sunken);border:1px solid var(--border-strong);font-family:var(--font-mono);font-size:10px;font-weight:600;color:var(--ink)}
 
-/* ── Quote header + tabs ────────────── */
-.quote-bar{display:flex;align-items:center;height:36px;padding:0 20px;background:var(--surface-raised);border-bottom:1px solid var(--border);flex-shrink:0;gap:10px}
-.qb-back{width:24px;height:24px;display:flex;align-items:center;justify-content:center;background:none;border:1px solid var(--border);cursor:pointer;color:var(--ink-secondary);text-decoration:none}
-.qb-id{font-family:var(--font-mono);font-size:11px;font-weight:600}
-.qb-status{font-family:var(--font-mono);font-size:9px;color:var(--ink-tertiary);background:var(--surface);border:1px solid var(--border);padding:1px 5px}
-.qb-sep{width:1px;height:14px;background:var(--border)}
+/* ── Quote bar — §6.5 engineering register header ── */
+.quote-bar{display:flex;align-items:center;height:38px;padding:0 20px;background:var(--surface);border-bottom:1px solid var(--border);flex-shrink:0;gap:10px}
+.qb-back{width:28px;height:28px;display:flex;align-items:center;justify-content:center;background:transparent;border:1px solid var(--border-strong);cursor:pointer;color:var(--ink-secondary);text-decoration:none;transition:all var(--duration-fast) var(--ease)}
+.qb-back:hover{background:var(--ink);color:var(--ink-inverse)}
+.qb-id{font-family:var(--font-mono);font-size:12px;font-weight:600;letter-spacing:0.02em}
+.qb-status{font-family:var(--font-mono);font-size:10px;font-weight:500;color:var(--ink-muted);letter-spacing:0.12em;text-transform:uppercase;padding:2px 6px;border:1px solid var(--border)}
+.qb-sep{width:1px;height:16px;background:var(--border)}
 .qb-tabs{display:flex;margin-left:4px}
-.qb-tab{padding:8px 12px;font-size:11px;font-weight:500;color:var(--ink-tertiary);cursor:pointer;border-bottom:2px solid transparent;text-decoration:none}
+.qb-tab{padding:9px 12px;font-family:var(--font-mono);font-size:11px;font-weight:500;color:var(--ink-muted);cursor:pointer;border-bottom:2px solid transparent;text-decoration:none;letter-spacing:0.04em;text-transform:uppercase;transition:color var(--duration-fast) var(--ease)}
 .qb-tab:hover{color:var(--ink-secondary)}
-.qb-tab.active{color:var(--cinnabar);border-bottom-color:var(--cinnabar)}
-.qb-right{margin-left:auto;font-family:var(--font-mono);font-size:10px;color:var(--ink-tertiary)}
+.qb-tab.active{color:var(--colour-primary);border-bottom-color:var(--colour-primary)}
+.qb-right{margin-left:auto;font-family:var(--font-mono);font-size:10px;color:var(--ink-subtle);letter-spacing:0.02em}
 
-/* ── Setup strip (replaces left rail) ── */
-.setup-strip{display:flex;align-items:center;padding:0 20px;height:36px;background:var(--surface-raised);border-bottom:1px solid var(--border);flex-shrink:0;gap:4px;overflow-x:auto}
-.ss-field{display:flex;align-items:center;gap:5px;padding:0 10px;height:28px;background:var(--surface);border:1px solid var(--border);cursor:pointer;transition:border-color 0.12s;flex-shrink:0;max-width:200px}
-.ss-field:hover{border-color:var(--border-active)}
-.ss-label{font-size:9px;color:var(--ink-tertiary);text-transform:uppercase;letter-spacing:0.04em;flex-shrink:0}
-.ss-value{font-size:11px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.ss-value.placeholder{color:var(--ink-tertiary);font-weight:400}
+/* ── Setup strip ────────────────────── */
+.setup-strip{display:flex;align-items:center;padding:0 20px;height:38px;background:var(--surface-sunken);border-bottom:1px solid var(--border);flex-shrink:0;gap:3px;overflow-x:auto}
+.ss-field{display:flex;align-items:center;gap:5px;padding:0 10px;height:28px;background:var(--surface-raised);border:1px solid var(--border);cursor:pointer;transition:border-color var(--duration-fast) var(--ease);flex-shrink:0;max-width:200px}
+.ss-field:hover{border-color:var(--border-strong)}
+.ss-label{font-family:var(--font-mono);font-size:9px;font-weight:500;color:var(--ink-muted);text-transform:uppercase;letter-spacing:0.08em;flex-shrink:0}
+.ss-value{font-family:var(--font-sans);font-size:12px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:var(--ink)}
+.ss-value.placeholder{color:var(--ink-subtle);font-weight:400}
 .ss-swatch{width:12px;height:12px;border:1px solid var(--border);flex-shrink:0}
-.ss-arrow{color:var(--ink-tertiary);flex-shrink:0}
+.ss-arrow{color:var(--ink-subtle);flex-shrink:0}
 .ss-sep{width:1px;height:18px;background:var(--border);margin:0 4px;flex-shrink:0}
-.ss-expand{display:flex;align-items:center;gap:3px;padding:0 8px;height:28px;font-family:var(--font-sans);font-size:10px;color:var(--ink-tertiary);background:none;border:1px solid var(--border);cursor:pointer;flex-shrink:0}
-.ss-expand:hover{border-color:var(--border-active);color:var(--ink-secondary)}
+.ss-expand{display:flex;align-items:center;gap:3px;padding:0 8px;height:28px;font-family:var(--font-mono);font-size:10px;color:var(--ink-muted);background:transparent;border:1px solid var(--border);cursor:pointer;flex-shrink:0;letter-spacing:0.04em;text-transform:uppercase;transition:all var(--duration-fast) var(--ease)}
+.ss-expand:hover{border-color:var(--border-strong);color:var(--ink-secondary)}
 
-/* ── Main canvas ────────────────────── */
+/* ── Canvas area ────────────────────── */
 .main-area{flex:1;display:flex;flex-direction:column;overflow:hidden}
 
-/* Canvas toolbar */
-.canvas-toolbar{display:flex;align-items:center;padding:4px 12px;background:var(--surface-raised);border-bottom:1px solid var(--border);gap:3px;flex-shrink:0}
-.ct-group{display:flex;gap:1px;background:var(--border);border:1px solid var(--border)}
-.ct-btn{width:30px;height:30px;display:flex;align-items:center;justify-content:center;background:var(--surface-raised);border:none;cursor:pointer;color:var(--ink-tertiary)}
-.ct-btn:hover{color:var(--ink-secondary);background:var(--surface)}
-.ct-btn.active{color:var(--cinnabar);background:var(--cinnabar-light)}
+/* Toolbar — engineering register, border-strong framing */
+.canvas-toolbar{display:flex;align-items:center;padding:4px 12px;background:var(--surface);border-bottom:1px solid var(--border);gap:3px;flex-shrink:0}
+.ct-group{display:flex;border:1px solid var(--border-strong)}
+.ct-btn{width:30px;height:30px;display:flex;align-items:center;justify-content:center;background:var(--surface-raised);border:none;border-right:1px solid var(--border);cursor:pointer;color:var(--ink-muted);transition:all var(--duration-fast) var(--ease)}
+.ct-btn:last-child{border-right:none}
+.ct-btn:hover{color:var(--ink);background:var(--surface-sunken)}
+.ct-btn.active{color:var(--ink);background:var(--surface-sunken)}
 .ct-sep{width:1px;height:18px;background:var(--border);margin:0 6px}
-.ct-label-btn{height:28px;padding:0 10px;font-family:var(--font-mono);font-size:10px;background:var(--surface-raised);border:1px solid var(--border);cursor:pointer;color:var(--ink-secondary);display:flex;align-items:center;gap:4px}
-.ct-label-btn:hover{border-color:var(--border-active)}
-.ct-label-btn.active{border-color:var(--cinnabar);color:var(--cinnabar);background:var(--cinnabar-light)}
-.ct-text{font-size:10px;color:var(--ink-tertiary);margin:0 4px}
+
+/* Label buttons — §7.7 button pattern */
+.ct-label-btn{height:28px;padding:0 10px;font-family:var(--font-mono);font-size:10px;font-weight:500;background:var(--surface-raised);border:1px solid var(--border);cursor:pointer;color:var(--ink-secondary);display:flex;align-items:center;gap:4px;text-decoration:none;letter-spacing:0.04em;text-transform:uppercase;transition:all var(--duration-fast) var(--ease)}
+.ct-label-btn:hover{border-color:var(--border-strong);color:var(--ink)}
+.ct-label-btn.active{border-color:var(--border-strong);color:var(--ink);background:var(--surface-sunken)}
+.ct-label-btn.disabled{opacity:0.4;cursor:default;pointer-events:none}
+.ct-text{font-family:var(--font-mono);font-size:9px;color:var(--ink-subtle);margin:0 4px;text-transform:uppercase;letter-spacing:0.08em}
 
 /* Canvas */
-.canvas{flex:1;display:flex;align-items:center;justify-content:center;position:relative}
+.canvas{flex:1;display:flex;align-items:center;justify-content:center;position:relative;background:var(--surface)}
 
-/* Empty state */
+/* ── Empty state ────────────────────── */
 .empty-state{max-width:560px;width:100%;text-align:center;padding:20px}
-.es-drop{border:2px dashed var(--cinnabar-mid);background:var(--cinnabar-light);padding:32px 24px;cursor:pointer;transition:all 0.15s;margin-bottom:16px;position:relative}
-.es-drop:hover{border-color:var(--cinnabar);background:#D63F1A0A}
-.es-drop-badge{position:absolute;top:8px;right:8px;font-family:var(--font-mono);font-size:9px;color:var(--cinnabar);background:var(--surface-raised);border:1px solid var(--cinnabar-mid);padding:2px 6px}
-.es-drop-icon{margin-bottom:8px;color:var(--cinnabar)}
-.es-drop-title{font-size:14px;font-weight:600;margin-bottom:4px}
-.es-drop-desc{font-size:12px;color:var(--ink-secondary);line-height:1.5;margin-bottom:6px}
-.es-drop-formats{font-family:var(--font-mono);font-size:10px;color:var(--ink-tertiary)}
+
+/* Drop zone — cinnabar border as signal (§3.3 — unmissable) */
+.es-drop{border:2px dashed var(--border);background:var(--surface-raised);padding:36px 28px;cursor:pointer;transition:all var(--duration-normal) var(--ease);margin-bottom:20px;position:relative}
+.es-drop:hover{border-color:var(--colour-primary)}
+.es-drop.dragover{border-color:var(--colour-primary);background:var(--surface-sunken)}
+
+/* Badge — snapshot stamp pattern §6.6 */
+.es-drop-badge{position:absolute;top:10px;right:10px;font-family:var(--font-mono);font-size:9px;font-weight:500;color:var(--colour-primary);letter-spacing:0.12em;text-transform:uppercase}
+.es-drop-icon{margin-bottom:10px;color:var(--ink-muted)}
+.es-drop-title{font-family:var(--font-sans);font-size:15px;font-weight:600;margin-bottom:6px;letter-spacing:-0.01em}
+.es-drop-desc{font-family:var(--font-sans);font-size:13px;color:var(--ink-secondary);line-height:1.5;margin-bottom:8px}
+.es-drop-formats{font-family:var(--font-mono);font-size:10px;color:var(--ink-muted);letter-spacing:0.04em}
 .upload-input{display:none}
-.es-or{font-size:10px;color:var(--ink-tertiary);margin-bottom:12px;display:flex;align-items:center;gap:10px}
+
+/* Divider — dimension line motif §6.1 */
+.es-or{font-family:var(--font-mono);font-size:10px;color:var(--ink-subtle);margin-bottom:16px;display:flex;align-items:center;gap:10px;text-transform:uppercase;letter-spacing:0.12em}
 .es-or::before,.es-or::after{content:'';flex:1;height:1px;background:var(--border)}
+
+/* Alt cards — border-strong framed §4.4 */
 .es-alts{display:flex;gap:8px}
-.es-alt{flex:1;padding:14px;background:var(--surface-raised);border:1px solid var(--border);cursor:pointer;text-align:left;text-decoration:none;color:var(--ink);transition:border-color 0.12s}
-.es-alt:hover{border-color:var(--border-active)}
-.es-alt-icon{margin-bottom:4px;color:var(--ink-tertiary)}
-.es-alt-title{font-size:12px;font-weight:600;margin-bottom:2px}
-.es-alt-desc{font-size:10px;color:var(--ink-secondary);line-height:1.4}
-.es-alt-hint{font-size:9px;color:var(--cinnabar);margin-top:4px}
+.es-alt{flex:1;padding:14px;background:var(--surface-raised);border:1px solid var(--border);cursor:pointer;text-align:left;text-decoration:none;color:var(--ink);transition:border-color var(--duration-fast) var(--ease)}
+.es-alt:hover{border-color:var(--border-strong)}
+.es-alt-icon{margin-bottom:6px;color:var(--ink-muted)}
+.es-alt-title{font-family:var(--font-sans);font-size:13px;font-weight:600;margin-bottom:3px;letter-spacing:-0.01em}
+.es-alt-desc{font-family:var(--font-sans);font-size:11px;color:var(--ink-secondary);line-height:1.4}
+.es-alt-hint{font-family:var(--font-mono);font-size:9px;color:var(--colour-primary);margin-top:6px;letter-spacing:0.02em}
 
-/* ── Pricing footer ─────────────────── */
-.pricing-bar{display:flex;align-items:center;justify-content:space-between;padding:6px 20px;background:var(--surface-raised);border-top:1px solid var(--border);flex-shrink:0}
-.pb-buckets{display:flex;gap:16px}
+/* ── Pricing footer — §7.4 data table footer pattern ── */
+.pricing-bar{display:flex;align-items:center;justify-content:space-between;padding:6px 20px;background:var(--surface-raised);border-top:1px solid var(--border-strong);flex-shrink:0}
+.pb-buckets{display:flex;gap:20px}
 .pb-bucket{text-align:center}
-.pb-bucket-label{font-size:8px;color:var(--ink-tertiary);text-transform:uppercase;letter-spacing:0.04em}
-.pb-bucket-value{font-family:var(--font-mono);font-size:12px;font-weight:600}
-.pb-bucket-value.empty{color:var(--ink-tertiary)}
-.pb-right{display:flex;align-items:center;gap:12px}
+.pb-bucket-label{font-family:var(--font-mono);font-size:8px;color:var(--ink-muted);text-transform:uppercase;letter-spacing:0.1em}
+.pb-bucket-value{font-family:var(--font-mono);font-size:13px;font-weight:600;font-variant-numeric:tabular-nums;font-feature-settings:'zero' 1}
+.pb-bucket-value.empty{color:var(--ink-subtle)}
+.pb-right{display:flex;align-items:center;gap:14px}
 .pb-total{text-align:right}
-.pb-total-label{font-size:8px;color:var(--ink-tertiary);text-transform:uppercase;letter-spacing:0.04em}
-.pb-total-value{font-family:var(--font-mono);font-size:16px;font-weight:600}
-.pb-total-value.empty{color:var(--ink-tertiary)}
+.pb-total-label{font-family:var(--font-mono);font-size:8px;color:var(--ink-muted);text-transform:uppercase;letter-spacing:0.1em}
+.pb-total-value{font-family:var(--font-mono);font-size:17px;font-weight:600;font-variant-numeric:tabular-nums;font-feature-settings:'zero' 1}
+.pb-total-value.empty{color:var(--ink-subtle)}
 .pb-btns{display:flex;gap:4px}
-.pb-btn{height:32px;padding:0 14px;font-family:var(--font-sans);font-size:11px;font-weight:500;cursor:pointer;border:1px solid var(--border);background:var(--surface-raised);color:var(--ink-secondary);display:flex;align-items:center;gap:4px;text-decoration:none}
-.pb-btn:hover{border-color:var(--border-active)}
-.pb-btn.primary{border:none;background:var(--cinnabar);color:white;font-weight:600}
-.pb-btn.primary:hover{opacity:0.88}
 
-/* ── Popovers ───────────────────────── */
-.popover{display:none;position:fixed;background:var(--surface-raised);border:1px solid var(--border);padding:12px;z-index:200;width:280px;box-shadow:0 2px 8px rgba(0,0,0,0.06)}
+/* §7.7 buttons — near-black primary, cinnabar on hover */
+.pb-btn{height:36px;padding:0 16px;font-family:var(--font-sans);font-size:11px;font-weight:500;cursor:pointer;border:1px solid var(--border-strong);background:var(--surface-raised);color:var(--ink-secondary);display:flex;align-items:center;gap:4px;text-decoration:none;letter-spacing:0.02em;transition:all var(--duration-fast) var(--ease)}
+.pb-btn:hover{background:var(--ink);color:var(--ink-inverse)}
+.pb-btn.primary{border:1px solid var(--border-strong);background:var(--ink);color:var(--ink-inverse);font-weight:600;letter-spacing:0.06em;text-transform:uppercase}
+.pb-btn.primary:hover{background:var(--colour-primary);border-color:var(--colour-primary)}
+
+/* ── Popovers — §4.5 shadow-md for floating, warm-tinted ── */
+.popover{display:none;position:fixed;background:var(--surface-raised);border:1px solid var(--border-strong);padding:14px;z-index:200;width:280px;box-shadow:0 4px 16px rgba(30,24,16,0.12)}
 .popover.open{display:block}
-.pop-title{font-size:11px;font-weight:600;margin-bottom:8px;display:flex;align-items:center;justify-content:space-between}
-.pop-close{background:none;border:none;cursor:pointer;color:var(--ink-tertiary);padding:2px}
-.pop-input{width:100%;height:34px;padding:0 10px;font-family:var(--font-sans);font-size:12px;color:var(--ink);background:var(--surface);border:1px solid var(--border);margin-bottom:6px}
-.pop-input:focus{outline:none;border-color:var(--cinnabar)}
-.pop-input::placeholder{color:var(--ink-tertiary)}
-.pop-pick{display:flex;align-items:center;gap:8px;padding:7px 8px;border:1px solid var(--border);cursor:pointer;margin-bottom:3px;transition:background 0.08s}
-.pop-pick:hover{background:var(--surface)}
-.pop-pick.selected{border-color:var(--cinnabar);background:var(--cinnabar-light)}
-.pop-avatar{width:22px;height:22px;display:flex;align-items:center;justify-content:center;background:var(--surface);border:1px solid var(--border);font-family:var(--font-mono);font-size:8px;font-weight:600;color:var(--ink-secondary);flex-shrink:0}
-.pop-name{font-size:11px;font-weight:500}
-.pop-type{font-family:var(--font-mono);font-size:8px;color:var(--ink-tertiary);margin-left:auto}
-.pop-new{display:flex;align-items:center;gap:4px;padding:6px 8px;font-family:var(--font-sans);font-size:10px;color:var(--cinnabar);background:none;border:1px dashed var(--cinnabar-mid);cursor:pointer;width:100%;margin-top:4px}
-.pop-new:hover{background:var(--cinnabar-light)}
-.pop-new-form{display:none;margin-top:6px;padding:8px;background:var(--cinnabar-light);border:1px solid var(--cinnabar-mid)}
+.pop-title{font-family:var(--font-mono);font-size:10px;font-weight:600;letter-spacing:0.12em;text-transform:uppercase;margin-bottom:10px;display:flex;align-items:center;justify-content:space-between;color:var(--ink-secondary)}
+.pop-close{background:none;border:none;cursor:pointer;color:var(--ink-muted);padding:2px;transition:color var(--duration-fast) var(--ease)}
+.pop-close:hover{color:var(--ink)}
+
+/* Form inputs — §7.8 */
+.pop-input{width:100%;height:36px;padding:0 10px;font-family:var(--font-sans);font-size:12px;color:var(--ink);background:var(--surface-sunken);border:1px solid var(--border-strong);margin-bottom:6px}
+.pop-input:focus{outline:none;border-color:var(--colour-primary);box-shadow:inset 0 0 0 1px var(--colour-primary)}
+.pop-input::placeholder{color:var(--ink-subtle)}
+
+/* Customer picks */
+.pop-pick{display:flex;align-items:center;gap:8px;padding:7px 8px;border:1px solid var(--border);cursor:pointer;margin-bottom:3px;transition:all var(--duration-fast) var(--ease)}
+.pop-pick:hover{background:var(--surface-sunken);border-color:var(--border-strong)}
+.pop-pick.selected{border-color:var(--border-strong);background:var(--surface-sunken)}
+.pop-avatar{width:24px;height:24px;display:flex;align-items:center;justify-content:center;background:var(--surface-sunken);border:1px solid var(--border);font-family:var(--font-mono);font-size:8px;font-weight:600;color:var(--ink-muted);flex-shrink:0}
+.pop-name{font-family:var(--font-sans);font-size:12px;font-weight:500}
+.pop-type{font-family:var(--font-mono);font-size:8px;color:var(--ink-muted);margin-left:auto;letter-spacing:0.06em;text-transform:uppercase}
+
+/* New customer toggle */
+.pop-new{display:flex;align-items:center;gap:4px;padding:6px 8px;font-family:var(--font-mono);font-size:10px;color:var(--ink-secondary);background:none;border:1px dashed var(--border);cursor:pointer;width:100%;margin-top:4px;letter-spacing:0.02em;transition:all var(--duration-fast) var(--ease)}
+.pop-new:hover{border-color:var(--border-strong);color:var(--ink)}
+.pop-new-form{display:none;margin-top:6px;padding:10px;background:var(--surface-sunken);border:1px solid var(--border)}
 .pop-new-form.open{display:block}
 .pop-row{display:flex;gap:4px;margin-bottom:4px}
 .pop-row .pop-input{flex:1;margin-bottom:0}
-.pop-select{height:34px;padding:0 8px;font-family:var(--font-sans);font-size:11px;color:var(--ink);background:var(--surface);border:1px solid var(--border);appearance:none;cursor:pointer;min-width:90px}
-.pop-btn{height:30px;padding:0 12px;font-family:var(--font-sans);font-size:10px;font-weight:600;cursor:pointer;border:none;background:var(--cinnabar);color:white}
-.pop-mat{display:flex;align-items:center;gap:6px;padding:7px 8px;border:1px solid var(--border);cursor:pointer;margin-bottom:3px}
-.pop-mat:hover{background:var(--surface)}
-.pop-mat.selected{border-color:var(--cinnabar);background:var(--cinnabar-light)}
-.pop-mat-swatch{width:18px;height:18px;border:1px solid var(--border);flex-shrink:0}
-.pop-mat-name{font-size:11px;font-weight:500}
-.pop-mat-detail{font-size:9px;color:var(--ink-tertiary)}
-.pop-mat-price{font-family:var(--font-mono);font-size:10px;color:var(--ink-secondary);margin-left:auto}
-.pop-note{font-size:9px;color:var(--ink-tertiary);margin-top:6px;padding:6px 8px;background:var(--surface);border:1px solid var(--border)}
+.pop-select{height:36px;padding:0 8px;font-family:var(--font-sans);font-size:11px;color:var(--ink);background:var(--surface-sunken);border:1px solid var(--border-strong);appearance:none;cursor:pointer;min-width:90px}
+.pop-btn{height:32px;padding:0 14px;font-family:var(--font-mono);font-size:10px;font-weight:600;cursor:pointer;border:1px solid var(--border-strong);background:var(--ink);color:var(--ink-inverse);letter-spacing:0.06em;text-transform:uppercase;transition:all var(--duration-fast) var(--ease)}
+.pop-btn:hover{background:var(--colour-primary);border-color:var(--colour-primary)}
 
-.screen-label{position:fixed;bottom:44px;right:20px;font-family:var(--font-mono);font-size:10px;color:var(--cinnabar);background:var(--cinnabar-light);border:1px solid var(--cinnabar-mid);padding:4px 10px;letter-spacing:0.04em;z-index:50}
+/* Material picks */
+.pop-mat{display:flex;align-items:center;gap:8px;padding:8px;border:1px solid var(--border);cursor:pointer;margin-bottom:3px;transition:all var(--duration-fast) var(--ease)}
+.pop-mat:hover{border-color:var(--border-strong);background:var(--surface-sunken)}
+.pop-mat.selected{border-color:var(--border-strong);background:var(--surface-sunken)}
+.pop-mat-swatch{width:20px;height:20px;border:1px solid var(--border);flex-shrink:0}
+.pop-mat-name{font-family:var(--font-sans);font-size:12px;font-weight:500}
+.pop-mat-detail{font-family:var(--font-mono);font-size:9px;color:var(--ink-muted);letter-spacing:0.02em}
+.pop-mat-price{font-family:var(--font-mono);font-size:11px;font-weight:500;color:var(--ink-secondary);margin-left:auto;font-variant-numeric:tabular-nums;font-feature-settings:'zero' 1}
+.pop-note{font-family:var(--font-sans);font-size:10px;color:var(--ink-muted);margin-top:8px;padding:8px;background:var(--surface-sunken);border:1px solid var(--border);line-height:1.5}
+.pop-note strong{color:var(--ink-secondary);font-weight:600}
+
+.screen-label{position:fixed;bottom:44px;right:20px;font-family:var(--font-mono);font-size:9px;font-weight:500;color:var(--colour-primary);letter-spacing:0.12em;text-transform:uppercase;z-index:50}
 </style>
 </head>
 <body>
 
-<!-- TOP NAV (shared, per Q7) -->
+<!-- TOP NAV -->
 <nav class="topnav">
   <div class="topnav-left">
-    <a class="topnav-logo" href="index.html" title="Back to design index"><svg width="16" height="16" viewBox="0 0 16 16" fill="none"><rect x="1" y="1" width="14" height="14" stroke="#1A1A1A" stroke-width="1.5" fill="none"/><path d="M3.5 12.5 L3.5 3.5 L12.5 3.5 L12.5 8 L8 8 L8 12.5 Z" stroke="#D63F1A" stroke-width="1.5" fill="none"/></svg> Stonehenge</a>
+    <a class="topnav-logo" href="index.html"><svg width="16" height="16" viewBox="0 0 16 16" fill="none"><rect x="1" y="1" width="14" height="14" stroke="var(--ink)" stroke-width="1.5" fill="none"/><path d="M3.5 12.5 L3.5 3.5 L12.5 3.5 L12.5 8 L8 8 L8 12.5 Z" stroke="var(--colour-primary)" stroke-width="1.5" fill="none"/></svg> Stonehenge</a>
     <div class="topnav-tabs">
-      <a class="topnav-tab active" href="quote-dashboard.html" title="All quotes — your main quote list">Quotes</a>
-      <a class="topnav-tab" href="mfg-job-board.html" title="Manufacturing job board — kanban view of active jobs">Jobs</a>
-      <a class="topnav-tab" href="#" title="Material catalogue — supplier rates, collections, colours (future)">Materials</a>
-      <a class="topnav-tab" href="#" title="Production schedule — calendar of upcoming installs and fab dates (future)">Schedule</a>
-      <a class="topnav-tab" href="#" title="Customer database — all customers, their quotes, jobs, and history (future)">Customers</a>
+      <a class="topnav-tab active" href="quote-dashboard.html">Quotes</a>
+      <a class="topnav-tab" href="mfg-job-board.html">Jobs</a>
+      <a class="topnav-tab" href="#">Materials</a>
+      <a class="topnav-tab" href="#">Schedule</a>
+      <a class="topnav-tab" href="#">Customers</a>
     </div>
   </div>
   <div class="topnav-right"><span class="topnav-tenant">Northcoast Stone</span><div class="avatar">JH</div></div>
 </nav>
 
-<!-- QUOTE BAR -->
+<!-- QUOTE BAR (engineering register — §6.5 inspired) -->
 <div class="quote-bar">
-  <a class="qb-back" href="quote-dashboard.html" title="Back to quote dashboard"><svg width="10" height="10" viewBox="0 0 10 10" fill="none"><path d="M7 1L3 5L7 9" stroke="currentColor" stroke-width="1.2"/></svg></a>
-  <span class="qb-id">Q-2026-0043</span>
-  <span class="qb-status">DRAFT</span>
+  <a class="qb-back" href="quote-dashboard.html"><svg width="10" height="10" viewBox="0 0 10 10" fill="none"><path d="M7 1L3 5L7 9" stroke="currentColor" stroke-width="1.2"/></svg></a>
+  <span class="qb-id numeric">Q-2026-0043</span>
+  <span class="qb-status">Draft</span>
   <div class="qb-sep"></div>
   <div class="qb-tabs">
-    <a class="qb-tab" href="configuration-tab.html" title="Quote settings — customer, project, pricing overrides, deposit %, validity">Config</a>
-    <span class="qb-tab active" title="Visual editor — place and edit pieces on the room layout canvas">Spatial</span>
-    <a class="qb-tab" href="parts-list.html" title="Tree view of all pieces — Room → Unit → Piece with per-piece costs">Parts</a>
-    <a class="qb-tab" href="pricing-tab.html" title="Full pricing breakdown — three-bucket subtotals, overrides, rule trace">Pricing</a>
-    <a class="qb-tab" href="pdf-preview-send.html" title="Customer-facing PDF — preview, set detail level, branding, send via email">PDF</a>
-    <a class="qb-tab" href="#" title="Audit log — every change, status transition, and notification for this quote">Activity</a>
+    <a class="qb-tab" href="configuration-tab.html">Config</a>
+    <span class="qb-tab active">Spatial</span>
+    <a class="qb-tab" href="parts-list.html">Parts</a>
+    <a class="qb-tab" href="pricing-tab.html">Pricing</a>
+    <a class="qb-tab" href="pdf-preview-send.html">PDF</a>
+    <a class="qb-tab" href="#">Activity</a>
   </div>
-  <div class="qb-right">Saved just now</div>
+  <div class="qb-right numeric">Saved just now</div>
 </div>
 
-<!-- SETUP STRIP (compact, replaces left rail) -->
+<!-- SETUP STRIP (sunken register — one-time fields) -->
 <div class="setup-strip">
-  <div class="ss-field" id="ss-customer" title="Who is this quote for? Select existing customer or add new.">
+  <div class="ss-field" id="ss-customer">
     <span class="ss-label">Customer</span>
     <span class="ss-value placeholder" id="ss-cust-val">Select...</span>
     <svg class="ss-arrow" width="8" height="8" viewBox="0 0 8 8" fill="none"><path d="M2 3L4 5L6 3" stroke="currentColor" stroke-width="1"/></svg>
   </div>
-  <div class="ss-field" id="ss-project" title="Project name — e.g. 'Sandgate Kitchen Renovation'. Click to edit.">
+  <div class="ss-field" id="ss-project">
     <span class="ss-label">Project</span>
     <span class="ss-value placeholder" id="ss-proj-val">Name...</span>
   </div>
-  <div class="ss-field" id="ss-address" title="Site address for delivery and installation. Click to edit.">
+  <div class="ss-field" id="ss-address">
     <span class="ss-label">Address</span>
     <span class="ss-value placeholder" id="ss-addr-val">Location...</span>
   </div>
   <div class="ss-sep"></div>
-  <div class="ss-field" id="ss-material" title="Default material for all pieces. Individual pieces can be overridden in the Parts tab. Use 'Change material' in Parts for bulk updates.">
+  <div class="ss-field" id="ss-material">
     <span class="ss-swatch" id="ss-mat-swatch"></span>
     <span class="ss-label">Material</span>
     <span class="ss-value placeholder" id="ss-mat-val">Select...</span>
     <svg class="ss-arrow" width="8" height="8" viewBox="0 0 8 8" fill="none"><path d="M2 3L4 5L6 3" stroke="currentColor" stroke-width="1"/></svg>
   </div>
   <div class="ss-sep"></div>
-  <button class="ss-expand" id="ss-more" title="More quote settings — validity, room, internal notes, deposit %, pricing overrides">
+  <button class="ss-expand" id="ss-more">
     <svg width="10" height="10" viewBox="0 0 10 10" fill="none"><circle cx="2" cy="5" r="1" fill="currentColor"/><circle cx="5" cy="5" r="1" fill="currentColor"/><circle cx="8" cy="5" r="1" fill="currentColor"/></svg>
     More
   </button>
 </div>
 
-<!-- MAIN AREA -->
 <div class="main-area">
   <!-- CANVAS TOOLBAR -->
   <div class="canvas-toolbar">
-    <!-- Tool group -->
     <div class="ct-group">
-      <button class="ct-btn active" title="Select tool — click pieces to select, drag to move. Shift+click for multi-select."><svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M2 1.5L2 11.5L5.5 8.5L8 13L10 12L7.5 7.5L11 7Z" stroke="currentColor" stroke-width="1" fill="none"/></svg></button>
-      <button class="ct-btn" title="Pan tool — drag the canvas to move your view. Also: hold Space + drag."><svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M7 2V12M2 7H12" stroke="currentColor" stroke-width="0.8"/></svg></button>
-      <button class="ct-btn" title="Measure tool — click two points to see the distance between them in mm."><svg width="14" height="14" viewBox="0 0 14 14" fill="none"><line x1="3" y1="11" x2="11" y2="3" stroke="currentColor" stroke-width="0.8"/><line x1="3" y1="11" x2="3" y2="9" stroke="currentColor" stroke-width="0.6"/><line x1="3" y1="11" x2="5" y2="11" stroke="currentColor" stroke-width="0.6"/></svg></button>
+      <button class="ct-btn active" title="Select — click to select, drag to move"><svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M2 1.5L2 11.5L5.5 8.5L8 13L10 12L7.5 7.5L11 7Z" stroke="currentColor" stroke-width="1" fill="none"/></svg></button>
+      <button class="ct-btn" title="Pan — drag canvas, or Space+drag"><svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M7 2V12M2 7H12" stroke="currentColor" stroke-width="0.8"/></svg></button>
+      <button class="ct-btn" title="Measure — click two points"><svg width="14" height="14" viewBox="0 0 14 14" fill="none"><line x1="3" y1="11" x2="11" y2="3" stroke="currentColor" stroke-width="0.8"/><line x1="3" y1="11" x2="3" y2="9" stroke="currentColor" stroke-width="0.6"/><line x1="3" y1="11" x2="5" y2="11" stroke="currentColor" stroke-width="0.6"/></svg></button>
     </div>
     <div class="ct-sep"></div>
-    <!-- Add group -->
-    <a class="ct-label-btn" href="piece-template-picker.html" title="Add piece — choose from 11 templates (L-shape, rectangle, peninsula, etc.) or build from scratch.">
-      <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><rect x="2" y="2" width="8" height="8" stroke="currentColor" stroke-width="0.8" fill="none"/><line x1="6" y1="4" x2="6" y2="8" stroke="currentColor" stroke-width="0.8"/><line x1="4" y1="6" x2="8" y2="6" stroke="currentColor" stroke-width="0.8"/></svg>
+    <a class="ct-label-btn" href="piece-template-picker.html">
+      <svg width="10" height="10" viewBox="0 0 10 10" fill="none"><rect x="1" y="1" width="8" height="8" stroke="currentColor" stroke-width="0.8" fill="none"/><line x1="5" y1="3" x2="5" y2="7" stroke="currentColor" stroke-width="0.8"/><line x1="3" y1="5" x2="7" y2="5" stroke="currentColor" stroke-width="0.8"/></svg>
       Add piece
     </a>
-    <span class="ct-label-btn" title="Add cutout — sink, cooktop, tap hole, powerpoint. Drag onto a piece to position. (Needs at least one piece first.)" style="opacity:0.5;cursor:default">
-      <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><rect x="1" y="1" width="10" height="10" stroke="currentColor" stroke-width="0.8" fill="none"/><rect x="4" y="4" width="4" height="4" stroke="currentColor" stroke-width="0.8" fill="none" stroke-dasharray="2 1"/></svg>
+    <span class="ct-label-btn disabled">
+      <svg width="10" height="10" viewBox="0 0 10 10" fill="none"><rect x="1" y="1" width="8" height="8" stroke="currentColor" stroke-width="0.8" fill="none"/><rect x="3" y="3" width="4" height="4" stroke="currentColor" stroke-width="0.8" fill="none" stroke-dasharray="1.5 1"/></svg>
       Add cutout
     </span>
-    <a class="ct-label-btn" href="#" title="Import drawing — upload a PDF/DXF/DWG or photo. Same as the drop zone below." onclick="document.getElementById('file-input-main').click();return false;">
-      <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><rect x="2" y="1" width="8" height="10" stroke="currentColor" stroke-width="0.8" fill="none"/><path d="M6 3V7M4 5L6 7L8 5" stroke="currentColor" stroke-width="0.8"/></svg>
+    <a class="ct-label-btn" href="#" onclick="document.getElementById('file-input-main').click();return false;">
+      <svg width="10" height="10" viewBox="0 0 10 10" fill="none"><rect x="1.5" y="1" width="7" height="8" stroke="currentColor" stroke-width="0.8" fill="none"/><path d="M5 3V6M3.5 4.5L5 6L6.5 4.5" stroke="currentColor" stroke-width="0.7"/></svg>
       Import drawing
     </a>
     <div class="ct-sep"></div>
-    <!-- View modes (§24.2) -->
-    <span class="ct-text">View:</span>
-    <a class="ct-label-btn active" href="spatial-plan-view.html" title="Customer view — shows logical units as single surfaces. What the customer sees in their quote PDF. No piece IDs, no assembly detail.">Customer</a>
-    <a class="ct-label-btn" href="spatial-plan-view.html" title="Shop Floor view — shows individual pieces with role colours (benchtop=blue, fascia=green, splashback=purple). Build-up strips visible. Piece IDs labelled. For internal team review.">Shop Floor</a>
-    <a class="ct-label-btn" href="#" title="Cut Card view — pieces nested on actual slab dimensions by the §31 slab optimiser. Shows kerf lines, grain arrows, cut order. Drives the physical cut card document. (Needs pieces first.)">Cut Card</a>
-    <div class="ct-sep"></div>
-    <!-- Zoom -->
-    <span class="ct-text" style="margin-left:auto">100%</span>
-    <button class="ct-btn" title="Zoom in" style="width:24px;height:24px;font-size:14px">+</button>
-    <button class="ct-btn" title="Zoom out" style="width:24px;height:24px;font-size:14px">-</button>
-    <button class="ct-btn" title="Fit all pieces to screen" style="width:24px;height:24px"><svg width="12" height="12" viewBox="0 0 12 12" fill="none"><rect x="1" y="1" width="10" height="10" stroke="currentColor" stroke-width="0.8" fill="none"/><rect x="3" y="3" width="6" height="6" stroke="currentColor" stroke-width="0.6" fill="none" stroke-dasharray="1.5 1"/></svg></button>
+    <span class="ct-text">View</span>
+    <a class="ct-label-btn active" href="spatial-plan-view.html">Customer</a>
+    <a class="ct-label-btn" href="spatial-plan-view.html">Shop floor</a>
+    <span class="ct-label-btn disabled">Cut card</span>
+    <div style="flex:1"></div>
+    <span class="ct-text numeric" style="margin-right:4px">100%</span>
+    <button class="ct-btn" style="width:24px;height:24px;border:1px solid var(--border)">+</button>
+    <button class="ct-btn" style="width:24px;height:24px;border:1px solid var(--border)">−</button>
   </div>
 
-  <!-- CANVAS (full width — no left rail!) -->
+  <!-- CANVAS -->
   <div class="canvas">
     <div class="empty-state">
       <div class="es-drop" id="drop-zone" onclick="document.getElementById('file-input-main').click()">
-        <span class="es-drop-badge">95% OF JOBS HAVE DRAWINGS</span>
+        <span class="es-drop-badge">95% of jobs have drawings</span>
         <div class="es-drop-icon"><svg width="36" height="36" viewBox="0 0 36 36" fill="none"><rect x="3" y="3" width="30" height="30" stroke="currentColor" stroke-width="1.2" fill="none"/><path d="M10 26L18 14L26 26" stroke="currentColor" stroke-width="1.2" fill="none"/><circle cx="27" cy="10" r="2.5" stroke="currentColor" stroke-width="1" fill="none"/></svg></div>
         <div class="es-drop-title">Drop a drawing to start</div>
         <div class="es-drop-desc">We'll extract pieces, dimensions, cutouts, and edge profiles. Review everything before committing.</div>
@@ -251,13 +310,13 @@ body{font-family:var(--font-sans);background:var(--surface);color:var(--ink);-we
       </div>
       <div class="es-or">or start manually</div>
       <div class="es-alts">
-        <a class="es-alt" href="piece-template-picker.html" title="Choose from 11 pre-built shape templates: Rectangle, L-Shape, U-Shape, Bay Window, Radius End, Full Circle, Angular Corner, Splayed Corner, Trapezoid, Peninsula, Custom. Enter dimensions and place on canvas.">
+        <a class="es-alt" href="piece-template-picker.html">
           <div class="es-alt-icon"><svg width="18" height="18" viewBox="0 0 18 18" fill="none"><rect x="2" y="2" width="14" height="14" stroke="currentColor" stroke-width="0.8" fill="none"/><path d="M2 2L9 2L9 9L16 9L16 16L2 16Z" stroke="currentColor" stroke-width="0.8" fill="none" stroke-dasharray="2 1.5"/></svg></div>
           <div class="es-alt-title">Pick a template</div>
           <div class="es-alt-desc">11 common shapes. Enter dimensions.</div>
-          <div class="es-alt-hint">You can save your own reusable templates</div>
+          <div class="es-alt-hint">↳ You can save your own reusable templates</div>
         </a>
-        <div class="es-alt" title="Activate polygon draw mode — tap corners on the canvas to trace piece outlines freehand. Polar tracking at 0°/45°/90° for straight edges. Close the shape by tapping the first point again.">
+        <div class="es-alt">
           <div class="es-alt-icon"><svg width="18" height="18" viewBox="0 0 18 18" fill="none"><path d="M3 15L3 3L15 3" stroke="currentColor" stroke-width="0.8" fill="none"/><circle cx="3" cy="3" r="1.5" stroke="currentColor" stroke-width="0.7" fill="none"/><circle cx="15" cy="3" r="1.5" stroke="currentColor" stroke-width="0.7" fill="none"/><circle cx="3" cy="15" r="1.5" stroke="currentColor" stroke-width="0.7" fill="none"/></svg></div>
           <div class="es-alt-title">Build your own</div>
           <div class="es-alt-desc">Tap corners on canvas to draw.</div>
@@ -267,32 +326,30 @@ body{font-family:var(--font-sans);background:var(--surface);color:var(--ink);-we
   </div>
 </div>
 
-<!-- PRICING FOOTER -->
+<!-- PRICING BAR (border-strong top = engineering plate framing) -->
 <div class="pricing-bar">
   <div class="pb-buckets">
-    <div class="pb-bucket" title="Total fabrication cost — cutting, profiling, polishing, assembly labour"><div class="pb-bucket-label">Fabrication</div><div class="pb-bucket-value empty">—</div></div>
-    <div class="pb-bucket" title="Total material cost — slab area × $/m² for the selected material"><div class="pb-bucket-label">Material</div><div class="pb-bucket-value empty">—</div></div>
-    <div class="pb-bucket" title="Total installation cost — delivery, on-site fitting, cutout templating"><div class="pb-bucket-label">Installation</div><div class="pb-bucket-value empty">—</div></div>
+    <div class="pb-bucket"><div class="pb-bucket-label">Fabrication</div><div class="pb-bucket-value empty numeric">—</div></div>
+    <div class="pb-bucket"><div class="pb-bucket-label">Material</div><div class="pb-bucket-value empty numeric">—</div></div>
+    <div class="pb-bucket"><div class="pb-bucket-label">Installation</div><div class="pb-bucket-value empty numeric">—</div></div>
   </div>
   <div class="pb-right">
-    <div class="pb-total"><div class="pb-total-label">Total ex GST</div><div class="pb-total-value empty">$0.00</div></div>
+    <div class="pb-total"><div class="pb-total-label">Total ex GST</div><div class="pb-total-value empty numeric">$0.00</div></div>
     <div class="pb-btns">
-      <a class="pb-btn" href="pdf-preview-send.html" title="Preview the customer-facing PDF — choose detail level, check branding, then send">Preview PDF</a>
-      <a class="pb-btn primary" href="pdf-preview-send.html" title="Generate PDF and open the send modal — email to customer with tracking">Send Quote</a>
+      <a class="pb-btn" href="pdf-preview-send.html">Preview PDF</a>
+      <a class="pb-btn primary" href="pdf-preview-send.html">Send quote</a>
     </div>
   </div>
 </div>
 
 <!-- POPOVERS -->
-
-<!-- Customer popover -->
 <div class="popover" id="pop-customer">
   <div class="pop-title">Customer <button class="pop-close" onclick="closePop()"><svg width="10" height="10" viewBox="0 0 10 10" fill="none"><path d="M2 2L8 8M8 2L2 8" stroke="currentColor" stroke-width="1.2"/></svg></button></div>
   <input class="pop-input" placeholder="Search or type name..." id="pop-cust-search">
-  <div class="pop-pick" data-name="Hashtag Hub Pty Ltd" onclick="pickCust(this)"><div class="pop-avatar">HH</div><span class="pop-name">Hashtag Hub Pty Ltd</span><span class="pop-type">BUILDER</span></div>
-  <div class="pop-pick" data-name="Meridian Homes" onclick="pickCust(this)"><div class="pop-avatar">MH</div><span class="pop-name">Meridian Homes</span><span class="pop-type">BUILDER</span></div>
-  <div class="pop-pick" data-name="R. Patterson" onclick="pickCust(this)"><div class="pop-avatar">RP</div><span class="pop-name">R. Patterson</span><span class="pop-type">HOMEOWNER</span></div>
-  <div class="pop-pick" data-name="K. Nakamura" onclick="pickCust(this)"><div class="pop-avatar">KN</div><span class="pop-name">K. Nakamura</span><span class="pop-type">ARCHITECT</span></div>
+  <div class="pop-pick" data-name="Hashtag Hub Pty Ltd" onclick="pickCust(this)"><div class="pop-avatar">HH</div><span class="pop-name">Hashtag Hub Pty Ltd</span><span class="pop-type">Builder</span></div>
+  <div class="pop-pick" data-name="Meridian Homes" onclick="pickCust(this)"><div class="pop-avatar">MH</div><span class="pop-name">Meridian Homes</span><span class="pop-type">Builder</span></div>
+  <div class="pop-pick" data-name="R. Patterson" onclick="pickCust(this)"><div class="pop-avatar">RP</div><span class="pop-name">R. Patterson</span><span class="pop-type">Homeowner</span></div>
+  <div class="pop-pick" data-name="K. Nakamura" onclick="pickCust(this)"><div class="pop-avatar">KN</div><span class="pop-name">K. Nakamura</span><span class="pop-type">Architect</span></div>
   <button class="pop-new" onclick="document.getElementById('pop-cust-new').classList.toggle('open')"><svg width="8" height="8" viewBox="0 0 8 8" fill="none"><line x1="4" y1="1" x2="4" y2="7" stroke="currentColor" stroke-width="1"/><line x1="1" y1="4" x2="7" y2="4" stroke="currentColor" stroke-width="1"/></svg> Add new customer</button>
   <div class="pop-new-form" id="pop-cust-new">
     <div class="pop-row"><input class="pop-input" placeholder="Company or person name" id="pop-new-name" style="margin-bottom:0"><select class="pop-select"><option>Builder</option><option>Architect</option><option>Designer</option><option>Homeowner</option></select></div>
@@ -301,42 +358,38 @@ body{font-family:var(--font-sans);background:var(--surface);color:var(--ink);-we
   </div>
 </div>
 
-<!-- Material popover -->
 <div class="popover" id="pop-material">
   <div class="pop-title">Default material <button class="pop-close" onclick="closePop()"><svg width="10" height="10" viewBox="0 0 10 10" fill="none"><path d="M2 2L8 8M8 2L2 8" stroke="currentColor" stroke-width="1.2"/></svg></button></div>
   <div class="pop-mat" data-mat="Caesarstone Concrete" data-color="#B8B3AA" onclick="pickMat(this)"><div class="pop-mat-swatch" style="background:#B8B3AA"></div><div><div class="pop-mat-name">Caesarstone Concrete</div><div class="pop-mat-detail">4003 · 20mm polished</div></div><span class="pop-mat-price">$285/m²</span></div>
   <div class="pop-mat" data-mat="Piatra Grey" data-color="#2C2C2C" onclick="pickMat(this)"><div class="pop-mat-swatch" style="background:#2C2C2C"></div><div><div class="pop-mat-name">Piatra Grey</div><div class="pop-mat-detail">5003 · 20mm polished</div></div><span class="pop-mat-price">$340/m²</span></div>
   <div class="pop-mat" data-mat="Statuario Maximus" data-color="#F0EDE6" onclick="pickMat(this)"><div class="pop-mat-swatch" style="background:#F0EDE6"></div><div><div class="pop-mat-name">Statuario Maximus</div><div class="pop-mat-detail">5031 · 20mm polished</div></div><span class="pop-mat-price">$380/m²</span></div>
   <div class="pop-mat" data-mat="Essastone Bone White" data-color="#F5F0E8" onclick="pickMat(this)"><div class="pop-mat-swatch" style="background:#F5F0E8"></div><div><div class="pop-mat-name">Essastone Bone White</div><div class="pop-mat-detail">20mm polished</div></div><span class="pop-mat-price">$195/m²</span></div>
-  <button style="width:100%;padding:7px;font-family:var(--font-sans);font-size:10px;color:var(--cinnabar);background:none;border:1px dashed var(--cinnabar-mid);cursor:pointer;margin-top:4px">Browse full catalogue →</button>
-  <div class="pop-note">This sets the quote-level default. Override per-piece in the <strong>Parts</strong> tab, or use <strong>bulk material change</strong> to update multiple pieces at once.</div>
+  <button style="width:100%;padding:8px;font-family:var(--font-mono);font-size:10px;color:var(--ink-secondary);background:none;border:1px dashed var(--border);cursor:pointer;margin-top:4px;letter-spacing:0.04em;transition:all var(--duration-fast) var(--ease)" onmouseover="this.style.borderColor='var(--border-strong)'" onmouseout="this.style.borderColor='var(--border)'">Browse full catalogue →</button>
+  <div class="pop-note">Sets the quote-level default. Override per-piece in <strong>Parts</strong>, or use <strong>bulk material change</strong> to update multiple pieces at once.</div>
 </div>
 
-<!-- Project inline edit -->
 <div class="popover" id="pop-project" style="width:240px">
   <div class="pop-title">Project name <button class="pop-close" onclick="closePop()"><svg width="10" height="10" viewBox="0 0 10 10" fill="none"><path d="M2 2L8 8M8 2L2 8" stroke="currentColor" stroke-width="1.2"/></svg></button></div>
   <input class="pop-input" placeholder="e.g. Sandgate Kitchen Renovation" id="pop-proj-input">
   <div style="display:flex;justify-content:flex-end;margin-top:4px"><button class="pop-btn" onclick="saveProj()">Done</button></div>
 </div>
 
-<!-- Address inline edit -->
 <div class="popover" id="pop-address" style="width:260px">
   <div class="pop-title">Site address <button class="pop-close" onclick="closePop()"><svg width="10" height="10" viewBox="0 0 10 10" fill="none"><path d="M2 2L8 8M8 2L2 8" stroke="currentColor" stroke-width="1.2"/></svg></button></div>
   <input class="pop-input" placeholder="Street address" id="pop-addr-input">
-  <div class="pop-row"><input class="pop-input" placeholder="Suburb" style="margin-bottom:0"><input class="pop-input" placeholder="QLD" style="margin-bottom:0;width:60px"><input class="pop-input" placeholder="4017" style="margin-bottom:0;width:60px"></div>
+  <div class="pop-row"><input class="pop-input" placeholder="Suburb" style="margin-bottom:0"><input class="pop-input" placeholder="QLD" style="margin-bottom:0;width:50px"><input class="pop-input numeric" placeholder="4017" style="margin-bottom:0;width:50px"></div>
   <div style="display:flex;justify-content:flex-end;margin-top:4px"><button class="pop-btn" onclick="saveAddr()">Done</button></div>
 </div>
 
-<!-- More settings popover -->
 <div class="popover" id="pop-more" style="width:260px">
   <div class="pop-title">More settings <button class="pop-close" onclick="closePop()"><svg width="10" height="10" viewBox="0 0 10 10" fill="none"><path d="M2 2L8 8M8 2L2 8" stroke="currentColor" stroke-width="1.2"/></svg></button></div>
-  <div style="margin-bottom:8px"><span style="font-size:9px;font-weight:500;color:var(--ink-tertiary);text-transform:uppercase;letter-spacing:0.04em">Room</span><input class="pop-input" placeholder="e.g. Kitchen" style="margin-top:3px"></div>
-  <div style="margin-bottom:8px"><span style="font-size:9px;font-weight:500;color:var(--ink-tertiary);text-transform:uppercase;letter-spacing:0.04em">Valid for</span><select class="pop-select" style="width:100%;margin-top:3px"><option>30 days</option><option>14 days</option><option>60 days</option><option>90 days</option></select></div>
-  <div><span style="font-size:9px;font-weight:500;color:var(--ink-tertiary);text-transform:uppercase;letter-spacing:0.04em">Internal notes</span><textarea style="width:100%;height:50px;padding:6px 8px;font-family:var(--font-sans);font-size:11px;color:var(--ink);background:var(--surface);border:1px solid var(--border);resize:vertical;margin-top:3px" placeholder="Visible only to your team..."></textarea></div>
-  <div class="pop-note">Full settings available in the <a href="configuration-tab.html" style="color:var(--cinnabar)">Config tab</a> — deposit %, pricing overrides, PDF defaults.</div>
+  <div style="margin-bottom:8px"><span style="font-family:var(--font-mono);font-size:9px;font-weight:500;color:var(--ink-muted);text-transform:uppercase;letter-spacing:0.08em">Room</span><input class="pop-input" placeholder="e.g. Kitchen" style="margin-top:3px"></div>
+  <div style="margin-bottom:8px"><span style="font-family:var(--font-mono);font-size:9px;font-weight:500;color:var(--ink-muted);text-transform:uppercase;letter-spacing:0.08em">Valid for</span><select class="pop-select" style="width:100%;margin-top:3px"><option>30 days</option><option>14 days</option><option>60 days</option><option>90 days</option></select></div>
+  <div><span style="font-family:var(--font-mono);font-size:9px;font-weight:500;color:var(--ink-muted);text-transform:uppercase;letter-spacing:0.08em">Internal notes</span><textarea style="width:100%;height:50px;padding:6px 8px;font-family:var(--font-sans);font-size:11px;color:var(--ink);background:var(--surface-sunken);border:1px solid var(--border-strong);resize:vertical;margin-top:3px" placeholder="Visible only to your team..."></textarea></div>
+  <div class="pop-note">Full settings in the <a href="configuration-tab.html" style="color:var(--ink);font-weight:600">Config tab</a> — deposit %, pricing overrides, PDF defaults.</div>
 </div>
 
-<div class="screen-label">QUOTE WORKSPACE — EMPTY STATE</div>
+<div class="screen-label">§ 05 · Quote workspace · Empty state</div>
 
 <script>
 let activePop=null;
@@ -359,33 +412,16 @@ document.getElementById('ss-address').addEventListener('click',function(e){e.sto
 document.getElementById('ss-material').addEventListener('click',function(e){e.stopPropagation();openPop('pop-material',this);});
 document.getElementById('ss-more').addEventListener('click',function(e){e.stopPropagation();openPop('pop-more',this);});
 
-function pickCust(el){
-  const v=document.getElementById('ss-cust-val');v.textContent=el.dataset.name;v.classList.remove('placeholder');
-  document.querySelectorAll('.pop-pick').forEach(p=>p.classList.remove('selected'));el.classList.add('selected');closePop();
-}
-function saveNewCust(){
-  const n=document.getElementById('pop-new-name').value;
-  if(n){document.getElementById('ss-cust-val').textContent=n;document.getElementById('ss-cust-val').classList.remove('placeholder');closePop();}
-}
-function pickMat(el){
-  const v=document.getElementById('ss-mat-val');v.textContent=el.dataset.mat;v.classList.remove('placeholder');
-  document.getElementById('ss-mat-swatch').style.background=el.dataset.color;
-  document.querySelectorAll('.pop-mat').forEach(m=>m.classList.remove('selected'));el.classList.add('selected');closePop();
-}
-function saveProj(){
-  const n=document.getElementById('pop-proj-input').value;
-  if(n){document.getElementById('ss-proj-val').textContent=n;document.getElementById('ss-proj-val').classList.remove('placeholder');closePop();}
-}
-function saveAddr(){
-  const n=document.getElementById('pop-addr-input').value;
-  if(n){document.getElementById('ss-addr-val').textContent=n;document.getElementById('ss-addr-val').classList.remove('placeholder');closePop();}
-}
+function pickCust(el){const v=document.getElementById('ss-cust-val');v.textContent=el.dataset.name;v.classList.remove('placeholder');document.querySelectorAll('.pop-pick').forEach(p=>p.classList.remove('selected'));el.classList.add('selected');closePop();}
+function saveNewCust(){const n=document.getElementById('pop-new-name').value;if(n){document.getElementById('ss-cust-val').textContent=n;document.getElementById('ss-cust-val').classList.remove('placeholder');closePop();}}
+function pickMat(el){const v=document.getElementById('ss-mat-val');v.textContent=el.dataset.mat;v.classList.remove('placeholder');document.getElementById('ss-mat-swatch').style.background=el.dataset.color;document.querySelectorAll('.pop-mat').forEach(m=>m.classList.remove('selected'));el.classList.add('selected');closePop();}
+function saveProj(){const n=document.getElementById('pop-proj-input').value;if(n){document.getElementById('ss-proj-val').textContent=n;document.getElementById('ss-proj-val').classList.remove('placeholder');closePop();}}
+function saveAddr(){const n=document.getElementById('pop-addr-input').value;if(n){document.getElementById('ss-addr-val').textContent=n;document.getElementById('ss-addr-val').classList.remove('placeholder');closePop();}}
 document.getElementById('pop-cust-search').addEventListener('input',function(){const t=this.value.toLowerCase();document.querySelectorAll('.pop-pick').forEach(p=>{p.style.display=p.querySelector('.pop-name').textContent.toLowerCase().includes(t)?'flex':'none';});});
 
-// Drop zone
 const dz=document.getElementById('drop-zone');
-dz.addEventListener('dragover',e=>{e.preventDefault();dz.style.borderColor='var(--cinnabar)';dz.style.background='#D63F1A18';});
-dz.addEventListener('dragleave',()=>{dz.style.borderColor='';dz.style.background='';});
+dz.addEventListener('dragover',e=>{e.preventDefault();dz.classList.add('dragover');});
+dz.addEventListener('dragleave',()=>dz.classList.remove('dragover'));
 dz.addEventListener('drop',e=>{e.preventDefault();window.location.href='drawing-review.html';});
 document.getElementById('file-input-main').addEventListener('change',function(){if(this.files[0])window.location.href='drawing-review.html';});
 </script>
